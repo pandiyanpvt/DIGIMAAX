@@ -48,7 +48,7 @@ Professional Marketing Materials Establish Credibility And Customer Confidence.
 Supports Growth:
 Customer Acquisition And Retention Through Targeted Advertising Solutions.`,
       image: advertisingImage,
-      layout: 'right' // Text Right, Image Left
+      layout: 'left' // Text Left, Image Right
     },
     {
       id: 3,
@@ -69,7 +69,7 @@ Quality Printing Services That Meet Your Business Needs.`,
 Advanced Technology:
 High-Quality Cameras And Monitoring Systems For Complete Security Coverage.`,
       image: securityImage,
-      layout: 'right' // Text Right, Image Left
+      layout: 'left' // Text Left, Image Right
     },
     {
       id: 5,
@@ -97,7 +97,7 @@ Streamlined Production Process With Consistent Quality Output.
 Versatility:
 From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
       image: cncImage,
-      layout: 'right' // Text Right, Image Left
+      layout: 'left' // Text Left, Image Right
     }
   ];
 
@@ -125,8 +125,6 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
   ];
 
   const renderService = (service, index) => {
-    const isLeftLayout = service.layout === 'left';
-    
     return (
       <motion.div
         key={service.id}
@@ -134,148 +132,115 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: index * 0.2 }}
       >
-        <Grid container spacing={6} alignItems="center" sx={{ mb: 8, minHeight: '600px' }}>
-          {/* Content Side */}
-          <Grid item xs={12} md={6} order={{ xs: 1, md: isLeftLayout ? 1 : 2 }}>
-            <Box 
-              sx={{ 
-                textAlign: { xs: 'center', md: isLeftLayout ? 'left' : 'right' },
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                height: '100%',
-                px: { xs: 2, md: 4 },
-                alignItems: { xs: 'center', md: isLeftLayout ? 'flex-start' : 'flex-end' }
-              }}
-            >
-              {/* Service Title */}
-              <Typography
-                variant="h3"
-                sx={{
-                  color: '#FFD700',
-                  fontWeight: 'bold',
-                  fontSize: { xs: '2rem', md: '2.5rem' },
-                  mb: 4,
-                  fontFamily: 'sans-serif',
+        <Box sx={{ mb: { xs: 6, md: 8 } }}>
+          <Grid container spacing={{ xs: 3, md: 4 }} alignItems="center">
+            {/* Content Side - Always Left */}
+            <Grid size={{ xs: 12, md: 6 }} order={{ xs: 1, md: 1 }}>
+              <Box 
+                sx={{ 
+                  textAlign: { xs: 'center', md: 'left' },
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  justifyContent: { xs: 'center', md: isLeftLayout ? 'flex-start' : 'flex-end' },
-                  flexWrap: 'wrap',
-                  width: '100%'
-                }}
-              >
-                {isLeftLayout && (
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      backgroundColor: '#DC143C',
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: '1.2rem',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {service.id}
-                  </Box>
-                )}
-                <Box component="span" sx={{ flex: 1, minWidth: 0 }}>
-                  {service.title}
-                </Box>
-                {!isLeftLayout && (
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      backgroundColor: '#DC143C',
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: '1.2rem',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {service.id}
-                  </Box>
-                )}
-              </Typography>
-
-              {/* Description */}
-              <Typography
-                variant="body1"
-                sx={{
-                  color: 'white',
-                  fontSize: { xs: '1rem', md: '1.1rem' },
-                  lineHeight: 1.8,
-                  fontFamily: 'sans-serif',
-                  whiteSpace: 'pre-line',
-                  maxWidth: { xs: '100%', md: '500px' },
-                  width: '100%',
-                  textAlign: { xs: 'center', md: isLeftLayout ? 'left' : 'right' }
-                }}
-              >
-                {service.description}
-              </Typography>
-            </Box>
-          </Grid>
-
-          {/* Image Side */}
-          <Grid item xs={12} md={6} order={{ xs: 2, md: isLeftLayout ? 2 : 1 }}>
-            <Box
-              sx={{
-                position: 'relative',
-                borderRadius: 3,
-                overflow: 'hidden',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-                height: { xs: '300px', md: '500px' },
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Box
-                component="img"
-                src={service.image}
-                alt={service.title}
-                sx={{
-                  width: '100%',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
                   height: '100%',
-                  objectFit: 'cover',
-                  borderRadius: 3,
+                  px: { xs: 2, md: 0 },
+                  py: { xs: 2, md: 4 }
                 }}
-              />
-              {/* Number indicator overlay */}
+              >
+                {/* Service Title */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
+                    justifyContent: { xs: 'center', md: 'flex-start' },
+                    flexWrap: 'wrap',
+                    mb: 3
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 50,
+                      height: 50,
+                      backgroundColor: '#DC143C',
+                      borderRadius: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '1.3rem',
+                      flexShrink: 0,
+                      boxShadow: '0 4px 12px rgba(220, 20, 60, 0.3)',
+                    }}
+                  >
+                    {service.id}
+                  </Box>
+                  <Typography
+                    variant="h3"
+                    sx={{
+                      color: '#FFD700',
+                      fontWeight: 'bold',
+                      fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
+                      fontFamily: 'sans-serif',
+                      lineHeight: 1.2,
+                      flex: 1,
+                      minWidth: 0
+                    }}
+                  >
+                    {service.title}
+                  </Typography>
+                </Box>
+
+                {/* Description */}
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: 'white',
+                    fontSize: { xs: '0.95rem', md: '1.1rem' },
+                    lineHeight: 1.7,
+                    fontFamily: 'sans-serif',
+                    whiteSpace: 'pre-line',
+                    maxWidth: { xs: '100%', md: '450px' },
+                    textAlign: { xs: 'center', md: 'left' },
+                    opacity: 0.95
+                  }}
+                >
+                  {service.description}
+                </Typography>
+              </Box>
+            </Grid>
+
+            {/* Image Side - Always Right */}
+            <Grid size={{ xs: 12, md: 6 }} order={{ xs: 2, md: 2 }}>
               <Box
                 sx={{
-                  position: 'absolute',
-                  top: 20,
-                  [isLeftLayout ? 'right' : 'left']: 20,
-                  width: 50,
-                  height: 50,
-                  backgroundColor: '#DC143C',
-                  borderRadius: 1,
+                  position: 'relative',
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+                  height: { xs: '250px', sm: '300px', md: '380px' },
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '1.5rem',
-                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+                  mx: { xs: 2, md: 0 }
                 }}
               >
-                {service.id}
+                <Box
+                  component="img"
+                  src={service.image}
+                  alt={service.title}
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: 3,
+                  }}
+                />
               </Box>
-            </Box>
+            </Grid>
           </Grid>
-        </Grid>
+        </Box>
 
         {/* Connecting Arrow */}
         {index < services.length - 1 && (
@@ -288,31 +253,31 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: '2rem',
+              marginBottom: '3rem',
             }}
           >
             {/* Connector line (vertical) */}
             <Box
               sx={{
-                width: '4px',
-                height: { xs: '140px', md: '329px' },
-                backgroundColor: 'white',
-                opacity: 1,
-                borderRadius: '4px',
+                width: '3px',
+                height: { xs: '60px', md: '80px' },
+                background: 'linear-gradient(180deg, #FFD700 0%, #FFA500 100%)',
+                borderRadius: '2px',
+                boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)',
               }}
             />
             {/* Down arrow head */}
             <Box
               sx={{
-                mt: 1.5,
+                mt: 1,
                 width: 0,
                 height: 0,
-                borderLeft: '14px solid transparent',
-                borderRight: '14px solid transparent',
-                borderTop: '22px solid white',
+                borderLeft: '12px solid transparent',
+                borderRight: '12px solid transparent',
+                borderTop: '18px solid #FFD700',
                 transition: 'transform 0.3s ease',
                 '&:hover': {
-                  transform: 'translateY(5px)',
+                  transform: 'translateY(3px)',
                 },
               }}
             />
@@ -328,33 +293,45 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
       sx={{
         minHeight: '100vh',
         background: 'linear-gradient(180deg, #4B11A9 0%, #29085D 100%)',
-        py: { xs: 4, md: 8 },
+        py: { xs: 6, md: 10 },
         position: 'relative',
       }}
     >
-      <Container maxWidth="lg" sx={{ px: { xs: 2, md: 4 } }}>
+      <Container maxWidth="md" sx={{ px: { xs: 2, md: 4 } }}>
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
           {/* Main Title */}
-          <Typography
-            variant="h2"
-            sx={{
-              textAlign: 'center',
-              mb: { xs: 4, md: 8 },
-              color: 'white',
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
-              fontWeight: 'bold',
-              fontFamily: 'sans-serif',
-            }}
-          >
-            Why Choose US
-          </Typography>
+          <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 10 } }}>
+            <Typography
+              variant="h2"
+              sx={{
+                color: 'white',
+                fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.5rem' },
+                fontWeight: 'bold',
+                fontFamily: 'sans-serif',
+                mb: 2,
+                lineHeight: 1.2
+              }}
+            >
+              Why Choose US
+            </Typography>
+            <Box
+              sx={{
+                width: { xs: '60px', md: '80px' },
+                height: '4px',
+                background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                borderRadius: '2px',
+                mx: 'auto',
+                boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)',
+              }}
+            />
+          </Box>
           
           {/* Services */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 4, md: 8 } }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             {services.map((service, index) => renderService(service, index))}
           </Box>
 
@@ -363,11 +340,36 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.2 }}
-            style={{ marginTop: '4rem' }}
+            style={{ marginTop: '6rem' }}
           >
-            <Grid container spacing={3} sx={{ mt: 8 }}>
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Typography
+                variant="h3"
+                sx={{
+                  color: 'white',
+                  fontSize: { xs: '1.8rem', md: '2.5rem' },
+                  fontWeight: 'bold',
+                  fontFamily: 'sans-serif',
+                  mb: 2
+                }}
+              >
+                Our Services
+              </Typography>
+              <Box
+                sx={{
+                  width: { xs: '50px', md: '70px' },
+                  height: '3px',
+                  background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                  borderRadius: '2px',
+                  mx: 'auto',
+                  boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)',
+                }}
+              />
+            </Box>
+            
+            <Grid container spacing={{ xs: 2, md: 2 }} sx={{ mt: 4 }}>
               {footerServices.map((item, index) => (
-                <Grid item xs={12} sm={6} md={3} key={index}>
+                <Grid size={{ xs: 6, sm: 3, md: 3 }} key={index}>
                   <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -378,31 +380,31 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
                     <Box
                       sx={{
                         background: 'rgba(255, 255, 255, 0.95)',
-                        borderRadius: '50px 20px 50px 20px',
-                        p: 3,
+                        borderRadius: '20px',
+                        p: { xs: 2, md: 2.5 },
                         textAlign: 'center',
                         color: '#000',
-                        minHeight: '180px',
+                        minHeight: { xs: '140px', md: '160px' },
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         position: 'relative',
-                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+                        boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
                         transition: 'all 0.3s ease',
                         '&:hover': {
-                          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-                          transform: 'translateY(-5px)',
+                          boxShadow: '0 15px 35px rgba(0, 0, 0, 0.25)',
+                          transform: 'translateY(-8px)',
                         },
                         '&::before': {
                           content: '""',
                           position: 'absolute',
-                          top: -10,
-                          left: -10,
-                          right: -10,
-                          bottom: -10,
+                          top: -8,
+                          left: -8,
+                          right: -8,
+                          bottom: -8,
                           background: 'linear-gradient(45deg, rgba(255, 215, 0, 0.1), rgba(255, 255, 255, 0.1))',
-                          borderRadius: '60px 30px 60px 30px',
+                          borderRadius: '28px',
                           zIndex: -1,
                         }
                       }}
@@ -410,16 +412,16 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
                       {/* Icon */}
                       <Box
                         sx={{
-                          fontSize: '2.5rem',
-                          mb: 1.5,
+                          fontSize: { xs: '1.8rem', md: '2.2rem' },
+                          mb: { xs: 0.8, md: 1 },
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          width: '70px',
-                          height: '70px',
+                          width: { xs: '50px', md: '60px' },
+                          height: { xs: '50px', md: '60px' },
                           borderRadius: '50%',
                           background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                          boxShadow: '0 5px 15px rgba(255, 215, 0, 0.3)',
+                          boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)',
                         }}
                       >
                         {item.icon}
@@ -429,16 +431,13 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
                       <Typography
                         variant="h6"
                         sx={{
-                          fontSize: { xs: '0.9rem', md: '1rem' },
+                          fontSize: { xs: '0.75rem', sm: '0.8rem', md: '0.9rem' },
                           fontWeight: 'bold',
                           fontFamily: 'sans-serif',
-                          mb: 1,
+                          mb: 0.5,
                           lineHeight: 1.1,
                           textAlign: 'center',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          maxWidth: '100%',
+                          color: '#333',
                         }}
                       >
                         {item.title}
@@ -448,12 +447,12 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
                       <Typography
                         variant="body2"
                         sx={{
-                          fontSize: { xs: '0.8rem', md: '0.9rem' },
+                          fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' },
                           fontWeight: 'medium',
                           fontFamily: 'sans-serif',
                           textAlign: 'center',
                           color: '#666',
-                          lineHeight: 1.3,
+                          lineHeight: 1.2,
                         }}
                       >
                         {item.description}

@@ -10,6 +10,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Telegram,
   Instagram,
@@ -21,6 +22,7 @@ import printerImage from '../../assets/hero/printing-teapot  1.png';
 const HeroSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
 
   const socialIcons = [
     { icon: <Telegram />, color: '#0088cc' },
@@ -44,7 +46,7 @@ const HeroSection = () => {
       <Container maxWidth="lg">
         <Grid container spacing={4} alignItems="center">
           {/* Left Content */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -91,6 +93,7 @@ const HeroSection = () => {
                 <Button
                   variant="contained"
                   size="large"
+                  onClick={() => navigate('/shop')}
                   sx={{
                     mr: 2,
                     mb: 2,
@@ -150,7 +153,7 @@ const HeroSection = () => {
           </Grid>
 
           {/* Right Content - 3D Printer */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}

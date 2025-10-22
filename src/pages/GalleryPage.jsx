@@ -46,112 +46,98 @@ const GalleryPage = () => {
       title: 'Creative Design Work',
       category: 'Interior Design',
       image: gallery1,
-      description: 'Artistic watercolor illustration with cosmic design elements',
-      size: 'tall' // tall, wide, square
+      description: 'Artistic watercolor illustration with cosmic design elements'
     },
     {
       id: 2,
       title: 'Modern Office Space',
       category: 'Interior Design',
       image: gallery2,
-      description: 'Industrial office interior with exposed ceiling and modern furniture',
-      size: 'wide'
+      description: 'Industrial office interior with exposed ceiling and modern furniture'
     },
     {
       id: 3,
       title: 'Product Photography',
       category: 'Advertising',
       image: gallery3,
-      description: 'Clean product shots with water droplets and professional lighting',
-      size: 'wide'
+      description: 'Clean product shots with water droplets and professional lighting'
     },
     {
       id: 4,
       title: 'Brand Identity Design',
       category: 'Advertising',
       image: gallery4,
-      description: 'Eco-friendly product branding and packaging design',
-      size: 'square'
+      description: 'Eco-friendly product branding and packaging design'
     },
     {
       id: 5,
       title: 'Character Design',
       category: 'Advertising',
       image: gallery5,
-      description: 'Superhero character illustration and design work',
-      size: 'tall'
+      description: 'Superhero character illustration and design work'
     },
     {
       id: 6,
       title: 'Architectural Photography',
       category: 'Interior Design',
       image: gallery6,
-      description: 'Modern minimalist house exterior with clean lines',
-      size: 'tall'
+      description: 'Modern minimalist house exterior with clean lines'
     },
     {
       id: 7,
       title: 'Fashion Photography',
       category: 'Advertising',
       image: gallery7,
-      description: 'Professional fashion shoot with elegant styling',
-      size: 'tall'
+      description: 'Professional fashion shoot with elegant styling'
     },
     {
       id: 8,
       title: 'Fashion Editorial',
       category: 'Advertising',
       image: gallery8,
-      description: 'Creative fashion editorial with abstract background',
-      size: 'tall'
+      description: 'Creative fashion editorial with abstract background'
     },
     {
       id: 9,
       title: 'Product Branding',
       category: 'Advertising',
       image: gallery9,
-      description: 'Nature-inspired product branding and packaging',
-      size: 'tall'
+      description: 'Nature-inspired product branding and packaging'
     },
     {
       id: 10,
       title: 'Product Line Design',
       category: 'Printing',
       image: gallery10,
-      description: 'Consistent product line design with nature themes',
-      size: 'wide'
+      description: 'Consistent product line design with nature themes'
     },
     {
       id: 11,
       title: 'Cosmetic Branding',
       category: 'Printing',
       image: gallery11,
-      description: 'Luxury cosmetic product with elegant packaging design',
-      size: 'tall'
+      description: 'Luxury cosmetic product with elegant packaging design'
     },
     {
       id: 12,
       title: 'Kitchen Design',
       category: 'Interior Design',
       image: gallery12,
-      description: 'Modern kitchen interior with light wood and stainless steel',
-      size: 'wide'
+      description: 'Modern kitchen interior with light wood and stainless steel'
     },
     {
       id: 13,
       title: 'Perfume Branding',
       category: 'Printing',
       image: gallery13,
-      description: 'Luxury perfume bottle design with floral elements',
-      size: 'tall'
+      description: 'Luxury perfume bottle design with floral elements'
     },
     {
       id: 14,
       title: 'Beverage Design',
       category: 'Printing',
       image: gallery14,
-      description: 'Colorful soda can designs with fruit themes',
-      size: 'tall'
+      description: 'Colorful soda can designs with fruit themes'
     }
   ];
 
@@ -176,14 +162,14 @@ const GalleryPage = () => {
         pb: 8,
       }}
     >
-      <Container maxWidth="lg" sx={{ px: { xs: 2, md: 4 } }}>
+      <Container maxWidth={false} sx={{ px: 0 }}>
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Box sx={{ textAlign: 'center', mb: 6, px: { xs: 2, md: 4 } }}>
             <Typography
               variant="h2"
               sx={{
@@ -213,7 +199,7 @@ const GalleryPage = () => {
 
         {/* Category Filter removed */}
 
-        {/* Gallery Grid - Masonry Layout */}
+        {/* Gallery Grid - Uniform Layout */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -223,122 +209,90 @@ const GalleryPage = () => {
             sx={{
               display: 'grid',
               gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(3, 1fr)',
-                lg: 'repeat(4, 1fr)',
+                xs: 'repeat(2, 1fr)',
+                sm: 'repeat(3, 1fr)',
+                md: 'repeat(4, 1fr)',
+                lg: 'repeat(5, 1fr)',
               },
-              gap: 1,
-              columnGap: 1,
+              gap: { xs: 1, sm: 1.5, md: 2 },
+              px: { xs: 1, sm: 2, md: 3 },
             }}
           >
-            {filteredItems.map((item, index) => {
-              const getImageHeight = () => {
-                switch (item.size) {
-                  case 'tall':
-                    return { xs: '350px', sm: '450px', md: '550px' };
-                  case 'wide':
-                    return { xs: '200px', sm: '250px', md: '300px' };
-                  case 'square':
-                    return { xs: '250px', sm: '300px', md: '350px' };
-                  default:
-                    return { xs: '250px', sm: '300px', md: '350px' };
-                }
-              };
-
-              const getGridSpan = () => {
-                switch (item.size) {
-                  case 'wide':
-                    return { xs: 'span 1', sm: 'span 2', md: 'span 2' };
-                  default:
-                    return 'span 1';
-                }
-              };
-
-              return (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    gridColumn: getGridSpan(),
-                    display: 'flex',
-                    flexDirection: 'column',
+            {filteredItems.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Card
+                  sx={{
+                    background: 'transparent',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    border: 'none',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    '&:hover': {
+                      transform: 'scale(1.02)',
+                      zIndex: 10,
+                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.25)',
+                    },
                   }}
+                  onClick={() => handleImageClick(item)}
                 >
-                  <Card
-                    sx={{
-                      height: '100%',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: 'blur(10px)',
-                      borderRadius: 1,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      '&:hover': {
-                        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
-                        transform: 'translateY(-8px)',
-                        border: '1px solid rgba(255, 215, 0, 0.3)',
-                      },
-                    }}
-                    onClick={() => handleImageClick(item)}
-                  >
-                    <Box sx={{ position: 'relative' }}>
-                      <CardMedia
-                        component="img"
-                        height={getImageHeight()}
-                        image={item.image}
-                        alt={item.title}
+                  <Box sx={{ position: 'relative', aspectRatio: '1' }}>
+                    <CardMedia
+                      component="img"
+                      image={item.image}
+                      alt={item.title}
+                      sx={{
+                        objectFit: 'cover',
+                        width: '100%',
+                        height: '100%',
+                        transition: 'transform 0.3s ease',
+                        display: 'block',
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.8) 100%)',
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        justifyContent: 'center',
+                        opacity: 0,
+                        transition: 'opacity 0.3s ease',
+                        '&:hover': {
+                          opacity: 1,
+                        },
+                      }}
+                    >
+                      <IconButton
                         sx={{
-                          objectFit: 'cover',
-                          width: '100%',
-                          transition: 'transform 0.3s ease',
+                          color: 'white',
+                          backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                          backdropFilter: 'blur(10px)',
+                          mb: 2,
                           '&:hover': {
-                            transform: 'scale(1.05)',
-                          },
-                        }}
-                      />
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.8) 100%)',
-                          display: 'flex',
-                          alignItems: 'flex-end',
-                          justifyContent: 'center',
-                          opacity: 0,
-                          transition: 'opacity 0.3s ease',
-                          '&:hover': {
-                            opacity: 1,
+                            backgroundColor: 'rgba(255, 215, 0, 0.4)',
                           },
                         }}
                       >
-                        <IconButton
-                          sx={{
-                            color: 'white',
-                            backgroundColor: 'rgba(255, 215, 0, 0.2)',
-                            backdropFilter: 'blur(10px)',
-                            '&:hover': {
-                              backgroundColor: 'rgba(255, 215, 0, 0.4)',
-                            },
-                          }}
-                        >
-                          <ZoomInIcon />
-                        </IconButton>
-                      </Box>
+                        <ZoomInIcon />
+                      </IconButton>
                     </Box>
-                    {/* Bottom texts removed as requested */}
-                  </Card>
-                </motion.div>
-              );
-            })}
+                  </Box>
+                </Card>
+              </motion.div>
+            ))}
           </Box>
         </motion.div>
 
