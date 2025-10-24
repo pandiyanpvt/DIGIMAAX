@@ -22,6 +22,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 // Product images
 import mugImg from '../assets/products/shop/Customized Mug.jpg';
@@ -32,6 +33,7 @@ import tshirtImg from '../assets/products/shop/tshit.jpg';
 const ProductDetailPage = () => {
   const navigate = useNavigate();
   const { getCartTotalItems, addToCart } = useCart();
+  const { isAuthenticated, openSignInModal } = useAuth();
   
   // State management
   const [selectedColor, setSelectedColor] = useState('white');
@@ -80,6 +82,10 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      openSignInModal();
+      return;
+    }
     addToCart(product.id, {
       title: product.title,
       image: product.images[0],
@@ -92,6 +98,10 @@ const ProductDetailPage = () => {
   };
 
   const handleBuyNow = () => {
+    if (!isAuthenticated) {
+      openSignInModal();
+      return;
+    }
     // Add to cart first, then navigate to checkout
     addToCart(product.id, {
       title: product.title,
