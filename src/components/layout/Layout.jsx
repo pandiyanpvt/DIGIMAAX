@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import Navbar from './Navbar';
+import Footer from './Footer';
 
 const Layout = ({ children }) => {
   return (
@@ -33,6 +34,7 @@ const Layout = ({ children }) => {
       <Box sx={{ position: 'relative', zIndex: 1 }}>
         <Navbar />
         {children}
+        <Footer />
       </Box>
     </Box>
   );
