@@ -7,16 +7,15 @@ import theme from './theme/theme';
 import Layout from './components/layout/Layout';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
-import SignInModal from './components/SignInModal';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ServicesPage from './pages/ServicesPage';
 import GalleryPage from './pages/GalleryPage';
-import ProductsPage from './pages/ProductsPage';
 import ShopPage from './pages/ShopPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ProductBuyPage from './pages/ProductBuyPage';
 import ContactPage from './pages/ContactPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -31,15 +30,14 @@ function App() {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/gallery" element={<GalleryPage />} />
-                <Route path="/products" element={<ProductsPage />} />
                 <Route path="/shop" element={<ShopPage />} />
                 <Route path="/product/:id" element={<ProductDetailPage />} />
                 <Route path="/checkout" element={<ProductBuyPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
               </Routes>
             </Layout>
           </Router>
-          <SignInModal />
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>
