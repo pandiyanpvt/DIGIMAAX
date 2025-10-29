@@ -20,13 +20,12 @@ import {
   Email,
   Phone,
   LocationOn,
+  Send,
+  AccessTime,
   Facebook,
   Twitter,
   Instagram,
   LinkedIn,
-  Send,
-  Business,
-  AccessTime,
 } from '@mui/icons-material';
 
 const ContactSection = () => {
@@ -185,6 +184,7 @@ const ContactSection = () => {
                 WebkitTextFillColor: 'transparent',
                 mb: 2,
                 fontFamily: 'sans-serif',
+                pt: 8,
               }}
             >
               Get In Touch
@@ -203,25 +203,30 @@ const ContactSection = () => {
           </Box>
         </motion.div>
 
-        <Grid container spacing={4}>
+        <Grid container spacing={4} sx={{ alignItems: 'stretch' }}>
           {/* Contact Form */}
-          <Grid size={{ xs: 12, md: 8 }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
+              style={{ width: '100%', display: 'flex' }}
             >
-              <Card
-                sx={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
+                <Card
+                  sx={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: '100%',
+                  }}
+                >
+                <CardContent sx={{ p: 4, flexGrow: 1 }}>
                   <Typography
                     variant="h5"
                     sx={{
@@ -363,6 +368,9 @@ const ContactSection = () => {
                           SelectProps={{
                             native: true,
                           }}
+                          InputLabelProps={{
+                            shrink: true,
+                          }}
                           variant="outlined"
                           sx={{
                             '& .MuiOutlinedInput-root': {
@@ -385,6 +393,10 @@ const ContactSection = () => {
                               color: '#2196F3',
                             },
                             '& .MuiOutlinedInput-input': {
+                              color: 'white',
+                            },
+                            '& option': {
+                              backgroundColor: '#1a0b2e',
                               color: 'white',
                             },
                           }}
@@ -515,57 +527,80 @@ const ContactSection = () => {
           </Grid>
 
           {/* Contact Information */}
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
+              style={{ width: '100%', display: 'flex' }}
             >
-              <Box sx={{ mb: 4 }}>
-                <Typography
-                  variant="h5"
+              <Card
                   sx={{
-                    fontWeight: 'bold',
-                    mb: 3,
-                    color: 'white',
-                    fontFamily: 'sans-serif',
-                  }}
-                >
-                  Contact Information
-                </Typography>
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  height: '100%',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <CardContent sx={{ p: 4, flexGrow: 1 }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 'bold',
+                      mb: 3,
+                      color: 'white',
+                      fontFamily: 'sans-serif',
+                    }}
+                  >
+                    Contact Information
+                  </Typography>
                 
+                  {/* Contact Info Boxes in 2x2 Grid */}
+                  <Grid container spacing={2} sx={{ alignItems: 'stretch' }}>
                 {contactInfo.map((info, index) => (
+                      <Grid size={{ xs: 12, sm: 6 }} key={info.title} sx={{ display: 'flex' }}>
                   <motion.div
-                    key={info.title}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                          style={{ height: '100%', width: '100%' }}
                   >
                     <Card
                       sx={{
-                        mb: 2,
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                              backdropFilter: 'blur(5px)',
+                              border: '1px solid rgba(255, 255, 255, 0.15)',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                         borderRadius: 2,
+                              height: '100%',
+                              minHeight: '160px',
+                              display: 'flex',
+                              flexDirection: 'column',
                         '&:hover': {
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                           transform: 'translateY(-2px)',
                         },
                         transition: 'all 0.3s ease',
                       }}
                     >
-                      <CardContent sx={{ p: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+                            <CardContent sx={{ p: 2.5, flexGrow: 1 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
                           {info.icon}
                           <Typography
-                            variant="h6"
+                                  variant="subtitle1"
                             sx={{
-                              ml: 2,
+                                    ml: 1.5,
                               fontWeight: 'bold',
                               color: 'white',
                               fontFamily: 'sans-serif',
+                                    fontSize: '0.95rem',
                             }}
                           >
                             {info.title}
@@ -578,7 +613,8 @@ const ContactSection = () => {
                             sx={{
                               color: 'rgba(255, 255, 255, 0.8)',
                               mb: 0.5,
-                              ml: 5,
+                                    fontSize: '0.85rem',
+                                    lineHeight: 1.4,
                             }}
                           >
                             {detail}
@@ -587,89 +623,100 @@ const ContactSection = () => {
                       </CardContent>
                     </Card>
                   </motion.div>
-                ))}
-              </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
 
-              {/* Social Media Links */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1 }}
-              >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 'bold',
-                    mb: 2,
-                    color: 'white',
-                    fontFamily: 'sans-serif',
-                  }}
-                >
-                  Follow Us
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <IconButton
-                    sx={{
-                      color: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      '&:hover': {
-                        backgroundColor: '#0088cc',
-                        transform: 'translateY(-2px)',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    <Facebook />
-                  </IconButton>
-                  <IconButton
-                    sx={{
-                      color: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      '&:hover': {
-                        backgroundColor: '#1da1f2',
-                        transform: 'translateY(-2px)',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    <Twitter />
-                  </IconButton>
-                  <IconButton
-                    sx={{
-                      color: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      '&:hover': {
-                        backgroundColor: '#E4405F',
-                        transform: 'translateY(-2px)',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    <Instagram />
-                  </IconButton>
-                  <IconButton
-                    sx={{
-                      color: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      '&:hover': {
-                        backgroundColor: '#0077b5',
-                        transform: 'translateY(-2px)',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    <LinkedIn />
-                  </IconButton>
-                </Box>
-              </motion.div>
+                  {/* Social Media Links & Additional Info */}
+                  <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(255, 255, 255, 0.15)' }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 'bold',
+                        mb: 2,
+                        color: 'white',
+                        fontFamily: 'sans-serif',
+                        textAlign: 'center',
+                      }}
+                    >
+                      Connect With Us
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <IconButton
+                        sx={{
+                          color: 'white',
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          '&:hover': {
+                            backgroundColor: '#1877F2',
+                            transform: 'translateY(-2px)',
+                          },
+                          transition: 'all 0.3s ease',
+                        }}
+                      >
+                        <Facebook />
+                      </IconButton>
+                      <IconButton
+                        sx={{
+                          color: 'white',
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          '&:hover': {
+                            backgroundColor: '#1DA1F2',
+                            transform: 'translateY(-2px)',
+                          },
+                          transition: 'all 0.3s ease',
+                        }}
+                      >
+                        <Twitter />
+                      </IconButton>
+                      <IconButton
+                        sx={{
+                          color: 'white',
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          '&:hover': {
+                            backgroundColor: '#E4405F',
+                            transform: 'translateY(-2px)',
+                          },
+                          transition: 'all 0.3s ease',
+                        }}
+                      >
+                        <Instagram />
+                      </IconButton>
+                      <IconButton
+                        sx={{
+                          color: 'white',
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          '&:hover': {
+                            backgroundColor: '#0A66C2',
+                            transform: 'translateY(-2px)',
+                          },
+                          transition: 'all 0.3s ease',
+                        }}
+                      >
+                        <LinkedIn />
+                      </IconButton>
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textAlign: 'center',
+                        mt: 2,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Follow us on social media for updates and news
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
             </motion.div>
           </Grid>
         </Grid>
