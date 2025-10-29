@@ -89,7 +89,6 @@ const Footer = () => {
             alignItems: 'flex-start',
           }}
         >
-          {/* Company Info */}
           <Grid item xs={12} sm={6} md={2.5}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -103,7 +102,7 @@ const Footer = () => {
                   src={logoImage}
                   alt="DIGIMAAX Logo"
                   sx={{
-                    height: 40,
+                    height: 100,
                     mb: 1,
                   }}
                 />
