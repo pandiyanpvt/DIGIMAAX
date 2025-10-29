@@ -2,6 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import SignInModal from '../SignInModal';
 
 const Layout = ({ children }) => {
   return (
@@ -35,6 +36,7 @@ const Layout = ({ children }) => {
         <Navbar />
         {children}
         <Footer />
+        <SignInModal />
       </Box>
     </Box>
   );
