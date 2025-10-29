@@ -13,18 +13,26 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider,
 } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Menu as MenuIcon, AccountCircle, Logout, Person } from '@mui/icons-material';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import logoImage from '../../assets/hero/DIGIMAAX_LOGO-01 1.png';
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+  const navigate = useNavigate();
+  const { openSignInModal, user, signOut, isAuthenticated } = useAuth();
 
   useEffect(() => {
     // Use a consistent navbar style across all pages (no scroll-based changes)
@@ -33,6 +41,23 @@ const Navbar = () => {
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleProfileMenuOpen = (event) => {
+    setProfileMenuAnchor(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setProfileMenuAnchor(null);
+  };
+
+  const handleSignOut = () => {
+    signOut();
+    handleProfileMenuClose();
+  };
+
+  const getInitials = (firstName, lastName) => {
+    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
   const navItems = [
@@ -74,6 +99,72 @@ const Navbar = () => {
           </ListItem>
         ))}
       </List>
+      
+      {/* Sign In Button or User Profile for Mobile */}
+      <Box sx={{ px: 3, pb: 2 }}>
+        {isAuthenticated && user ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+            <Avatar
+              sx={{
+                width: 60,
+                height: 60,
+                bgcolor: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '1.5rem',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 4px 14px rgba(33, 150, 243, 0.4)',
+              }}
+            >
+              {getInitials(user.firstName, user.lastName)}
+            </Avatar>
+            <Typography variant="h6" sx={{ color: 'white', textAlign: 'center' }}>
+              {user.firstName} {user.lastName}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center' }}>
+              {user.email}
+            </Typography>
+            <Button
+              onClick={handleSignOut}
+              variant="outlined"
+              fullWidth
+              startIcon={<Logout />}
+              sx={{
+                color: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                '&:hover': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                },
+              }}
+            >
+              Sign Out
+            </Button>
+          </Box>
+        ) : (
+          <Button
+            onClick={openSignInModal}
+            variant="contained"
+            color="primary"
+            size="large"
+            fullWidth
+            sx={{
+              textTransform: 'none',
+              fontSize: '1rem',
+              fontWeight: 600,
+              py: 1.5,
+              borderRadius: 2,
+              boxShadow: 2,
+              '&:hover': {
+                boxShadow: 4,
+              },
+            }}
+          >
+            Sign In
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 
@@ -113,7 +204,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               {navItems.map((item) => (
                 <motion.div
                   key={item.name}
@@ -152,6 +243,72 @@ const Navbar = () => {
                   </Button>
                 </motion.div>
               ))}
+              
+              {/* Sign In Button or User Profile */}
+              {isAuthenticated && user ? (
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" sx={{ color: 'white', mr: 1 }}>
+                      {user.firstName} {user.lastName}
+                    </Typography>
+                    <IconButton
+                      onClick={handleProfileMenuOpen}
+                      sx={{
+                        padding: 0,
+                      }}
+                    >
+                      <Avatar
+                        sx={{
+                          width: 45,
+                          height: 45,
+                          bgcolor: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                          background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: '1.1rem',
+                          border: '2px solid rgba(255, 255, 255, 0.3)',
+                          boxShadow: '0 4px 14px rgba(33, 150, 243, 0.4)',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
+                          },
+                        }}
+                      >
+                        {getInitials(user.firstName, user.lastName)}
+                      </Avatar>
+                    </IconButton>
+                  </Box>
+                </motion.div>
+              ) : (
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    onClick={openSignInModal}
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      px: 4,
+                      py: 1,
+                      borderRadius: 2,
+                      boxShadow: 2,
+                      '&:hover': {
+                        boxShadow: 4,
+                      },
+                    }}
+                  >
+                    Sign In
+                  </Button>
+                </motion.div>
+              )}
             </Box>
           )}
 
@@ -191,6 +348,85 @@ const Navbar = () => {
           {drawer}
         </Drawer>
       </AppBar>
+
+      {/* Profile Menu Dropdown */}
+      <Menu
+        anchorEl={profileMenuAnchor}
+        open={Boolean(profileMenuAnchor)}
+        onClose={handleProfileMenuClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          sx: {
+            mt: 1.5,
+            minWidth: 200,
+            borderRadius: 2,
+            background: 'rgba(26, 26, 46, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+          },
+        }}
+      >
+        <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar
+              sx={{
+                width: 40,
+                height: 40,
+                bgcolor: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+              }}
+            >
+              {user && getInitials(user.firstName, user.lastName)}
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle2" sx={{ color: 'white', fontWeight: 600 }}>
+                {user?.firstName} {user?.lastName}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                {user?.email}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        <MenuItem
+          onClick={() => {
+            navigate('/profile');
+            handleProfileMenuClose();
+          }}
+          sx={{
+            color: 'white',
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(33, 150, 243, 0.1)',
+            },
+          }}
+        >
+          <Person sx={{ mr: 2, fontSize: 20 }} />
+          My Profile
+        </MenuItem>
+
+        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
+        <MenuItem
+          onClick={handleSignOut}
+          sx={{
+            color: '#FF6B6B',
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(255, 107, 107, 0.1)',
+            },
+          }}
+        >
+          <Logout sx={{ mr: 2, fontSize: 20 }} />
+          Sign Out
+        </MenuItem>
+      </Menu>
     </motion.div>
   );
 };
