@@ -406,7 +406,11 @@ const ShopPage = () => {
   };
 
   return (
-    <Box sx={{ backgroundColor: '#fafafa', minHeight: '100vh' }}>
+    <Box sx={{ 
+      background: 'linear-gradient(180deg, #29085D 0%, #1a0540 100%)',
+      minHeight: '100vh',
+      position: 'relative',
+    }}>
       {/* Snackbar Notifications */}
       <Snackbar
         open={snackbar.open}
@@ -428,59 +432,79 @@ const ShopPage = () => {
       <Box
         sx={{
           position: 'relative',
-          height: { xs: '300px', md: '400px' },
+          height: { xs: '350px', md: '450px' },
           backgroundImage: `url(${shopHero})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          mb: 4,
+          mb: 6,
           mt: { xs: 7, md: 8 },
+          overflow: 'hidden',
         }}
       >
-        {/* Overlay */}
+        {/* Overlay with gradient */}
         <Box
           sx={{
             position: 'absolute',
             inset: 0,
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            background: 'linear-gradient(135deg, rgba(41, 8, 93, 0.85) 0%, rgba(33, 150, 243, 0.6) 100%)',
+            backdropFilter: 'blur(2px)',
           }}
         />
         
         {/* Content */}
-        <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+        <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center', px: 2 }}>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
           >
             <Typography
               sx={{
                 fontSize: { xs: '5rem', md: '10rem', lg: '12rem' },
                 fontWeight: 300,
-                color: 'rgba(0, 0, 0, 0.08)',
-                letterSpacing: '0.05em',
+                color: 'rgba(255, 255, 255, 0.1)',
+                letterSpacing: '0.1em',
                 lineHeight: 1,
-                mb: 1,
+                mb: 2,
+                textShadow: '0 0 40px rgba(255, 215, 0, 0.3)',
               }}
             >
               shop
             </Typography>
-            <Typography
-              variant="h5"
-              sx={{
-                color: '#333',
-                fontWeight: 500,
-                fontSize: { xs: '1.25rem', md: '1.5rem' },
-              }}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
             >
-              Give All You Need
-            </Typography>
+              <Typography
+                variant="h4"
+                sx={{
+                  color: '#FFD700',
+                  fontWeight: 700,
+                  fontSize: { xs: '1.5rem', md: '2.5rem' },
+                  textShadow: '0 4px 20px rgba(255, 215, 0, 0.4)',
+                  mb: 1,
+                }}
+              >
+                Give All You Need
+              </Typography>
+              <Box
+                sx={{
+                  width: '120px',
+                  height: '4px',
+                  background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                  borderRadius: '2px',
+                  mx: 'auto',
+                }}
+              />
+            </motion.div>
           </motion.div>
         </Box>
 
-        {/* Search Bar (Top Right) */}
+        {/* Search Bar (Top Right) - Glass effect */}
         <Box
           sx={{
             position: 'absolute',
@@ -497,7 +521,7 @@ const ShopPage = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ fontSize: 18, color: '#666' }} />
+                  <SearchIcon sx={{ fontSize: 18, color: '#FFD700' }} />
                 </InputAdornment>
               ),
               endAdornment: searchQuery && (
@@ -507,25 +531,31 @@ const ShopPage = () => {
                     onClick={() => setSearchQuery('')}
                     aria-label="Clear search"
                   >
-                    <ClearIcon sx={{ fontSize: 18 }} />
+                    <ClearIcon sx={{ fontSize: 18, color: 'white' }} />
                   </IconButton>
                 </InputAdornment>
               ),
             }}
             sx={{
-              backgroundColor: 'white',
-              borderRadius: 1,
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: 2,
               width: { xs: '200px', md: '300px' },
               '& .MuiOutlinedInput-root': {
+                color: 'white',
                 '& fieldset': {
-                  borderColor: '#e0e0e0',
+                  borderColor: 'rgba(255, 215, 0, 0.3)',
                 },
                 '&:hover fieldset': {
-                  borderColor: '#333',
+                  borderColor: 'rgba(255, 215, 0, 0.6)',
                 },
                 '&.Mui-focused fieldset': {
-                  borderColor: '#000',
+                  borderColor: '#FFD700',
                 },
+              },
+              '& .MuiInputBase-input::placeholder': {
+                color: 'rgba(255, 255, 255, 0.7)',
+                opacity: 1,
               },
             }}
           />
@@ -533,82 +563,171 @@ const ShopPage = () => {
       </Box>
 
       {/* Main Content */}
-      <Container maxWidth="xl">
-        {/* Filter Bar */}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 3,
-            flexWrap: 'wrap',
-            gap: 2,
-          }}
+      <Container maxWidth="xl" sx={{ pb: 8 }}>
+        {/* Filter Bar - Glass Effect */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body1" sx={{ color: '#666' }}>
-              {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'product' : 'products'} found
-            </Typography>
-            {(selectedCategory !== 'All Product' || selectedBadge || searchQuery || 
-              priceRange[0] !== 0 || priceRange[1] !== maxPrice) && (
-              <Button
-                size="small"
-                startIcon={<ClearIcon />}
-                onClick={resetFilters}
-                sx={{ textTransform: 'none' }}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 4,
+              flexWrap: { xs: 'wrap', md: 'nowrap' },
+              gap: 2,
+              background: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: 3,
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              p: { xs: 2, md: 2.5 },
+            }}
+          >
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2,
+              flexWrap: 'wrap',
+              flex: { xs: '1 1 100%', md: '1 1 auto' },
+            }}>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  color: 'white', 
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                }}
               >
-                Clear Filters
-              </Button>
-            )}
-          </Box>
-          
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Sort By</InputLabel>
-            <Select
-              value={sortBy}
-              label="Sort By"
-              onChange={(e) => setSortBy(e.target.value)}
+                {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'product' : 'products'} found
+              </Typography>
+              {(selectedCategory !== 'All Product' || selectedBadge || searchQuery || 
+                priceRange[0] !== 0 || priceRange[1] !== maxPrice) && (
+                <Button
+                  size="small"
+                  startIcon={<ClearIcon />}
+                  onClick={resetFilters}
+                  sx={{ 
+                    textTransform: 'none',
+                    color: '#FF4081',
+                    borderColor: '#FF4081',
+                    whiteSpace: 'nowrap',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 64, 129, 0.1)',
+                      borderColor: '#FF4081',
+                    }
+                  }}
+                  variant="outlined"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </Box>
+            
+            <FormControl 
+              size="small" 
+              sx={{ 
+                minWidth: { xs: '100%', sm: 200 },
+                maxWidth: { xs: '100%', sm: 250 },
+              }}
             >
-              <MenuItem value="featured">Featured</MenuItem>
-              <MenuItem value="popular">Most Popular</MenuItem>
-              <MenuItem value="rating">Highest Rated</MenuItem>
-              <MenuItem value="price-low">Price: Low to High</MenuItem>
-              <MenuItem value="price-high">Price: High to Low</MenuItem>
-              <MenuItem value="name">Name: A to Z</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+              <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sort By</InputLabel>
+              <Select
+                value={sortBy}
+                label="Sort By"
+                onChange={(e) => setSortBy(e.target.value)}
+                sx={{
+                  color: 'white',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 215, 0, 0.3)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 215, 0, 0.6)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#FFD700',
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: '#FFD700',
+                  },
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      background: 'rgba(41, 8, 93, 0.95)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 215, 0, 0.3)',
+                      '& .MuiMenuItem-root': {
+                        color: 'white',
+                        '&:hover': {
+                          background: 'rgba(33, 150, 243, 0.2)',
+                        },
+                        '&.Mui-selected': {
+                          background: 'rgba(255, 215, 0, 0.2)',
+                          '&:hover': {
+                            background: 'rgba(255, 215, 0, 0.3)',
+                          },
+                        },
+                      },
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="featured">Featured</MenuItem>
+                <MenuItem value="popular">Most Popular</MenuItem>
+                <MenuItem value="rating">Highest Rated</MenuItem>
+                <MenuItem value="price-low">Price: Low to High</MenuItem>
+                <MenuItem value="price-high">Price: High to Low</MenuItem>
+                <MenuItem value="name">Name: A to Z</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </motion.div>
 
         <Grid container spacing={3}>
           {/* Left Sidebar */}
-          <Grid item xs={12} md={2.5}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                backgroundColor: 'white',
-                borderRadius: 2,
-                border: '1px solid #e0e0e0',
-                position: 'sticky',
-                top: 100,
-              }}
+          <Grid size={{ xs: 12, md: 2.5 }}>
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {/* Category Filter */}
-              <Box sx={{ mb: 3 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    mb: 2,
-                    fontWeight: 600,
-                    fontSize: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}
-                >
-                  <FilterListIcon sx={{ fontSize: 18 }} />
-                  Category
-                </Typography>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 3,
+                  border: '2px solid rgba(255, 215, 0, 0.2)',
+                  position: 'sticky',
+                  top: 100,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    border: '2px solid rgba(255, 215, 0, 0.4)',
+                    boxShadow: '0 8px 32px rgba(255, 215, 0, 0.15)',
+                  },
+                }}
+              >
+                {/* Category Filter */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      fontWeight: 700,
+                      fontSize: '1.1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      color: '#FFD700',
+                    }}
+                  >
+                    <FilterListIcon sx={{ fontSize: 20 }} />
+                    Category
+                  </Typography>
 
                 <RadioGroup
                   value={selectedCategory}
@@ -618,10 +737,20 @@ const ShopPage = () => {
                     <FormControlLabel
                       key={category}
                       value={category}
-                      control={<Radio size="small" />}
+                      control={
+                        <Radio 
+                          size="small"
+                          sx={{
+                            color: 'rgba(255, 255, 255, 0.5)',
+                            '&.Mui-checked': {
+                              color: '#2196F3',
+                            },
+                          }}
+                        />
+                      } 
                       label={
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                          <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                          <Typography variant="body2" sx={{ fontSize: '0.9rem', color: 'white' }}>
                             {category}
                           </Typography>
                           <Chip
@@ -630,8 +759,11 @@ const ShopPage = () => {
                             sx={{
                               height: 20,
                               fontSize: '0.7rem',
-                              backgroundColor: selectedCategory === category ? '#000' : '#f5f5f5',
-                              color: selectedCategory === category ? 'white' : '#666',
+                              background: selectedCategory === category 
+                                ? 'linear-gradient(45deg, #2196F3, #FF4081)' 
+                                : 'rgba(255, 255, 255, 0.1)',
+                              color: 'white',
+                              fontWeight: 600,
                             }}
                           />
                         </Box>
@@ -643,13 +775,14 @@ const ShopPage = () => {
               </Box>
 
               {/* Badge Filter */}
-              <Box sx={{ borderTop: '1px solid #e0e0e0', pt: 3, mb: 3 }}>
+              <Box sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', pt: 3, mb: 3 }}>
                 <Typography
                   variant="h6"
                   sx={{
                     mb: 2,
-                    fontWeight: 600,
-                    fontSize: '1rem',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    color: '#FFD700',
                   }}
                 >
                   Special Filters
@@ -661,9 +794,19 @@ const ShopPage = () => {
                 >
                   <FormControlLabel
                     value=""
-                    control={<Radio size="small" />}
+                    control={
+                      <Radio 
+                        size="small"
+                        sx={{
+                          color: 'rgba(255, 255, 255, 0.5)',
+                          '&.Mui-checked': {
+                            color: '#2196F3',
+                          },
+                        }}
+                      />
+                    }
                     label={
-                      <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.9rem', color: 'white' }}>
                         All Products
                       </Typography>
                     }
@@ -673,9 +816,19 @@ const ShopPage = () => {
                     <FormControlLabel
                       key={badge}
                       value={badge}
-                      control={<Radio size="small" />}
+                      control={
+                        <Radio 
+                          size="small"
+                          sx={{
+                            color: 'rgba(255, 255, 255, 0.5)',
+                            '&.Mui-checked': {
+                              color: '#2196F3',
+                            },
+                          }}
+                        />
+                      }
                       label={
-                        <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                        <Typography variant="body2" sx={{ fontSize: '0.9rem', color: 'white' }}>
                           {badge}
                         </Typography>
                       }
@@ -686,13 +839,14 @@ const ShopPage = () => {
               </Box>
 
               {/* Price Range Filter */}
-              <Box sx={{ borderTop: '1px solid #e0e0e0', pt: 3 }}>
+              <Box sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', pt: 3 }}>
                 <Typography
                   variant="h6"
                   sx={{
                     mb: 2,
-                    fontWeight: 600,
-                    fontSize: '1rem',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    color: '#FFD700',
                   }}
                 >
                   Price Range
@@ -705,81 +859,110 @@ const ShopPage = () => {
                   max={maxPrice}
                   valueLabelFormat={(value) => `$${value}`}
                   sx={{
-                    color: '#000',
+                    color: '#2196F3',
                     '& .MuiSlider-thumb': {
+                      background: 'linear-gradient(45deg, #2196F3, #FF4081)',
                       '&:hover, &.Mui-focusVisible': {
-                        boxShadow: '0 0 0 8px rgba(0, 0, 0, 0.16)',
+                        boxShadow: '0 0 0 8px rgba(33, 150, 243, 0.16)',
                       },
+                    },
+                    '& .MuiSlider-track': {
+                      background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                    },
+                    '& .MuiSlider-rail': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    },
+                    '& .MuiSlider-valueLabel': {
+                      background: 'linear-gradient(45deg, #2196F3, #FF4081)',
                     },
                   }}
                 />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                  <Typography variant="caption" sx={{ color: '#666' }}>
+                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>
                     ${priceRange[0]}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#666' }}>
+                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>
                     ${priceRange[1]}
                   </Typography>
                 </Box>
               </Box>
             </Paper>
+          </motion.div>
           </Grid>
 
           {/* Products Grid */}
-          <Grid item xs={12} md={9.5}>
+          <Grid size={{ xs: 12, md: 9.5 }}>
             {/* Empty State */}
             {paginatedProducts.length === 0 ? (
-              <Box
-                sx={{
-                  textAlign: 'center',
-                  py: 8,
-                  backgroundColor: 'white',
-                  borderRadius: 2,
-                  border: '1px solid #e0e0e0',
-                }}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
               >
-                <Typography variant="h5" sx={{ mb: 2, color: '#666' }}>
-                  No products found
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 3, color: '#999' }}>
-                  Try adjusting your filters or search query
-                </Typography>
-                <Button
-                  variant="contained"
-                  onClick={resetFilters}
+                <Box
                   sx={{
-                    backgroundColor: '#000',
-                    '&:hover': { backgroundColor: '#333' },
-                    textTransform: 'none',
+                    textAlign: 'center',
+                    py: 8,
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 3,
+                    border: '2px solid rgba(255, 215, 0, 0.2)',
                   }}
                 >
-                  Reset All Filters
-                </Button>
-              </Box>
+                  <Typography variant="h5" sx={{ mb: 2, color: 'white', fontWeight: 600 }}>
+                    No products found
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 3, color: 'rgba(255, 255, 255, 0.7)' }}>
+                    Try adjusting your filters or search query
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={resetFilters}
+                    sx={{
+                      background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                      '&:hover': { 
+                        background: 'linear-gradient(45deg, #1976D2, #C2185B)',
+                        transform: 'translateY(-2px)',
+                      },
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 2,
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    Reset All Filters
+                  </Button>
+                </Box>
+              </motion.div>
             ) : (
               <Grid container spacing={3}>
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                   {paginatedProducts.map((product, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={product.id}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={product.id}>
                       <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.4, delay: index * 0.05 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        whileHover={{ y: -10 }}
                       >
                         <Card
                           sx={{
                             height: '100%',
                             display: 'flex',
                             flexDirection: 'column',
-                            backgroundColor: 'white',
-                            borderRadius: 2,
-                            border: '1px solid #e0e0e0',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: 3,
+                            border: '2px solid rgba(255, 215, 0, 0.2)',
                             overflow: 'hidden',
-                            transition: 'all 0.3s ease',
+                            transition: 'all 0.4s ease',
                             '&:hover': {
-                              boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                              transform: 'translateY(-6px)',
+                              border: '2px solid rgba(255, 215, 0, 0.6)',
+                              boxShadow: '0 15px 50px rgba(255, 215, 0, 0.3)',
+                              transform: 'translateY(-10px)',
                             },
                           }}
                         >
@@ -790,11 +973,13 @@ const ShopPage = () => {
                                 label={product.category.replace('For ', '')}
                                 size="small"
                                 sx={{
-                                  backgroundColor: '#f5f5f5',
-                                  color: '#666',
+                                  background: 'rgba(255, 255, 255, 0.15)',
+                                  backdropFilter: 'blur(10px)',
+                                  color: 'white',
                                   fontSize: '0.7rem',
-                                  fontWeight: 500,
+                                  fontWeight: 600,
                                   height: 22,
+                                  border: '1px solid rgba(255, 255, 255, 0.2)',
                                 }}
                               />
                               {product.badge && (
@@ -802,15 +987,16 @@ const ShopPage = () => {
                                   label={product.badge}
                                   size="small"
                                   sx={{
-                                    backgroundColor: 
+                                    background: 
                                       product.badge === 'New Arrival' ? '#4caf50' :
                                       product.badge === 'Best Seller' ? '#ff9800' :
-                                      product.badge === 'On Discount' ? '#f44336' :
+                                      product.badge === 'On Discount' ? '#DC143C' :
                                       '#2196f3',
                                     color: 'white',
                                     fontSize: '0.7rem',
-                                    fontWeight: 600,
+                                    fontWeight: 700,
                                     height: 22,
+                                    boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
                                   }}
                                 />
                               )}
@@ -821,11 +1007,14 @@ const ShopPage = () => {
                                 size="small"
                                 onClick={() => toggleFavorite(product.id)}
                                 sx={{
-                                  color: favorites.has(product.id) ? '#f44336' : '#ccc',
-                                  transition: 'all 0.2s',
+                                  color: favorites.has(product.id) ? '#DC143C' : 'rgba(255, 255, 255, 0.5)',
+                                  transition: 'all 0.3s',
+                                  background: 'rgba(255, 255, 255, 0.1)',
+                                  backdropFilter: 'blur(10px)',
                                   '&:hover': {
                                     transform: 'scale(1.2)',
-                                    color: '#f44336',
+                                    color: '#DC143C',
+                                    background: 'rgba(220, 20, 60, 0.2)',
                                   },
                                 }}
                                 aria-label={favorites.has(product.id) ? "Remove from favorites" : "Add to favorites"}
@@ -872,14 +1061,16 @@ const ShopPage = () => {
                                 variant="h6"
                                 sx={{
                                   fontSize: '1rem',
-                                  fontWeight: 600,
+                                  fontWeight: 700,
                                   mb: 0.5,
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
                                   whiteSpace: 'nowrap',
                                   cursor: 'pointer',
+                                  color: 'white',
+                                  transition: 'all 0.3s',
                                   '&:hover': {
-                                    color: '#2196f3',
+                                    color: '#FFD700',
                                   },
                                 }}
                                 onClick={() => navigate(`/product/${product.id}`)}
@@ -892,7 +1083,7 @@ const ShopPage = () => {
                               variant="body2"
                               sx={{
                                 fontSize: '0.8rem',
-                                color: '#999',
+                                color: 'rgba(255, 255, 255, 0.7)',
                                 mb: 1,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -909,24 +1100,33 @@ const ShopPage = () => {
                                 precision={0.1}
                                 size="small"
                                 readOnly
-                                sx={{ fontSize: '1rem' }}
+                                sx={{ 
+                                  fontSize: '1rem',
+                                  '& .MuiRating-iconFilled': {
+                                    color: '#FFD700',
+                                  },
+                                  '& .MuiRating-iconEmpty': {
+                                    color: 'rgba(255, 255, 255, 0.3)',
+                                  },
+                                }}
                               />
                               <Typography
                                 variant="body2"
-                                sx={{ ml: 1, color: '#666', fontSize: '0.75rem' }}
+                                sx={{ ml: 1, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', fontWeight: 500 }}
                               >
                                 {product.rating} ({product.reviews})
                               </Typography>
                             </Box>
 
                             {/* Price */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                               <Typography
                                 variant="h6"
                                 sx={{
-                                  fontSize: '1.35rem',
+                                  fontSize: '1.5rem',
                                   fontWeight: 700,
-                                  color: product.oldPrice ? '#f44336' : '#000',
+                                  color: product.oldPrice ? '#DC143C' : '#FFD700',
+                                  textShadow: product.oldPrice ? '0 0 10px rgba(220, 20, 60, 0.5)' : '0 0 10px rgba(255, 215, 0, 0.5)',
                                 }}
                               >
                                 ${product.price.toFixed(2)}
@@ -937,7 +1137,7 @@ const ShopPage = () => {
                                     variant="body2"
                                     sx={{
                                       fontSize: '1rem',
-                                      color: '#999',
+                                      color: 'rgba(255, 255, 255, 0.5)',
                                       textDecoration: 'line-through',
                                     }}
                                   >
@@ -947,11 +1147,12 @@ const ShopPage = () => {
                                     label={`-${Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%`}
                                     size="small"
                                     sx={{
-                                      backgroundColor: '#ffebee',
-                                      color: '#f44336',
-                                      fontWeight: 600,
+                                      background: '#DC143C',
+                                      color: 'white',
+                                      fontWeight: 700,
                                       fontSize: '0.7rem',
                                       height: 20,
+                                      boxShadow: '0 4px 15px rgba(220, 20, 60, 0.4)',
                                     }}
                                   />
                                 </>
@@ -968,17 +1169,19 @@ const ShopPage = () => {
                                 startIcon={<ShoppingCartIcon />}
                                 onClick={() => handleAddToCart(product)}
                                 sx={{
-                                  borderColor: '#e0e0e0',
-                                  color: '#333',
+                                  borderColor: 'rgba(255, 215, 0, 0.5)',
+                                  color: '#FFD700',
                                   textTransform: 'none',
-                                  fontWeight: 600,
+                                  fontWeight: 700,
                                   fontSize: '0.85rem',
+                                  background: 'rgba(255, 215, 0, 0.05)',
+                                  backdropFilter: 'blur(10px)',
                                   '&:hover': {
-                                    borderColor: '#000',
-                                    backgroundColor: '#f5f5f5',
+                                    borderColor: '#FFD700',
+                                    background: 'rgba(255, 215, 0, 0.15)',
                                     transform: 'translateY(-2px)',
                                   },
-                                  transition: 'all 0.2s',
+                                  transition: 'all 0.3s',
                                 }}
                               >
                                 Add
@@ -990,16 +1193,18 @@ const ShopPage = () => {
                                 variant="contained"
                                 onClick={() => handleBuyNow(product)}
                                 sx={{
-                                  backgroundColor: '#000',
+                                  background: 'linear-gradient(45deg, #2196F3, #FF4081)',
                                   color: 'white',
                                   textTransform: 'none',
-                                  fontWeight: 600,
+                                  fontWeight: 700,
                                   fontSize: '0.85rem',
+                                  boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
                                   '&:hover': {
-                                    backgroundColor: '#333',
+                                    background: 'linear-gradient(45deg, #1976D2, #C2185B)',
                                     transform: 'translateY(-2px)',
+                                    boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
                                   },
-                                  transition: 'all 0.2s',
+                                  transition: 'all 0.3s',
                                 }}
                               >
                                 Buy Now
@@ -1017,148 +1222,187 @@ const ShopPage = () => {
             {/* Pagination */}
             {totalPages > 1 && (
               <Fade in={true}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    mt: 6,
-                    mb: 4,
-                    flexWrap: 'wrap',
-                    gap: 2,
-                  }}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
                 >
-                  <Button
-                    startIcon={<KeyboardArrowLeftIcon />}
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(currentPage - 1)}
+                  <Box
                     sx={{
-                      textTransform: 'none',
-                      color: currentPage === 1 ? '#ccc' : '#666',
-                      fontWeight: 500,
-                      '&:hover': {
-                        backgroundColor: currentPage === 1 ? 'transparent' : '#f5f5f5',
-                      },
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      mt: 6,
+                      mb: 4,
+                      flexWrap: 'wrap',
+                      gap: 2,
+                      p: 2,
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: 3,
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
                     }}
-                    aria-label="Previous page"
                   >
-                    Previous
-                  </Button>
+                    <Button
+                      startIcon={<KeyboardArrowLeftIcon />}
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      sx={{
+                        textTransform: 'none',
+                        color: currentPage === 1 ? 'rgba(255, 255, 255, 0.3)' : 'white',
+                        fontWeight: 600,
+                        '&:hover': {
+                          background: currentPage === 1 ? 'transparent' : 'rgba(33, 150, 243, 0.2)',
+                        },
+                      }}
+                      aria-label="Previous page"
+                    >
+                      Previous
+                    </Button>
 
-                  <Pagination
-                    count={totalPages}
-                    page={currentPage}
-                    onChange={(e, page) => setCurrentPage(page)}
-                    color="primary"
-                    size="large"
-                    sx={{
-                      '& .MuiPaginationItem-root': {
-                        fontWeight: 500,
-                        '&.Mui-selected': {
-                          backgroundColor: '#000',
+                    <Pagination
+                      count={totalPages}
+                      page={currentPage}
+                      onChange={(e, page) => setCurrentPage(page)}
+                      color="primary"
+                      size="large"
+                      sx={{
+                        '& .MuiPaginationItem-root': {
                           color: 'white',
+                          fontWeight: 600,
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          '&.Mui-selected': {
+                            background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                            color: 'white',
+                            border: '1px solid rgba(255, 215, 0, 0.5)',
+                            '&:hover': {
+                              background: 'linear-gradient(45deg, #1976D2, #C2185B)',
+                            },
+                          },
                           '&:hover': {
-                            backgroundColor: '#333',
+                            background: 'rgba(255, 255, 255, 0.1)',
                           },
                         },
-                        '&:hover': {
-                          backgroundColor: '#f5f5f5',
-                        },
-                      },
-                    }}
-                  />
+                      }}
+                    />
 
-                  <Button
-                    endIcon={<KeyboardArrowRightIcon />}
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    sx={{
-                      textTransform: 'none',
-                      color: currentPage === totalPages ? '#ccc' : '#666',
-                      fontWeight: 500,
-                      '&:hover': {
-                        backgroundColor: currentPage === totalPages ? 'transparent' : '#f5f5f5',
-                      },
-                    }}
-                    aria-label="Next page"
-                  >
-                    Next
-                  </Button>
-                </Box>
+                    <Button
+                      endIcon={<KeyboardArrowRightIcon />}
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      sx={{
+                        textTransform: 'none',
+                        color: currentPage === totalPages ? 'rgba(255, 255, 255, 0.3)' : 'white',
+                        fontWeight: 600,
+                        '&:hover': {
+                          background: currentPage === totalPages ? 'transparent' : 'rgba(33, 150, 243, 0.2)',
+                        },
+                      }}
+                      aria-label="Next page"
+                    >
+                      Next
+                    </Button>
+                  </Box>
+                </motion.div>
               </Fade>
             )}
 
             {/* Explore Recommendations */}
-            <Box sx={{ mt: 8, mb: 6 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" sx={{ fontWeight: 600, fontSize: '1.5rem' }}>
-                  ⭐ Explore our recommendations
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Tooltip title="Previous">
-                    <IconButton
-                      size="small"
-                      onClick={prevRecommendation}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <Box sx={{ mt: 8, mb: 6 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                  <Box>
+                    <Typography variant="h4" sx={{ fontWeight: 700, fontSize: '2rem', color: 'white', mb: 1 }}>
+                      ⭐ Explore our recommendations
+                    </Typography>
+                    <Box
                       sx={{
-                        border: '1px solid #e0e0e0',
-                        borderRadius: 1,
-                        '&:hover': {
-                          backgroundColor: '#000',
-                          color: 'white',
-                          borderColor: '#000',
-                        },
-                        transition: 'all 0.2s',
+                        width: '100px',
+                        height: '4px',
+                        background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                        borderRadius: '2px',
                       }}
-                      aria-label="Previous recommendation"
-                    >
-                      <KeyboardArrowLeftIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Next">
-                    <IconButton
-                      size="small"
-                      onClick={nextRecommendation}
-                      sx={{
-                        border: '1px solid #e0e0e0',
-                        borderRadius: 1,
-                        '&:hover': {
-                          backgroundColor: '#000',
+                    />
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Tooltip title="Previous">
+                      <IconButton
+                        size="small"
+                        onClick={prevRecommendation}
+                        sx={{
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'blur(10px)',
+                          border: '2px solid rgba(255, 215, 0, 0.3)',
+                          borderRadius: 2,
                           color: 'white',
-                          borderColor: '#000',
-                        },
-                        transition: 'all 0.2s',
-                      }}
-                      aria-label="Next recommendation"
-                    >
-                      <KeyboardArrowRightIcon />
-                    </IconButton>
-                  </Tooltip>
+                          '&:hover': {
+                            background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                            borderColor: '#FFD700',
+                            transform: 'scale(1.1)',
+                          },
+                          transition: 'all 0.3s',
+                        }}
+                        aria-label="Previous recommendation"
+                      >
+                        <KeyboardArrowLeftIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Next">
+                      <IconButton
+                        size="small"
+                        onClick={nextRecommendation}
+                        sx={{
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'blur(10px)',
+                          border: '2px solid rgba(255, 215, 0, 0.3)',
+                          borderRadius: 2,
+                          color: 'white',
+                          '&:hover': {
+                            background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                            borderColor: '#FFD700',
+                            transform: 'scale(1.1)',
+                          },
+                          transition: 'all 0.3s',
+                        }}
+                        aria-label="Next recommendation"
+                      >
+                        <KeyboardArrowRightIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </Box>
-              </Box>
 
               <Grid container spacing={3}>
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                   {recommendations.map((product, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={product.id}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={product.id}>
                       <motion.div
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.5, delay: index * 0.15 }}
+                        whileHover={{ y: -10 }}
                       >
                         <Card
                           sx={{
                             height: '100%',
                             display: 'flex',
                             flexDirection: 'column',
-                            backgroundColor: 'white',
-                            borderRadius: 2,
-                            border: '1px solid #e0e0e0',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: 3,
+                            border: '2px solid rgba(33, 150, 243, 0.3)',
                             overflow: 'hidden',
-                            transition: 'all 0.3s ease',
+                            transition: 'all 0.4s ease',
                             '&:hover': {
-                              boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                              transform: 'translateY(-6px)',
+                              border: '2px solid rgba(33, 150, 243, 0.8)',
+                              boxShadow: '0 15px 50px rgba(33, 150, 243, 0.4)',
+                              transform: 'translateY(-10px)',
                             },
                           }}
                         >
@@ -1168,11 +1412,13 @@ const ShopPage = () => {
                                 label={product.category.replace('For ', '')}
                                 size="small"
                                 sx={{
-                                  backgroundColor: '#f5f5f5',
-                                  color: '#666',
+                                  background: 'rgba(255, 255, 255, 0.15)',
+                                  backdropFilter: 'blur(10px)',
+                                  color: 'white',
                                   fontSize: '0.7rem',
-                                  fontWeight: 500,
+                                  fontWeight: 600,
                                   height: 22,
+                                  border: '1px solid rgba(255, 255, 255, 0.2)',
                                 }}
                               />
                               {product.badge && (
@@ -1180,11 +1426,12 @@ const ShopPage = () => {
                                   label={product.badge}
                                   size="small"
                                   sx={{
-                                    backgroundColor: '#2196f3',
+                                    background: 'linear-gradient(45deg, #2196F3, #FF4081)',
                                     color: 'white',
                                     fontSize: '0.7rem',
-                                    fontWeight: 600,
+                                    fontWeight: 700,
                                     height: 22,
+                                    boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
                                   }}
                                 />
                               )}
@@ -1225,19 +1472,33 @@ const ShopPage = () => {
                               variant="h6"
                               sx={{
                                 fontSize: '1rem',
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 mb: 1,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
+                                color: 'white',
                               }}
                             >
                               {product.name}
                             </Typography>
 
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                              <Rating value={product.rating} precision={0.1} size="small" readOnly />
-                              <Typography variant="body2" sx={{ ml: 1, color: '#666', fontSize: '0.75rem' }}>
+                              <Rating 
+                                value={product.rating} 
+                                precision={0.1} 
+                                size="small" 
+                                readOnly 
+                                sx={{ 
+                                  '& .MuiRating-iconFilled': {
+                                    color: '#FFD700',
+                                  },
+                                  '& .MuiRating-iconEmpty': {
+                                    color: 'rgba(255, 255, 255, 0.3)',
+                                  },
+                                }}
+                              />
+                              <Typography variant="body2" sx={{ ml: 1, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem', fontWeight: 500 }}>
                                 {product.rating} ({product.reviews})
                               </Typography>
                             </Box>
@@ -1245,9 +1506,10 @@ const ShopPage = () => {
                             <Typography
                               variant="h6"
                               sx={{
-                                fontSize: '1.35rem',
+                                fontSize: '1.5rem',
                                 fontWeight: 700,
-                                color: '#000',
+                                color: '#FFD700',
+                                textShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
                               }}
                             >
                               ${product.price.toFixed(2)}
@@ -1261,15 +1523,19 @@ const ShopPage = () => {
                               startIcon={<ShoppingCartIcon />}
                               onClick={() => handleAddToCart(product)}
                               sx={{
-                                borderColor: '#e0e0e0',
-                                color: '#333',
+                                borderColor: 'rgba(33, 150, 243, 0.5)',
+                                color: '#2196F3',
                                 textTransform: 'none',
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 fontSize: '0.85rem',
+                                background: 'rgba(33, 150, 243, 0.05)',
+                                backdropFilter: 'blur(10px)',
                                 '&:hover': {
-                                  borderColor: '#000',
-                                  backgroundColor: '#f5f5f5',
+                                  borderColor: '#2196F3',
+                                  background: 'rgba(33, 150, 243, 0.15)',
+                                  transform: 'translateY(-2px)',
                                 },
+                                transition: 'all 0.3s',
                               }}
                             >
                               Add
@@ -1279,14 +1545,18 @@ const ShopPage = () => {
                               variant="contained"
                               onClick={() => handleBuyNow(product)}
                               sx={{
-                                backgroundColor: '#000',
+                                background: 'linear-gradient(45deg, #2196F3, #FF4081)',
                                 color: 'white',
                                 textTransform: 'none',
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 fontSize: '0.85rem',
+                                boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
                                 '&:hover': {
-                                  backgroundColor: '#333',
+                                  background: 'linear-gradient(45deg, #1976D2, #C2185B)',
+                                  transform: 'translateY(-2px)',
+                                  boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
                                 },
+                                transition: 'all 0.3s',
                               }}
                             >
                               Buy Now
@@ -1299,10 +1569,11 @@ const ShopPage = () => {
                 </AnimatePresence>
               </Grid>
             </Box>
+            </motion.div>
 
             {/* Newsletter Section */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
@@ -1311,8 +1582,9 @@ const ShopPage = () => {
                 component="form"
                 onSubmit={handleNewsletterSubmit}
                 sx={{
-                  backgroundColor: '#2c2c2c',
-                  borderRadius: 3,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(15px)',
+                  borderRadius: 4,
                   p: { xs: 3, md: 5 },
                   display: 'flex',
                   alignItems: 'center',
@@ -1320,31 +1592,58 @@ const ShopPage = () => {
                   flexDirection: { xs: 'column', md: 'row' },
                   gap: 3,
                   mb: 6,
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                  border: '2px solid rgba(255, 215, 0, 0.2)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.4s ease',
+                  '&:hover': {
+                    border: '2px solid rgba(255, 215, 0, 0.4)',
+                    boxShadow: '0 15px 50px rgba(33, 150, 243, 0.3)',
+                  },
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(255, 64, 129, 0.1) 100%)',
+                    zIndex: -1,
+                  },
                 }}
               >
                 <Box>
                   <Typography
-                    variant="h4"
+                    variant="h3"
                     sx={{
-                      color: 'white',
-                      fontWeight: 600,
+                      color: '#FFD700',
+                      fontWeight: 700,
                       mb: 0.5,
-                      fontSize: { xs: '1.5rem', md: '2rem' },
+                      fontSize: { xs: '1.5rem', md: '2.5rem' },
+                      textShadow: '0 4px 20px rgba(255, 215, 0, 0.4)',
                     }}
                   >
                     Ready to Get
                   </Typography>
                   <Typography
-                    variant="h4"
+                    variant="h3"
                     sx={{
                       color: 'white',
-                      fontWeight: 600,
-                      fontSize: { xs: '1.5rem', md: '2rem' },
+                      fontWeight: 700,
+                      fontSize: { xs: '1.5rem', md: '2.5rem' },
                     }}
                   >
                     Our New Stuff?
                   </Typography>
+                  <Box
+                    sx={{
+                      width: '80px',
+                      height: '4px',
+                      background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                      borderRadius: '2px',
+                      mt: 1,
+                    }}
+                  />
                 </Box>
 
                 <Box
@@ -1355,7 +1654,7 @@ const ShopPage = () => {
                     width: { xs: '100%', md: 'auto' },
                   }}
                 >
-                  <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
                     <TextField
                       type="email"
                       placeholder="Enter your email"
@@ -1367,19 +1666,25 @@ const ShopPage = () => {
                       }}
                       error={!!emailError}
                       sx={{
-                        backgroundColor: 'white',
-                        borderRadius: 1,
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: 2,
                         width: { xs: '100%', sm: '280px' },
                         '& .MuiOutlinedInput-root': {
+                          color: 'white',
                           '& fieldset': {
-                            border: emailError ? '2px solid #f44336' : 'none',
+                            borderColor: emailError ? '#DC143C' : 'rgba(255, 215, 0, 0.3)',
                           },
                           '&:hover fieldset': {
-                            border: emailError ? '2px solid #f44336' : '1px solid #ddd',
+                            borderColor: emailError ? '#DC143C' : 'rgba(255, 215, 0, 0.6)',
                           },
                           '&.Mui-focused fieldset': {
-                            border: '2px solid #2196f3',
+                            borderColor: emailError ? '#DC143C' : '#FFD700',
                           },
+                        },
+                        '& .MuiInputBase-input::placeholder': {
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          opacity: 1,
                         },
                       }}
                       inputProps={{
@@ -1390,16 +1695,19 @@ const ShopPage = () => {
                       type="submit"
                       variant="contained"
                       sx={{
-                        backgroundColor: 'white',
-                        color: '#000',
+                        background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                        color: 'white',
                         textTransform: 'none',
-                        fontWeight: 600,
+                        fontWeight: 700,
                         px: 4,
+                        borderRadius: 2,
+                        boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
                         '&:hover': {
-                          backgroundColor: '#f5f5f5',
+                          background: 'linear-gradient(45deg, #1976D2, #C2185B)',
                           transform: 'scale(1.05)',
+                          boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
                         },
-                        transition: 'all 0.2s',
+                        transition: 'all 0.3s',
                       }}
                     >
                       Subscribe
@@ -1409,9 +1717,10 @@ const ShopPage = () => {
                     <Typography
                       variant="caption"
                       sx={{
-                        color: '#ff6b6b',
+                        color: '#DC143C',
                         fontSize: '0.75rem',
                         ml: 1,
+                        fontWeight: 600,
                       }}
                     >
                       {emailError}
@@ -1420,10 +1729,10 @@ const ShopPage = () => {
                 </Box>
 
                 <Box sx={{ textAlign: { xs: 'center', md: 'right' }, maxWidth: 400 }}>
-                  <Typography variant="body2" sx={{ color: 'white', fontSize: '0.9rem', mb: 0.5, fontWeight: 500 }}>
+                  <Typography variant="body1" sx={{ color: '#FFD700', fontSize: '1rem', mb: 1, fontWeight: 700 }}>
                     📧 Stay Updated with DIGIMAAX
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem' }}>
                     Get exclusive deals, new arrivals, and special offers delivered to your inbox!
                   </Typography>
                 </Box>
