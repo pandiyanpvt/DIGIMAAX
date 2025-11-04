@@ -18,9 +18,10 @@ export const CartProvider = ({ children }) => {
     setCartItems(prev => {
       const newMap = new Map(prev);
       const currentQuantity = newMap.get(itemId)?.quantity || 0;
+      const requestedQuantity = itemDetails.quantity || 1;
       newMap.set(itemId, {
         ...itemDetails,
-        quantity: currentQuantity + 1,
+        quantity: currentQuantity + requestedQuantity,
         id: itemId,
       });
       return newMap;

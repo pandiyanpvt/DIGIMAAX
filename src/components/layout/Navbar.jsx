@@ -17,12 +17,14 @@ import {
   Menu,
   MenuItem,
   Divider,
+  Badge,
 } from '@mui/material';
-import { Menu as MenuIcon, AccountCircle, Logout, Person } from '@mui/icons-material';
+import { Menu as MenuIcon, AccountCircle, Logout, Person, ShoppingCart } from '@mui/icons-material';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import logoImage from '../../assets/hero/DIGIMAAX_LOGO-01 1.png';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -33,6 +35,8 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { openSignInModal, user, signOut, isAuthenticated } = useAuth();
+  const { getCartTotalItems } = useCart();
+  const cartItemCount = getCartTotalItems();
 
   useEffect(() => {
     // Use a consistent navbar style across all pages (no scroll-based changes)
@@ -100,6 +104,49 @@ const Navbar = () => {
         ))}
       </List>
       
+      {/* Cart Icon for Mobile - Only visible when authenticated */}
+      {isAuthenticated && (
+        <Box sx={{ px: 3, py: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <ListItemButton
+            component={RouterLink}
+            to="/cart"
+            sx={{
+              borderRadius: 2,
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              py: 1.5,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          >
+            <Badge 
+              badgeContent={cartItemCount} 
+              color="error" 
+              sx={{ 
+                mr: 2,
+                '& .MuiBadge-badge': {
+                  fontSize: '0.7rem',
+                  minWidth: '18px',
+                  height: '18px',
+                  padding: '0 4px',
+                  backgroundColor: '#FF4081',
+                  color: 'white',
+                  fontWeight: 'bold',
+                },
+              }}
+            >
+              <ShoppingCart sx={{ fontSize: '28px', color: 'white' }} />
+            </Badge>
+            <ListItemText 
+              primary="Shopping Cart" 
+              secondary={`${cartItemCount} item${cartItemCount !== 1 ? 's' : ''}`}
+              primaryTypographyProps={{ color: 'white', fontWeight: 600, fontSize: '1rem' }}
+              secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}
+            />
+          </ListItemButton>
+        </Box>
+      )}
+
       {/* Sign In Button or User Profile for Mobile */}
       <Box sx={{ px: 3, pb: 2 }}>
         {isAuthenticated && user ? (
@@ -243,6 +290,50 @@ const Navbar = () => {
                   </Button>
                 </motion.div>
               ))}
+              
+              {/* Cart Icon - Only visible when authenticated */}
+              {isAuthenticated && (
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  style={{ display: 'flex', alignItems: 'center' }}
+                >
+                  <IconButton
+                    component={RouterLink}
+                    to="/cart"
+                    size="medium"
+                    sx={{
+                      color: 'white',
+                      padding: '8px',
+                      marginLeft: '8px',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      },
+                      '& .MuiSvgIcon-root': {
+                        fontSize: '24px',
+                      },
+                    }}
+                  >
+                    <Badge 
+                      badgeContent={cartItemCount} 
+                      color="error"
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          fontSize: '0.7rem',
+                          minWidth: '18px',
+                          height: '18px',
+                          padding: '0 4px',
+                          backgroundColor: '#FF4081',
+                          color: 'white',
+                          fontWeight: 'bold',
+                        },
+                      }}
+                    >
+                      <ShoppingCart sx={{ fontSize: '24px', color: 'white' }} />
+                    </Badge>
+                  </IconButton>
+                </motion.div>
+              )}
               
               {/* Sign In Button or User Profile */}
               {isAuthenticated && user ? (

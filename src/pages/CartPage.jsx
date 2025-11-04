@@ -30,6 +30,8 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useCart } from '../context/CartContext';
+import { formatLKR } from '../utils/currency';
+import { TAX_RATE, FLAT_SHIPPING_LKR } from '../config/commerce';
 import { useAuth } from '../context/AuthContext';
 
 const CartPage = () => {
@@ -43,8 +45,8 @@ const CartPage = () => {
 
   const items = Array.from(cartItems.values());
   const subtotal = getCartTotalPrice();
-  const shipping = items.length > 0 ? 500 : 0;
-  const tax = subtotal * 0.15;
+  const shipping = items.length > 0 ? FLAT_SHIPPING_LKR : 0;
+  const tax = subtotal * TAX_RATE;
   const total = subtotal + shipping + tax;
 
   const showSnackbar = (message, severity = 'success') => {
@@ -104,7 +106,7 @@ const CartPage = () => {
   if (items.length === 0) {
     return (
       <Box sx={{ 
-        background: 'linear-gradient(180deg, #29085D 0%, #1a0540 100%)',
+        background: 'linear-gradient(135deg, #0A0A0F 0%, #1A1A2E 50%, #16213E 100%)',
         minHeight: '100vh',
         pt: { xs: 7, md: 8 },
         pb: 8,
@@ -132,9 +134,9 @@ const CartPage = () => {
                 textAlign: 'center',
                 py: 10,
                 background: 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: 'blur(15px)',
+                backdropFilter: 'blur(20px)',
                 borderRadius: 4,
-                border: '2px solid rgba(255, 215, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
               }}
             >
@@ -143,7 +145,7 @@ const CartPage = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                <ShoppingCartIcon sx={{ fontSize: 100, color: 'rgba(255, 215, 0, 0.4)', mb: 2 }} />
+                <ShoppingCartIcon sx={{ fontSize: 100, color: 'rgba(33, 150, 243, 0.4)', mb: 2 }} />
               </motion.div>
               <Typography variant="h4" sx={{ mb: 2, color: 'white', fontWeight: 700 }}>
                 Your cart is empty
@@ -181,7 +183,7 @@ const CartPage = () => {
 
   return (
     <Box sx={{ 
-      background: 'linear-gradient(180deg, #29085D 0%, #1a0540 100%)',
+      background: 'linear-gradient(135deg, #0A0A0F 0%, #1A1A2E 50%, #16213E 100%)',
       minHeight: '100vh',
       pt: { xs: 7, md: 8 },
       pb: 8,
@@ -209,9 +211,9 @@ const CartPage = () => {
         onClose={() => setDeleteDialog({ open: false, itemId: null, itemName: '' })}
         PaperProps={{
           sx: {
-            background: 'rgba(41, 8, 93, 0.95)',
-            backdropFilter: 'blur(15px)',
-            border: '2px solid rgba(255, 215, 0, 0.3)',
+            background: 'rgba(26, 26, 46, 0.95)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: 3,
           },
         }}
@@ -252,9 +254,9 @@ const CartPage = () => {
         onClose={() => setClearDialog(false)}
         PaperProps={{
           sx: {
-            background: 'rgba(41, 8, 93, 0.95)',
-            backdropFilter: 'blur(15px)',
-            border: '2px solid rgba(255, 215, 0, 0.3)',
+            background: 'rgba(26, 26, 46, 0.95)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: 3,
           },
         }}
@@ -302,10 +304,10 @@ const CartPage = () => {
                 sx={{ 
                   color: 'white', 
                   mr: 2,
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(33, 150, 243, 0.1)',
                   backdropFilter: 'blur(10px)',
                   '&:hover': {
-                    background: 'rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(33, 150, 243, 0.2)',
                     transform: 'scale(1.1)',
                   },
                   transition: 'all 0.3s',
@@ -360,13 +362,13 @@ const CartPage = () => {
                 sx={{
                   p: 3,
                   background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
+                  backdropFilter: 'blur(20px)',
                   borderRadius: 3,
-                  border: '2px solid rgba(255, 215, 0, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    border: '2px solid rgba(255, 215, 0, 0.4)',
-                    boxShadow: '0 8px 32px rgba(255, 215, 0, 0.15)',
+                    border: '1px solid rgba(33, 150, 243, 0.4)',
+                    boxShadow: '0 8px 32px rgba(33, 150, 243, 0.15)',
                   },
                 }}
               >
@@ -382,15 +384,15 @@ const CartPage = () => {
                       <Card
                         sx={{
                           mb: 3,
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          backdropFilter: 'blur(10px)',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          backdropFilter: 'blur(20px)',
                           borderRadius: 3,
-                          border: '2px solid rgba(255, 215, 0, 0.15)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
                           overflow: 'hidden',
                           transition: 'all 0.3s ease',
                           '&:hover': {
-                            border: '2px solid rgba(255, 215, 0, 0.4)',
-                            boxShadow: '0 8px 24px rgba(255, 215, 0, 0.2)',
+                            border: '1px solid rgba(33, 150, 243, 0.4)',
+                            boxShadow: '0 8px 24px rgba(33, 150, 243, 0.2)',
                             transform: 'translateY(-4px)',
                           },
                           '&:last-child': { mb: 0 }
@@ -407,10 +409,10 @@ const CartPage = () => {
                               cursor: 'pointer',
                               flexShrink: 0,
                               position: 'relative',
-                              border: '2px solid rgba(255, 215, 0, 0.2)',
+                              border: '1px solid rgba(33, 150, 243, 0.3)',
                               transition: 'all 0.3s ease',
                               '&:hover': {
-                                border: '2px solid rgba(255, 215, 0, 0.6)',
+                                border: '1px solid rgba(33, 150, 243, 0.6)',
                                 transform: 'scale(1.05)',
                               },
                             }}
@@ -444,7 +446,7 @@ const CartPage = () => {
                                   fontSize: { xs: '1rem', sm: '1.2rem' },
                                   transition: 'all 0.3s',
                                   '&:hover': { 
-                                    color: '#FFD700',
+                                    color: '#64B5F6',
                                     transform: 'translateX(4px)',
                                   },
                                   overflow: 'hidden',
@@ -486,7 +488,7 @@ const CartPage = () => {
                                   size="small"
                                   sx={{
                                     background: 'rgba(33, 150, 243, 0.2)',
-                                    color: '#2196F3',
+                                    color: '#64B5F6',
                                     border: '1px solid rgba(33, 150, 243, 0.3)',
                                     fontSize: '0.75rem',
                                     height: 24,
@@ -498,9 +500,9 @@ const CartPage = () => {
                                   label={`Size: ${item.size}`}
                                   size="small"
                                   sx={{
-                                    background: 'rgba(255, 215, 0, 0.2)',
-                                    color: '#FFD700',
-                                    border: '1px solid rgba(255, 215, 0, 0.3)',
+                                    background: 'rgba(255, 64, 129, 0.2)',
+                                    color: '#FF79B0',
+                                    border: '1px solid rgba(255, 64, 129, 0.3)',
                                     fontSize: '0.75rem',
                                     height: 24,
                                   }}
@@ -518,13 +520,13 @@ const CartPage = () => {
                                     onClick={() => handleQuantityChange(item.id, -1)}
                                     disabled={item.quantity <= 1}
                                     sx={{
-                                      background: 'rgba(255, 255, 255, 0.1)',
+                                      background: 'rgba(33, 150, 243, 0.15)',
                                       backdropFilter: 'blur(10px)',
                                       color: 'white',
-                                      border: '1px solid rgba(255, 215, 0, 0.3)',
+                                      border: '1px solid rgba(33, 150, 243, 0.3)',
                                       '&:hover': { 
-                                        background: 'rgba(255, 215, 0, 0.2)',
-                                        borderColor: '#FFD700',
+                                        background: 'rgba(33, 150, 243, 0.3)',
+                                        borderColor: '#2196F3',
                                         transform: 'scale(1.1)',
                                       },
                                       '&.Mui-disabled': {
@@ -550,7 +552,7 @@ const CartPage = () => {
                                     py: 0.5,
                                     background: 'rgba(255, 255, 255, 0.05)',
                                     borderRadius: 1,
-                                    border: '1px solid rgba(255, 215, 0, 0.2)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
                                   }}
                                 >
                                   {item.quantity}
@@ -560,13 +562,13 @@ const CartPage = () => {
                                     size="small"
                                     onClick={() => handleQuantityChange(item.id, 1)}
                                     sx={{
-                                      background: 'rgba(255, 255, 255, 0.1)',
+                                      background: 'rgba(33, 150, 243, 0.15)',
                                       backdropFilter: 'blur(10px)',
                                       color: 'white',
-                                      border: '1px solid rgba(255, 215, 0, 0.3)',
+                                      border: '1px solid rgba(33, 150, 243, 0.3)',
                                       '&:hover': { 
-                                        background: 'rgba(255, 215, 0, 0.2)',
-                                        borderColor: '#FFD700',
+                                        background: 'rgba(33, 150, 243, 0.3)',
+                                        borderColor: '#2196F3',
                                         transform: 'scale(1.1)',
                                       },
                                       transition: 'all 0.3s',
@@ -582,17 +584,17 @@ const CartPage = () => {
                                 <Typography
                                   variant="h5"
                                   sx={{
-                                    color: '#FFD700',
+                                    color: '#64B5F6',
                                     fontWeight: 700,
                                     fontSize: { xs: '1.3rem', sm: '1.5rem' },
-                                    textShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+                                    textShadow: '0 0 10px rgba(33, 150, 243, 0.5)',
                                   }}
                                 >
-                                  ${(item.price * item.quantity).toFixed(2)}
+                                  {formatLKR(item.price * item.quantity)}
                                 </Typography>
                                 {item.quantity > 1 && (
                                   <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                                    ${item.price.toFixed(2)} each
+                                    {formatLKR(item.price)} each
                                   </Typography>
                                 )}
                               </Box>
@@ -605,7 +607,7 @@ const CartPage = () => {
                           sx={{ 
                             mt: 3, 
                             borderColor: 'rgba(255, 255, 255, 0.1)',
-                            background: 'linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent)',
+                            background: 'linear-gradient(90deg, transparent, rgba(33, 150, 243, 0.3), transparent)',
                           }} 
                         />
                       )}
@@ -627,26 +629,26 @@ const CartPage = () => {
                 sx={{
                   p: 3,
                   background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
+                  backdropFilter: 'blur(20px)',
                   borderRadius: 3,
-                  border: '2px solid rgba(255, 215, 0, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   position: 'sticky',
                   top: 100,
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    border: '2px solid rgba(255, 215, 0, 0.4)',
-                    boxShadow: '0 8px 32px rgba(255, 215, 0, 0.15)',
+                    border: '1px solid rgba(33, 150, 243, 0.4)',
+                    boxShadow: '0 8px 32px rgba(33, 150, 243, 0.15)',
                   },
                 }}
               >
                 <Typography 
                   variant="h5" 
                   sx={{ 
-                    color: '#FFD700', 
+                    color: '#64B5F6', 
                     fontWeight: 700, 
                     mb: 3,
                     fontSize: { xs: '1.3rem', sm: '1.5rem' },
-                    textShadow: '0 0 10px rgba(255, 215, 0, 0.3)',
+                    textShadow: '0 0 10px rgba(33, 150, 243, 0.3)',
                   }}
                 >
                   Order Summary
@@ -658,7 +660,7 @@ const CartPage = () => {
                       Subtotal
                     </Typography>
                     <Typography variant="body1" sx={{ color: 'white', fontWeight: 600, fontSize: '1.1rem' }}>
-                      ${subtotal.toFixed(2)}
+                      {formatLKR(subtotal)}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -666,7 +668,7 @@ const CartPage = () => {
                       Shipping
                     </Typography>
                     <Typography variant="body1" sx={{ color: 'white', fontWeight: 600, fontSize: '1.1rem' }}>
-                      ${shipping.toFixed(2)}
+                      {formatLKR(shipping)}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -674,14 +676,14 @@ const CartPage = () => {
                       Tax (15%)
                     </Typography>
                     <Typography variant="body1" sx={{ color: 'white', fontWeight: 600, fontSize: '1.1rem' }}>
-                      ${tax.toFixed(2)}
+                      {formatLKR(tax)}
                     </Typography>
                   </Box>
                   <Divider 
                     sx={{ 
-                      borderColor: 'rgba(255, 215, 0, 0.3)', 
+                      borderColor: 'rgba(255, 255, 255, 0.1)', 
                       mb: 2,
-                      borderWidth: 2,
+                      borderWidth: 1,
                     }} 
                   />
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -691,13 +693,13 @@ const CartPage = () => {
                     <Typography 
                       variant="h5" 
                       sx={{ 
-                        color: '#FFD700', 
+                        color: '#64B5F6', 
                         fontWeight: 700,
                         fontSize: '1.8rem',
-                        textShadow: '0 0 15px rgba(255, 215, 0, 0.5)',
+                        textShadow: '0 0 15px rgba(33, 150, 243, 0.5)',
                       }}
                     >
-                      ${total.toFixed(2)}
+                      {formatLKR(total)}
                     </Typography>
                   </Box>
                 </Box>
@@ -732,20 +734,20 @@ const CartPage = () => {
                   variant="outlined"
                   onClick={() => navigate('/shop')}
                   sx={{
-                    borderColor: 'rgba(255, 215, 0, 0.5)',
-                    color: '#FFD700',
+                    borderColor: 'rgba(33, 150, 243, 0.5)',
+                    color: '#64B5F6',
                     textTransform: 'none',
                     fontWeight: 600,
                     py: 1.5,
                     fontSize: '0.95rem',
                     borderRadius: 2,
-                    background: 'rgba(255, 215, 0, 0.05)',
+                    background: 'rgba(33, 150, 243, 0.05)',
                     backdropFilter: 'blur(10px)',
                     '&:hover': {
-                      borderColor: '#FFD700',
-                      background: 'rgba(255, 215, 0, 0.15)',
+                      borderColor: '#2196F3',
+                      background: 'rgba(33, 150, 243, 0.15)',
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
+                      boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)',
                     },
                     transition: 'all 0.3s ease',
                   }}
