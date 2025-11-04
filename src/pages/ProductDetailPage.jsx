@@ -1,557 +1,172 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Container,
-  Typography,
   Grid,
+  Typography,
+  Paper,
+  Breadcrumbs,
+  Link,
+  Rating,
+  Chip,
+  TextField,
+  Button,
+  MenuItem,
   Card,
   CardMedia,
-  CardContent,
-  CardActions,
-  Button,
-  IconButton,
-  Chip,
-  Divider,
-  Badge,
+  Stack,
 } from '@mui/material';
-import { motion } from 'framer-motion';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-
-// Product images
-import mugImg from '../assets/products/shop/Customized Mug.jpg';
-import clockImg from '../assets/products/shop/Customized Wall Clock.jpg';
-import shirtImg from '../assets/products/shop/shirt.jpg';
-import tshirtImg from '../assets/products/shop/tshit.jpg';
+import { formatLKR } from '../utils/currency';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getProductById } from '../services/products';
+import { CircularProgress, Alert } from '@mui/material';
 
 const ProductDetailPage = () => {
+  const [color, setColor] = useState('Black');
+  const [size, setSize] = useState('M');
+  const [qty, setQty] = useState(1);
+  const [customText, setCustomText] = useState('');
+  const [imageFile, setImageFile] = useState();
+  const { addToCart, updateCartQuantity } = useCart();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { getCartTotalItems, addToCart } = useCart();
-  const { isAuthenticated, openSignInModal } = useAuth();
-  
-  // State management
-  const [selectedColor, setSelectedColor] = useState('white');
-  const [selectedSize, setSelectedSize] = useState('L');
-  const [quantity, setQuantity] = useState(1);
-  const [isLiked, setIsLiked] = useState(false);
+  const [product, setProduct] = useState();
+  const [activeImg, setActiveImg] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Product data
-  const product = {
-    id: 1,
-    title: 'Customized T-Shirt',
-    price: 5000,
-    currency: 'LKR',
-    description: 'Step into style and brand identity with Digimaax\'s premium unisex customized T-shirts — tailored for both men and women, and perfect for any occasion. Whether you\'re promoting your business, hosting an event, or outfitting your team, our T-shirts combine comfort, durability, and standout design.',
-    images: [
-      shirtImg,
-      tshirtImg,
-      mugImg,
-      clockImg,
-      shirtImg,
-    ],
-    colors: [
-      { name: 'White', value: 'white', hex: '#ffffff' },
-      { name: 'Dark Grey', value: 'darkgrey', hex: '#424242' },
-      { name: 'Red', value: 'red', hex: '#f44336' },
-      { name: 'Purple', value: 'purple', hex: '#9c27b0' },
-      { name: 'Light Blue', value: 'lightblue', hex: '#03a9f4' },
-      { name: 'Green', value: 'green', hex: '#4caf50' },
-      { name: 'Pink', value: 'pink', hex: '#e91e63' },
-    ],
-    sizes: ['S', 'M', 'L', 'XL'],
-  };
-
-  const relatedProducts = [
-    { id: 1, title: 'Customized T-Shirt', image: shirtImg, price: 5000 },
-    { id: 2, title: 'Customized T-Shirt', image: tshirtImg, price: 5000 },
-    { id: 3, title: 'Customized T-Shirt', image: mugImg, price: 5000 },
-    { id: 4, title: 'Customized T-Shirt', image: clockImg, price: 5000 },
-  ];
-
-  const handleQuantityChange = (change) => {
-    const newQuantity = quantity + change;
-    if (newQuantity >= 1) {
-      setQuantity(newQuantity);
-    }
-  };
-
-  const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      openSignInModal();
-      return;
-    }
-    addToCart(product.id, {
-      title: product.title,
-      image: product.images[0],
-      price: product.price,
-      color: selectedColor,
-      size: selectedSize,
-      quantity: quantity,
-    });
-    console.log('Added to cart:', { product, color: selectedColor, size: selectedSize, quantity });
-  };
-
-  const handleBuyNow = () => {
-    if (!isAuthenticated) {
-      openSignInModal();
-      return;
-    }
-    // Add to cart first, then navigate to checkout
-    addToCart(product.id, {
-      title: product.title,
-      image: product.images[0],
-      price: product.price,
-      color: selectedColor,
-      size: selectedSize,
-      quantity: quantity,
-    });
-    navigate('/checkout');
-  };
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    getProductById(id)
+      .then((p) => { if (!active) return; setProduct(p); setActiveImg(p.image); })
+      .catch(() => { if (!active) return; setError('Product not found'); })
+      .finally(() => { if (!active) return; setLoading(false); });
+    return () => { active = false; };
+  }, [id]);
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          backgroundColor: '#2c2c2c',
-          py: 2,
-          px: { xs: 2, md: 4 },
-          position: 'sticky',
-          top: 0,
-          zIndex: 1000,
-        }}
-      >
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <IconButton sx={{ color: 'white', mr: 2 }} onClick={() => navigate(-1)}>
-                <ArrowBackIcon />
-              </IconButton>
-              <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
-                Product Details
-              </Typography>
-            </Box>
-            <Badge badgeContent={getCartTotalItems()} color="primary">
-              <IconButton sx={{ color: 'white' }} onClick={() => navigate('/shop')}>
-                <ShoppingBagIcon />
-              </IconButton>
-            </Badge>
-          </Box>
-        </Container>
-      </Box>
+    <Box sx={{ background: 'linear-gradient(180deg, #29085D 0%, #1a0540 100%)', minHeight: '100vh', pt: { xs: 8, md: 10 }, pb: 8 }}>
+      <Container maxWidth="lg">
+        <Breadcrumbs separator={<NavigateNextIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.6)' }} />} sx={{ mb: 2 }}>
+          <Link underline="hover" color="#FFD700" href="/shop">Shop</Link>
+          <Typography color="white">{product?.title || 'Product'}</Typography>
+        </Breadcrumbs>
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Grid container spacing={4}>
-          {/* Product Images */}
-          <Grid item xs={12} md={7}>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              {/* Thumbnail Images */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {product.images.map((image, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: 1,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      border: '2px solid transparent',
-                      '&:hover': { border: '2px solid #1976d2' },
-                    }}
-                  >
-                    <img
-                      src={image}
-                      alt={`Product ${index + 1}`}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                  </Box>
-                ))}
-              </Box>
+        {error && (
+          <Paper elevation={0} sx={{ p: 3, mb: 3, textAlign: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 3 }}>
+            <Typography sx={{ color: 'white', mb: 2 }}>{error}</Typography>
+            <Button variant="contained" onClick={() => navigate('/shop')} sx={{ background: 'linear-gradient(45deg, #2196F3, #FF4081)', textTransform: 'none', fontWeight: 800 }}>Back to Shop</Button>
+          </Paper>
+        )}
 
-              {/* Main Product Image */}
-              <Box sx={{ flex: 1 }}>
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: 500,
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                    backgroundColor: 'white',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                  }}
-                >
-                  <img
-                    src={product.images[0]}
-                    alt={product.title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
-                  />
-                </Box>
+        {loading && !error && (
+          <Typography sx={{ color: 'white', textAlign: 'center', py: 4 }}>Loading product...</Typography>
+        )}
+
+        {!loading && !error && product && (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 3 }}>
+              <Box sx={{ position: 'relative', pt: '75%', background: 'rgba(0,0,0,0.25)' }}>
+                <CardMedia component="img" image={activeImg} alt={product?.title} loading="lazy" sx={{ position: 'absolute', inset: 0, objectFit: 'contain', p: 3 }} />
               </Box>
-            </Box>
+            </Card>
+            <Stack direction="row" spacing={1.5} sx={{ mt: 1.5 }}>
+              {product && (product.gallery || (product.image ? [product.image] : [])).filter(Boolean).map((src, i) => (
+                <Card key={i} onClick={() => setActiveImg(src)} sx={{ width: 72, height: 72, background: 'rgba(255,255,255,0.06)', border: activeImg===src ? '2px solid #FFD700' : '1px solid rgba(255,255,255,0.12)', cursor: 'pointer' }}>
+                  <CardMedia component="img" image={src} alt={`thumb-${i}`} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </Card>
+              ))}
+            </Stack>
           </Grid>
 
-          {/* Product Details */}
-          <Grid item xs={12} md={5}>
-            <Box sx={{ pl: { md: 2 } }}>
-              {/* Product Title */}
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 'bold',
-                  color: '#2c2c2c',
-                  mb: 2,
-                  fontFamily: 'sans-serif',
-                }}
-              >
-                {product.title}
-              </Typography>
-
-              {/* Price */}
-              <Typography
-                variant="h3"
-                sx={{
-                  fontWeight: 'bold',
-                  color: '#1976d2',
-                  mb: 3,
-                }}
-              >
-                {product.price} {product.currency}
-              </Typography>
-
-              {/* Color Selection */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#2c2c2c' }}>
-                  Color
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  {product.colors.map((color) => (
-                    <Box
-                      key={color.value}
-                      onClick={() => setSelectedColor(color.value)}
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        backgroundColor: color.hex,
-                        cursor: 'pointer',
-                        border: selectedColor === color.value ? '3px solid #1976d2' : '2px solid #e0e0e0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        '&:hover': {
-                          transform: 'scale(1.1)',
-                        },
-                        transition: 'all 0.2s ease',
-                      }}
-                    />
-                  ))}
-                </Box>
+          <Grid item xs={12} md={6}>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: 3, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <Typography variant="h4" sx={{ color: 'white', fontWeight: 900 }}>{product?.title || (loading ? 'Loading…' : 'Unknown Product')}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                <Rating value={product?.rating || 0} precision={0.1} readOnly sx={{ '& .MuiRating-iconFilled': { color: '#FFD700' } }} />
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>{product ? `${product.rating} rating` : ''}</Typography>
               </Box>
+              <Box sx={{ mt: 2, display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                <Typography variant="h5" sx={{ color: '#FFD700', fontWeight: 900 }}>{formatLKR(product?.price || 0)}</Typography>
+                <Chip size="small" color="error" label="In Stock" />
+              </Box>
+              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)', mt: 2 }}>{product?.desc}</Typography>
 
-              {/* Size Selection */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#2c2c2c' }}>
-                  Size
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  {product.sizes.map((size) => (
-                    <Button
-                      key={size}
-                      variant={selectedSize === size ? 'contained' : 'outlined'}
-                      onClick={() => setSelectedSize(size)}
-                      sx={{
-                        minWidth: 50,
-                        height: 40,
-                        borderRadius: 2,
-                        fontWeight: 'bold',
-                        backgroundColor: selectedSize === size ? '#1976d2' : 'transparent',
-                        borderColor: '#1976d2',
-                        color: selectedSize === size ? 'white' : '#1976d2',
-                        '&:hover': {
-                          backgroundColor: selectedSize === size ? '#1565c0' : '#e3f2fd',
-                        },
-                      }}
-                    >
-                      {size}
+              <Box sx={{ mt: 3 }}>
+                <Typography sx={{ color: 'white', fontWeight: 700, mb: 1 }}>Customization</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField fullWidth select size="small" label="Color" value={color} onChange={(e) => setColor(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { color: 'white' } }}>
+                      {['Black','White','Navy','Red'].map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField fullWidth select size="small" label="Size" value={size} onChange={(e) => setSize(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { color: 'white' } }}>
+                      {['S','M','L','XL'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField fullWidth size="small" label="Custom Text" value={customText} onChange={(e) => setCustomText(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { color: 'white' } }} />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button component="label" variant="outlined" sx={{ color: '#FFD700', borderColor: 'rgba(255,215,0,0.6)', textTransform: 'none', fontWeight: 700 }}>
+                      Upload Your Image
+                      <input hidden type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0])} />
                     </Button>
-                  ))}
-                </Box>
+                    {imageFile && (
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', ml: 1 }}>{imageFile.name}</Typography>
+                    )}
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField fullWidth size="small" type="number" label="Quantity" value={qty} inputProps={{ min: 1 }} onChange={(e) => setQty(Math.max(1, Number(e.target.value)))} sx={{ '& .MuiOutlinedInput-root': { color: 'white' } }} />
+                  </Grid>
+                </Grid>
               </Box>
 
-              {/* Quantity Selector */}
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#2c2c2c' }}>
-                  Quantity
-                </Typography>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    backgroundColor: 'white',
-                    borderRadius: 2,
-                    p: 1,
-                    width: 'fit-content',
-                    border: '1px solid #e0e0e0',
-                  }}
-                >
-                  <IconButton
-                    onClick={() => handleQuantityChange(-1)}
-                    disabled={quantity <= 1}
-                    sx={{
-                      backgroundColor: '#f5f5f5',
-                      '&:hover': { backgroundColor: '#e0e0e0' },
-                    }}
-                  >
-                    <RemoveIcon />
-                  </IconButton>
-                  <Typography variant="h6" sx={{ minWidth: 30, textAlign: 'center', fontWeight: 'bold' }}>
-                    {quantity}
-                  </Typography>
-                  <IconButton
-                    onClick={() => handleQuantityChange(1)}
-                    sx={{
-                      backgroundColor: '#f5f5f5',
-                      '&:hover': { backgroundColor: '#e0e0e0' },
-                    }}
-                  >
-                    <AddIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-
-              {/* Action Buttons */}
-              <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+              <Box sx={{ display: 'flex', gap: 1.5, mt: 3 }}>
                 <Button
-                  variant="outlined"
-                  startIcon={<ShoppingBagIcon />}
-                  onClick={handleAddToCart}
-                  sx={{
-                    flex: 1,
-                    py: 1.5,
-                    fontWeight: 'bold',
-                    borderColor: '#1976d2',
-                    color: '#1976d2',
-                    '&:hover': {
-                      backgroundColor: '#e3f2fd',
-                      borderColor: '#1565c0',
-                    },
+                  variant="contained"
+                  onClick={() => {
+                    if (!product) return;
+                    addToCart(product.id, { title: product.title, price: product.price, image: product.image, color, size, customText });
+                    if (qty > 1) {
+                      updateCartQuantity(product.id, qty);
+                    }
                   }}
+                  sx={{ background: 'linear-gradient(45deg, #2196F3, #FF4081)', textTransform: 'none', fontWeight: 800 }}
                 >
                   Add to Cart
                 </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleBuyNow}
-                  sx={{
-                    flex: 1,
-                    py: 1.5,
-                    fontWeight: 'bold',
-                    backgroundColor: '#2c2c2c',
-                    '&:hover': {
-                      backgroundColor: '#424242',
-                    },
-                  }}
-                >
-                  BUY NOW
-                </Button>
+                <Button variant="outlined" onClick={() => navigate('/checkout')} sx={{ color: '#FFD700', borderColor: 'rgba(255,215,0,0.6)', textTransform: 'none', fontWeight: 800 }}>Buy Now</Button>
               </Box>
-
-              {/* Heart Icon */}
-              <IconButton
-                onClick={() => setIsLiked(!isLiked)}
-                sx={{
-                  backgroundColor: 'white',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                  '&:hover': {
-                    backgroundColor: '#f5f5f5',
-                  },
-                }}
-              >
-                <FavoriteIcon
-                  sx={{
-                    color: isLiked ? '#ff9800' : '#9e9e9e',
-                    fontSize: 24,
-                  }}
-                />
-              </IconButton>
-            </Box>
+            </Paper>
           </Grid>
         </Grid>
 
-        {/* Product Description */}
-        <Box sx={{ mt: 6, mb: 6 }}>
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 'bold',
-              color: '#2c2c2c',
-              mb: 3,
-              fontFamily: 'sans-serif',
-            }}
-          >
-            {product.title}
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{
-              color: '#666',
-              lineHeight: 1.8,
-              fontSize: '1.1rem',
-              maxWidth: '80%',
-            }}
-          >
-            {product.description}
-          </Typography>
-        </Box>
-
-        {/* Related Products */}
-        <Box sx={{ mt: 8 }}>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 'bold',
-              color: '#2c2c2c',
-              mb: 4,
-              textAlign: 'center',
-              fontFamily: 'sans-serif',
-            }}
-          >
-            Related Products
-          </Typography>
-          
-          <Grid container spacing={3}>
-            {relatedProducts.map((item, index) => (
-              <Grid key={item.id} item xs={12} sm={6} md={3}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card
-                    sx={{
-                      height: 350,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      backgroundColor: 'white',
-                      border: '1px solid #e0e0e0',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      borderRadius: 2,
-                      overflow: 'hidden',
-                      position: 'relative',
-                      '&:hover': {
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-                        transform: 'translateY(-2px)',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    {/* Image Container */}
-                    <Box sx={{ position: 'relative', height: 250 }}>
-                      <CardMedia
-                        component="img"
-                        height="250"
-                        image={item.image}
-                        alt={item.title}
-                        sx={{ objectFit: 'cover' }}
-                      />
-                      
-                      {/* Heart Icon */}
-                      <IconButton
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                          backgroundColor: 'rgba(255,255,255,0.8)',
-                          '&:hover': {
-                            backgroundColor: 'rgba(255,255,255,0.9)',
-                          },
-                        }}
-                        size="small"
-                      >
-                        <FavoriteIcon
-                          sx={{
-                            color: '#ff9800',
-                            fontSize: 20,
-                          }}
-                        />
-                      </IconButton>
-                    </Box>
-
-                    {/* Title Bar */}
-                    <Box
-                      sx={{
-                        backgroundColor: '#000',
-                        color: 'white',
-                        p: 2,
-                        flexGrow: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontFamily: 'sans-serif',
-                          fontWeight: 500,
-                          fontSize: '1rem',
-                        }}
-                      >
-                        {item.title}
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          ml: 2,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: '1px',
-                            height: '20px',
-                            backgroundColor: 'white',
-                            mr: 1,
-                          }}
-                        />
-                        <IconButton
-                          sx={{
-                            color: 'white',
-                            p: 0.5,
-                            '&:hover': {
-                              backgroundColor: 'rgba(255,255,255,0.1)',
-                            },
-                          }}
-                        >
-                          <ShoppingBagIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  </Card>
-                </motion.div>
+        <Box sx={{ mt: 5 }}>
+          <Typography variant="h5" sx={{ color: 'white', fontWeight: 900, mb: 2 }}>Related Products</Typography>
+          <Grid container spacing={2}>
+            {[1,2,3,4].map(i => (
+              <Grid item xs={12} sm={6} md={3} key={i}>
+                <Paper elevation={0} sx={{ p: 2, borderRadius: 3, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                  <Box sx={{ position: 'relative', pt: '65%', background: 'rgba(0,0,0,0.25)', borderRadius: 2 }} />
+                  <Typography sx={{ color: 'white', fontWeight: 700, mt: 1 }}>Product {i}</Typography>
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>LKR 2,999</Typography>
+                </Paper>
               </Grid>
             ))}
           </Grid>
         </Box>
+        )}
       </Container>
     </Box>
   );
 };
 
 export default ProductDetailPage;
+
+

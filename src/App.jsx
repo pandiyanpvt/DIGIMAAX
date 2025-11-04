@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -12,15 +12,18 @@ import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ServicesPage from './pages/ServicesPage';
 import GalleryPage from './pages/GalleryPage';
-import ShopPage from './pages/ShopPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import ProductBuyPage from './pages/ProductBuyPage';
+const ShopPage = lazy(() => import('./pages/ShopPage'));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const ServiceDetailPage = lazy(() => import('./pages/ServiceDetailPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
 import ContactPage from './pages/ContactPage';
 import ProfilePage from './pages/ProfilePage';
 import CartPage from './pages/CartPage';
-import WishlistPage from './pages/WishlistPage';
-import CategoryPage from './pages/CategoryPage';
-import SearchResultsPage from './pages/SearchResultsPage';
+// import WishlistPage from './pages/WishlistPage';
+// import CategoryPage from './pages/CategoryPage';
+// import SearchResultsPage from './pages/SearchResultsPage';
 import CompareProductsPage from './pages/CompareProductsPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
@@ -34,24 +37,27 @@ function App() {
           <WishlistProvider>
             <Router>
               <Layout>
+                <Suspense fallback={null}>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/services" element={<ServicesPage />} />
                   <Route path="/gallery" element={<GalleryPage />} />
                   <Route path="/shop" element={<ShopPage />} />
-                  <Route path="/shop/category/:name" element={<CategoryPage />} />
                   <Route path="/product/:id" element={<ProductDetailPage />} />
-                  <Route path="/checkout" element={<ProductBuyPage />} />
+                  <Route path="/services/:slug" element={<ServiceDetailPage />} />
+                  <Route path="/checkout" element={<CheckoutPage />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/cart" element={<CartPage />} />
-                  <Route path="/wishlist" element={<WishlistPage />} />
-                  <Route path="/search" element={<SearchResultsPage />} />
+                  {/** removed wishlist and search routes **/}
                   <Route path="/compare" element={<CompareProductsPage />} />
                   <Route path="/orders" element={<OrderHistoryPage />} />
                   <Route path="/orders/:id/track" element={<OrderTrackingPage />} />
+                  <Route path="/order-success" element={<OrderSuccessPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
+                </Suspense>
               </Layout>
             </Router>
           </WishlistProvider>
