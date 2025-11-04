@@ -221,7 +221,6 @@ const AboutSection = () => {
               Don't just take our word for it - hear from our satisfied clients
             </Typography>
 
-            {/* Testimonial Slider */}
             <Box
               sx={{
                 position: 'relative',
