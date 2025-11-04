@@ -24,6 +24,9 @@ import {
   Pagination,
   Chip,
   Tooltip,
+  Snackbar,
+  Alert,
+  Stack,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -57,6 +60,7 @@ const ShopPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const itemsPerPage = 9;
 
   const filtered = useMemo(() => {
@@ -219,35 +223,131 @@ const ShopPage = () => {
                   </Paper>
                 </Grid>
               )}
-              {!loading && !error && paged.map((p) => (
+              {!loading && !error && filtered.length === 0 && (
+                <Grid item xs={12}>
+                  <Paper elevation={0} sx={{ p: 4, textAlign: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 3 }}>
+                    <Typography variant="h6" sx={{ color: 'white', mb: 1 }}>No products found</Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 2 }}>Try adjusting your filters or search terms</Typography>
+                    <Button variant="outlined" onClick={() => { setSelectedCategory(''); setPriceRange([0, 10000]); setSortBy('trending'); setQuery(''); setPage(1); }} sx={{ color: '#FFD700', borderColor: 'rgba(255,215,0,0.6)', textTransform: 'none', fontWeight: 700 }}>Clear Filters</Button>
+                  </Paper>
+                </Grid>
+              )}
+              {!loading && !error && filtered.length > 0 && paged.map((p) => (
                 <Grid item xs={12} sm={6} md={3} lg={3} key={p.id} sx={{ display: 'flex' }}>
-                  <Card sx={{ height: '100%', width: '100%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 3, display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ position: 'relative', pt: '70%', background: 'rgba(0,0,0,0.25)' }}>
+                  <Card sx={{ height: '100%', width: '100%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 3, display: 'flex', flexDirection: 'column', transition: 'transform 0.2s, box-shadow 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' } }}>
+                    <Box sx={{ position: 'relative', pt: '70%', background: 'rgba(0,0,0,0.25)', borderRadius: '12px 12px 0 0', overflow: 'hidden' }}>
                       <CardMedia component="img" image={p.image || ''} alt={p.title} loading="lazy" sx={{ position: 'absolute', inset: 0, objectFit: 'contain', p: 2 }} />
-                      <Chip size="small" label={p.category} sx={{ position: 'absolute', top: 10, left: 10, background: 'rgba(0,0,0,0.5)', color: 'white' }} />
+                      {p.badge && (
+                        <Chip 
+                          size="small" 
+                          label={p.badge} 
+                          sx={{ 
+                            position: 'absolute', 
+                            top: 10, 
+                            right: 10, 
+                            background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: '0.7rem',
+                          }} 
+                        />
+                      )}
+                      <Chip 
+                        size="small" 
+                        label={p.category} 
+                        sx={{ 
+                          position: 'absolute', 
+                          top: 10, 
+                          left: 10, 
+                          background: 'rgba(0,0,0,0.7)', 
+                          color: 'white',
+                          backdropFilter: 'blur(4px)',
+                        }} 
+                      />
                     </Box>
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Tooltip title={p.title}><Typography variant="h6" sx={{ color: 'white', fontWeight: 800, fontSize: '1rem', mb: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</Typography></Tooltip>
-                      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', mb: 1, height: 38, overflow: 'hidden' }}>{p.desc}</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="h6" sx={{ color: '#FFD700', fontWeight: 900 }}>{formatLKR(p.price)}</Typography>
-                        <Rating size="small" value={p.rating} precision={0.1} readOnly sx={{ '& .MuiRating-iconFilled': { color: '#FFD700' } }} />
+                    <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
+                      <Tooltip title={p.title}>
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            color: 'white', 
+                            fontWeight: 800, 
+                            fontSize: '1rem', 
+                            mb: 0.5, 
+                            overflow: 'hidden', 
+                            textOverflow: 'ellipsis', 
+                            whiteSpace: 'nowrap',
+                            minHeight: '24px',
+                          }}
+                        >
+                          {p.title}
+                        </Typography>
+                      </Tooltip>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: 'rgba(255,255,255,0.85)', 
+                          mb: 1.5, 
+                          minHeight: '38px',
+                          overflow: 'hidden',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          flexGrow: 1,
+                        }}
+                      >
+                        {p.desc}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 'auto' }}>
+                        <Typography variant="h6" sx={{ color: '#FFD700', fontWeight: 900, fontSize: '1.1rem' }}>
+                          {formatLKR(p.price)}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Rating size="small" value={p.rating} precision={0.1} readOnly sx={{ '& .MuiRating-iconFilled': { color: '#FFD700' } }} />
+                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>({p.rating})</Typography>
+                        </Box>
                       </Box>
                     </CardContent>
-                    <CardActions sx={{ p: 2, pt: 0, gap: 1 }}>
-                      <Button
-                        variant="outlined"
-                        fullWidth
-                        startIcon={<ShoppingCartIcon />}
-                        onClick={() => {
-                          // allow guest carts; require auth at checkout only
-                          addToCart(p.id, { title: p.title, image: p.image, price: p.price });
-                        }}
-                        sx={{ color: '#FFD700', borderColor: 'rgba(255,215,0,0.6)', textTransform: 'none', fontWeight: 700 }}
-                      >
-                        Add to Cart
-                      </Button>
-                      <Button variant="contained" fullWidth startIcon={<VisibilityIcon />} onClick={() => navigate(`/product/${p.id}`)} sx={{ background: 'linear-gradient(45deg, #2196F3, #FF4081)', textTransform: 'none', fontWeight: 800 }}>View Details</Button>
+                    <CardActions sx={{ p: 2, pt: 0, gap: 1, flexDirection: 'column', width: '100%' }}>
+                      <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
+                        <Button
+                          variant="outlined"
+                          fullWidth
+                          startIcon={<ShoppingCartIcon />}
+                          onClick={() => {
+                            addToCart(p.id, { title: p.title, image: p.image, price: p.price });
+                            setSnackbar({ open: true, message: `${p.title} added to cart!` });
+                          }}
+                          sx={{ 
+                            color: '#FFD700', 
+                            borderColor: 'rgba(255,215,0,0.6)', 
+                            textTransform: 'none', 
+                            fontWeight: 700,
+                            '&:hover': {
+                              borderColor: '#FFD700',
+                              backgroundColor: 'rgba(255,215,0,0.1)',
+                            },
+                          }}
+                        >
+                          Add to Cart
+                        </Button>
+                        <Button 
+                          variant="contained" 
+                          fullWidth 
+                          startIcon={<VisibilityIcon />} 
+                          onClick={() => navigate(`/product/${p.id}`)} 
+                          sx={{ 
+                            background: 'linear-gradient(45deg, #2196F3, #FF4081)', 
+                            textTransform: 'none', 
+                            fontWeight: 800,
+                            '&:hover': {
+                              background: 'linear-gradient(45deg, #1976D2, #E91E63)',
+                            },
+                          }}
+                        >
+                          View
+                        </Button>
+                      </Stack>
                     </CardActions>
                   </Card>
                 </Grid>
@@ -256,11 +356,54 @@ const ShopPage = () => {
 
           {totalPages > 1 && (
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-              <Pagination count={totalPages} page={page} onChange={(_, p) => setPage(p)} color="primary" />
+              <Pagination 
+                count={totalPages} 
+                page={page} 
+                onChange={(_, p) => setPage(p)} 
+                color="primary"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    color: 'white',
+                    '&.Mui-selected': {
+                      backgroundColor: '#2196F3',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#1976D2',
+                      },
+                    },
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                  },
+                }}
+              />
             </Box>
           )}
         </Box>
       </Container>
+
+      {/* Snackbar for cart notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ open: false, message: '' })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ open: false, message: '' })} 
+          severity="success" 
+          sx={{ 
+            width: '100%',
+            backgroundColor: 'rgba(76, 175, 80, 0.9)',
+            color: 'white',
+            '& .MuiAlert-icon': {
+              color: 'white',
+            },
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
