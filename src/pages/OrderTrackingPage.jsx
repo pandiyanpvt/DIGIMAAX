@@ -28,7 +28,6 @@ import DoneIcon from '@mui/icons-material/Done';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAuth } from '../context/AuthContext';
 
-// Mock order data
 const mockOrder = {
   id: 'ORD-2024-001',
   date: '2024-01-15',
@@ -62,10 +61,7 @@ const OrderTrackingPage = () => {
   const { isAuthenticated, openSignInModal } = useAuth();
   const [order, setOrder] = useState(mockOrder);
 
-  // Simulate order status updates (for demo purposes)
   useEffect(() => {
-    // In a real app, you would fetch order data based on the ID
-    // For now, we'll use the mock data
   }, [id]);
 
   const getStatusSteps = () => {

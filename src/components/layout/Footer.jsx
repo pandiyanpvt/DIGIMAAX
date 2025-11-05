@@ -16,7 +16,6 @@ import {
   WhatsApp,
   Facebook,
   Twitter,
-  LinkedIn,
   Phone,
   Email,
   LocationOn,
@@ -48,7 +47,6 @@ const Footer = () => {
     { icon: <Facebook />, color: '#1877F2', label: 'Facebook' },
     { icon: <Instagram />, color: '#E4405F', label: 'Instagram' },
     { icon: <Twitter />, color: '#1DA1F2', label: 'Twitter' },
-    { icon: <LinkedIn />, color: '#0A66C2', label: 'LinkedIn' },
     { icon: <WhatsApp />, color: '#25D366', label: 'WhatsApp' },
     { icon: <Telegram />, color: '#0088cc', label: 'Telegram' },
   ];
@@ -258,7 +256,7 @@ const Footer = () => {
                   >
                     <Box
                       sx={{
-                        color: '#2196F3',
+                        color: 'white',
                         display: 'flex',
                         alignItems: 'center',
                       }}

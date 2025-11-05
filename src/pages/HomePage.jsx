@@ -136,7 +136,7 @@ const HomePage = () => {
               sx={{
                 width: '80px',
                 height: '4px',
-                background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                background: 'white',
                 borderRadius: '2px',
                 mx: 'auto',
                 mb: 6,
@@ -293,7 +293,7 @@ const HomePage = () => {
                 size="large"
                 onClick={() => navigate('/services')}
                 sx={{
-                  background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                  background: '#2196F3',
                   borderRadius: '25px',
                   px: 5,
                   py: 1.5,
@@ -302,7 +302,7 @@ const HomePage = () => {
                   textTransform: 'none',
                   boxShadow: '0 8px 32px rgba(33, 150, 243, 0.3)',
                   '&:hover': {
-                    background: 'linear-gradient(45deg, #1976D2, #C2185B)',
+                    background: '#1976D2',
                     boxShadow: '0 12px 40px rgba(33, 150, 243, 0.4)',
                     transform: 'translateY(-2px)',
                   },
@@ -344,7 +344,7 @@ const HomePage = () => {
               sx={{
                 width: '80px',
                 height: '4px',
-                background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                background: 'white',
                 borderRadius: '2px',
                 mx: 'auto',
                 mb: 2,
@@ -456,7 +456,7 @@ const HomePage = () => {
                 size="large"
                 onClick={() => navigate('/shop')}
                 sx={{
-                  background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                  background: '#2196F3',
                   borderRadius: '25px',
                   px: 5,
                   py: 1.5,
@@ -465,7 +465,7 @@ const HomePage = () => {
                   textTransform: 'none',
                   boxShadow: '0 8px 32px rgba(33, 150, 243, 0.3)',
                   '&:hover': {
-                    background: 'linear-gradient(45deg, #1976D2, #C2185B)',
+                    background: '#1976D2',
                     boxShadow: '0 12px 40px rgba(33, 150, 243, 0.4)',
                     transform: 'translateY(-2px)',
                   },
@@ -492,7 +492,7 @@ const HomePage = () => {
                 sx={{
                   width: '60px',
                   height: '4px',
-                  background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                  background: 'white',
                   borderRadius: '2px',
                   mx: 'auto',
                 }}
@@ -553,7 +553,7 @@ const HomePage = () => {
                     >
                       <Box
                         sx={{
-                          color: '#2196F3',
+                          color: 'white',
                           mb: 2,
                           display: 'flex',
                           justifyContent: 'center',

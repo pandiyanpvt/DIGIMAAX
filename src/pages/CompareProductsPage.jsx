@@ -25,13 +25,11 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
-// Import product images
 import mugImg from '../assets/products/shop/Customized Mug.jpg';
 import clockImg from '../assets/products/shop/Customized Wall Clock.jpg';
 import shirtImg from '../assets/products/shop/shirt.jpg';
 import tshirtImg from '../assets/products/shop/tshit.jpg';
 
-// Products data
 const products = [
   { id: 1, name: 'Customized Photo Mug', category: 'For Home', price: 24.99, rating: 4.8, reviews: 245, image: mugImg, badge: 'Best Seller', description: 'Personalized ceramic mug with your photos', inStock: true },
   { id: 2, name: 'Designer Wall Clock', category: 'For Home', price: 39.99, rating: 4.9, reviews: 189, image: clockImg, badge: 'New Arrival', description: 'Modern wall clock with custom design', inStock: true },
@@ -53,7 +51,6 @@ const CompareProductsPage = () => {
   const { addToCart } = useCart();
   const { isAuthenticated, openSignInModal } = useAuth();
 
-  // Get product IDs from URL params (e.g., ?ids=1,2,3)
   const productIds = useMemo(() => {
     const idsParam = searchParams.get('ids');
     if (!idsParam) return [];

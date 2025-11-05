@@ -108,7 +108,7 @@ const CartPage = () => {
       <Box sx={{ 
         background: 'linear-gradient(135deg, #0A0A0F 0%, #1A1A2E 50%, #16213E 100%)',
         minHeight: '100vh',
-        pt: { xs: 7, md: 8 },
+        pt: { xs: 10, md: 12 },
         pb: 8,
       }}>
         <Container maxWidth="lg">
@@ -157,9 +157,9 @@ const CartPage = () => {
                 variant="contained"
                 onClick={() => navigate('/shop')}
                 sx={{
-                  background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                  background: '#2196F3',
                   '&:hover': { 
-                    background: 'linear-gradient(45deg, #1976D2, #C2185B)',
+                    background: '#1976D2',
                     transform: 'translateY(-2px)',
                     boxShadow: '0 8px 24px rgba(33, 150, 243, 0.4)',
                   },
@@ -185,7 +185,7 @@ const CartPage = () => {
     <Box sx={{ 
       background: 'linear-gradient(135deg, #0A0A0F 0%, #1A1A2E 50%, #16213E 100%)',
       minHeight: '100vh',
-      pt: { xs: 7, md: 8 },
+      pt: { xs: 10, md: 12 },
       pb: 8,
     }}>
       {/* Snackbar Notifications */}
@@ -709,7 +709,7 @@ const CartPage = () => {
                   variant="contained"
                   onClick={handleCheckout}
                   sx={{
-                    background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                    background: '#2196F3',
                     color: 'white',
                     textTransform: 'none',
                     fontWeight: 700,
@@ -719,7 +719,7 @@ const CartPage = () => {
                     borderRadius: 2,
                     boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
                     '&:hover': {
-                      background: 'linear-gradient(45deg, #1976D2, #C2185B)',
+                      background: '#1976D2',
                       transform: 'translateY(-2px)',
                       boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
                     },
@@ -731,21 +731,18 @@ const CartPage = () => {
 
                 <Button
                   fullWidth
-                  variant="outlined"
+                  variant="contained"
                   onClick={() => navigate('/shop')}
                   sx={{
-                    borderColor: 'rgba(33, 150, 243, 0.5)',
-                    color: '#64B5F6',
+                    background: '#2196F3',
+                    color: 'white',
                     textTransform: 'none',
                     fontWeight: 600,
                     py: 1.5,
                     fontSize: '0.95rem',
                     borderRadius: 2,
-                    background: 'rgba(33, 150, 243, 0.05)',
-                    backdropFilter: 'blur(10px)',
                     '&:hover': {
-                      borderColor: '#2196F3',
-                      background: 'rgba(33, 150, 243, 0.15)',
+                      background: '#1976D2',
                       transform: 'translateY(-2px)',
                       boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)',
                     },

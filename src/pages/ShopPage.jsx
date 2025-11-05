@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Container,
@@ -35,8 +36,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useCart } from '../context/CartContext';
 import { formatLKR } from '../utils/currency';
 import { getProducts } from '../services/products';
-
-// Products fetched from service
 
 const categories = [
   'Customized Wall Clock',
@@ -112,8 +111,13 @@ const ShopPage = () => {
   return (
     <Box sx={{ background: 'linear-gradient(180deg, #29085D 0%, #1a0540 100%)', minHeight: '100vh', pt: { xs: 8, md: 10 }, pb: 8 }}>
       <Container maxWidth="xl">
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 2, flexWrap: 'wrap' }}>
-          <Typography variant="h4" sx={{ color: 'white', fontWeight: 800 }}>DIGIMAAX Product Shop</Typography>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 2, flexWrap: 'wrap' }}>
+            <Typography variant="h4" sx={{ color: 'white', fontWeight: 800 }}>DIGIMAAX Product Shop</Typography>
           <TextField
             size="small"
             placeholder="Search products..."
@@ -137,10 +141,16 @@ const ShopPage = () => {
               '& .MuiOutlinedInput-root': { color: 'white', '& fieldset': { borderColor: 'rgba(255,255,255,0.25)' } }
             }}
           />
-        </Box>
+          </Box>
+        </motion.div>
 
-        <Box sx={{ mb: 3 }}>
-          <Paper elevation={0} sx={{ p: 2, borderRadius: 3, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <Box sx={{ mb: 3 }}>
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
               <Box sx={{ minWidth: 220, flex: '1 1 220px' }}>
                 <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.8)', mb: 0.5 }}>Category</Typography>
@@ -191,7 +201,8 @@ const ShopPage = () => {
               </Box>
             </Box>
           </Paper>
-        </Box>
+          </Box>
+        </motion.div>
 
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
@@ -232,11 +243,20 @@ const ShopPage = () => {
                   </Paper>
                 </Grid>
               )}
-              {!loading && !error && filtered.length > 0 && paged.map((p) => (
-                <Grid item xs={12} sm={6} md={3} lg={3} key={p.id} sx={{ display: 'flex' }}>
-                  <Card sx={{ height: '100%', width: '100%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 3, display: 'flex', flexDirection: 'column', transition: 'transform 0.2s, box-shadow 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' } }}>
+              {!loading && !error && filtered.length > 0 && (
+                <AnimatePresence mode="wait">
+                  {paged.map((p, index) => (
+                    <Grid item xs={12} sm={6} md={3} lg={3} key={p.id} sx={{ display: 'flex' }}>
+                      <motion.div
+                        initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.4, delay: index * 0.1 }}
+                        style={{ width: '100%', height: '100%' }}
+                      >
+                        <Card sx={{ height: '100%', width: '100%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 3, display: 'flex', flexDirection: 'column', transition: 'transform 0.2s, box-shadow 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' } }}>
                     <Box sx={{ position: 'relative', pt: '70%', background: 'rgba(0,0,0,0.25)', borderRadius: '12px 12px 0 0', overflow: 'hidden' }}>
-                      <CardMedia component="img" image={p.image || ''} alt={p.title} loading="lazy" sx={{ position: 'absolute', inset: 0, objectFit: 'contain', p: 2 }} />
+                      <CardMedia component="img" image={p.image || ''} alt={p.title} loading="eager" sx={{ position: 'absolute', inset: 0, objectFit: 'contain', p: 2 }} />
                       {p.badge && (
                         <Chip 
                           size="small" 
@@ -348,15 +368,23 @@ const ShopPage = () => {
                           View
                         </Button>
                       </Stack>
-                    </CardActions>
-                  </Card>
-                </Grid>
-              ))}
+                        </CardActions>
+                      </Card>
+                      </motion.div>
+                    </Grid>
+                  ))}
+                </AnimatePresence>
+              )}
           </Grid>
 
           {totalPages > 1 && (
-            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-              <Pagination 
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+                <Pagination 
                 count={totalPages} 
                 page={page} 
                 onChange={(_, p) => setPage(p)} 
@@ -377,7 +405,8 @@ const ShopPage = () => {
                   },
                 }}
               />
-            </Box>
+              </Box>
+            </motion.div>
           )}
         </Box>
       </Container>

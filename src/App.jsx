@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -8,6 +8,8 @@ import Layout from './components/layout/Layout';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { preloadAllImages } from './utils/imagePreloader';
+import ScrollToTop from './components/ScrollToTop';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ServicesPage from './pages/ServicesPage';
@@ -29,6 +31,11 @@ import OrderHistoryPage from './pages/OrderHistoryPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 
 function App() {
+  // Preload all images when app starts
+  useEffect(() => {
+    preloadAllImages();
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -36,6 +43,7 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <Router>
+              <ScrollToTop />
               <Layout>
                 <Suspense fallback={null}>
                 <Routes>
