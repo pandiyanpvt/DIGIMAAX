@@ -21,7 +21,6 @@ import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useAuth } from '../context/AuthContext';
 
-// Mock order data
 const mockOrders = [
   {
     id: 'ORD-2024-001',

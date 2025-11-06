@@ -9,7 +9,6 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 
-// Import service images
 import interiorDesignImage from '../../assets/hero/Rectangle 94.png';
 import advertisingImage from '../../assets/hero/Rectangle 95.png';
 import printingImage from '../../assets/hero/Rectangle 96.png';

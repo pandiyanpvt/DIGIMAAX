@@ -35,7 +35,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { openSignInModal, user, signOut, isAuthenticated } = useAuth();
-  const { getCartTotalItems } = useCart();
+  const { getCartTotalItems, setCartDrawerOpen } = useCart();
   const cartItemCount = getCartTotalItems();
 
   useEffect(() => {
@@ -94,7 +94,7 @@ const Navbar = () => {
               to={item.to}
               sx={{ 
                 textAlign: 'center',
-                color: location.pathname === item.to ? '#2196F3' : 'inherit',
+                color: location.pathname === item.to ? '#FFD700' : 'inherit',
                 fontWeight: location.pathname === item.to ? 'bold' : 'normal',
               }}
             >
@@ -108,8 +108,10 @@ const Navbar = () => {
       {isAuthenticated && (
         <Box sx={{ px: 3, py: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
           <ListItemButton
-            component={RouterLink}
-            to="/cart"
+            onClick={() => {
+              setCartDrawerOpen(true);
+              handleDrawerToggle();
+            }}
             sx={{
               borderRadius: 2,
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -262,7 +264,7 @@ const Navbar = () => {
                     component={RouterLink}
                     to={item.to}
                     sx={{
-                      color: location.pathname === item.to ? '#2196F3' : 'white',
+                      color: location.pathname === item.to ? '#FFD700' : 'white',
                       fontWeight: location.pathname === item.to ? 'bold' : 'medium',
                       textTransform: 'none',
                       fontSize: '1rem',
@@ -277,7 +279,7 @@ const Navbar = () => {
                         left: '50%',
                         width: location.pathname === item.to ? '100%' : 0,
                         height: '2px',
-                        backgroundColor: '#2196F3',
+                        backgroundColor: '#FFD700',
                         transition: 'all 0.3s ease',
                         transform: 'translateX(-50%)',
                       },
@@ -291,88 +293,94 @@ const Navbar = () => {
                 </motion.div>
               ))}
               
-              {/* Cart Icon - Only visible when authenticated */}
-              {isAuthenticated && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  style={{ display: 'flex', alignItems: 'center' }}
-                >
-                  <IconButton
-                    component={RouterLink}
-                    to="/cart"
-                    size="medium"
-                    sx={{
-                      color: 'white',
-                      padding: '8px',
-                      marginLeft: '8px',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      },
-                      '& .MuiSvgIcon-root': {
-                        fontSize: '24px',
-                      },
-                    }}
+              {/* Sign In Button or User Profile */}
+              {isAuthenticated && user ? (
+                <>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <Badge 
-                      badgeContent={cartItemCount} 
-                      color="error"
+                    <Box
+                      onClick={handleProfileMenuOpen}
                       sx={{
-                        '& .MuiBadge-badge': {
-                          fontSize: '0.7rem',
-                          minWidth: '18px',
-                          height: '18px',
-                          padding: '0 4px',
-                          backgroundColor: '#FF4081',
-                          color: 'white',
-                          fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        px: 1.5,
+                        py: 0.5,
+                        ml: 1,
+                        borderRadius: '25px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
                         },
                       }}
                     >
-                      <ShoppingCart sx={{ fontSize: '24px', color: 'white' }} />
-                    </Badge>
-                  </IconButton>
-                </motion.div>
-              )}
-              
-              {/* Sign In Button or User Profile */}
-              {isAuthenticated && user ? (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" sx={{ color: 'white', mr: 1 }}>
-                      {user.firstName} {user.lastName}
-                    </Typography>
+                      <Person sx={{ fontSize: '20px', color: 'white' }} />
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: 'white', 
+                          fontWeight: 500,
+                          fontSize: '0.9rem',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {user.firstName} {user.lastName}
+                      </Typography>
+                    </Box>
+                  </motion.div>
+                  
+                  {/* Cart Icon - Only visible when authenticated */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ display: 'flex', alignItems: 'center' }}
+                  >
                     <IconButton
-                      onClick={handleProfileMenuOpen}
+                      onClick={() => setCartDrawerOpen(true)}
                       sx={{
-                        padding: 0,
+                        width: 45,
+                        height: 45,
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        color: 'white',
+                        padding: '8px',
+                        marginLeft: '8px',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                        },
+                        transition: 'all 0.3s ease',
                       }}
                     >
-                      <Avatar
+                      <Badge 
+                        badgeContent={cartItemCount} 
+                        color="error"
                         sx={{
-                          width: 45,
-                          height: 45,
-                          bgcolor: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                          background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          fontSize: '1.1rem',
-                          border: '2px solid rgba(255, 255, 255, 0.3)',
-                          boxShadow: '0 4px 14px rgba(33, 150, 243, 0.4)',
-                          cursor: 'pointer',
-                          '&:hover': {
-                            boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
+                          '& .MuiBadge-badge': {
+                            fontSize: '0.7rem',
+                            minWidth: '18px',
+                            height: '18px',
+                            padding: '0 4px',
+                            backgroundColor: '#FF4081',
+                            color: 'white',
+                            fontWeight: 'bold',
                           },
                         }}
                       >
-                        {getInitials(user.firstName, user.lastName)}
-                      </Avatar>
+                        <ShoppingCart sx={{ fontSize: '24px', color: 'white' }} />
+                      </Badge>
                     </IconButton>
-                  </Box>
-                </motion.div>
+                  </motion.div>
+                </>
               ) : (
                 <motion.div
                   whileHover={{ scale: 1.02 }}

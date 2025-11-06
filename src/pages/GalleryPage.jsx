@@ -17,7 +17,6 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon, ZoomIn as ZoomInIcon } from '@mui/icons-material';
 
-// Import gallery images
 import gallery1 from '../assets/products/Gellary/2bae113f6e9839dd87fee0c9c3d2326f7aaf74c7.jpg';
 import gallery2 from '../assets/products/Gellary/7ad6bc835097a5e543f9b4d8e92f2c86dd0fc1dc.jpg';
 import gallery3 from '../assets/products/Gellary/b8e63afc60119e2b7f569522e7f62dfde200e4a6.jpg';
@@ -36,7 +35,6 @@ import gallery14 from '../assets/products/Gellary/Rectangle 10.png';
 const GalleryPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  // Category filtering removed; show all items
   const [selectedImage, setSelectedImage] = useState(null);
   const [open, setOpen] = useState(false);
 

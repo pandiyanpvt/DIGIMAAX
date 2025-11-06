@@ -58,7 +58,6 @@ const ProfilePage = () => {
     bio: '',
   });
 
-  // Sync profileData with user data whenever user changes
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -98,10 +97,8 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Update user in context
       signIn({
         ...user,
         ...profileData,
@@ -117,7 +114,6 @@ const ProfilePage = () => {
   };
 
   const handleCancelEdit = () => {
-    // Reset to current user data
     if (user) {
       setProfileData({
         firstName: user.firstName || '',
@@ -157,7 +153,6 @@ const ProfilePage = () => {
     }
 
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       setEditPasswordMode(false);
