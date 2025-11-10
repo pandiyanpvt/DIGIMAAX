@@ -15,6 +15,8 @@ body {
   background: #0A0A0F;
   color: #FFFFFF;
   overflow-x: hidden;
+  /* Firefox scrollbar colors: thumb track */
+  scrollbar-color: #2196F3 rgba(26, 26, 46, 0.3);
 }
 
 #root {
@@ -31,12 +33,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #2196F3, #FF4081);
+  background: #2196F3;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #1976D2, #C2185B);
+  background: #1976D2;
 }
 
 /* Selection color */

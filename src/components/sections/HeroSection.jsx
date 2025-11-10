@@ -47,6 +47,7 @@ const HeroSection = () => {
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const slideInOffset = isMobile ? -60 : -120;
 
   useEffect(() => {
     const preloadImages = () => {
@@ -128,10 +129,10 @@ const HeroSection = () => {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, y: slideInOffset }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 60 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             style={{
               position: 'absolute',
               top: 0,
@@ -162,7 +163,7 @@ const HeroSection = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'linear-gradient(180deg, rgba(41, 8, 93, 0.6) 0%, rgba(26, 5, 64, 0.7) 100%)',
+            background: 'linear-gradient(180deg, rgba(41, 8, 93, 0.35) 0%, rgba(26, 5, 64, 0.5) 100%)',
             zIndex: 1,
           }}
         />
@@ -284,10 +285,11 @@ const HeroSection = () => {
       <Box
         sx={{
           position: 'absolute',
-          bottom: { xs: 20, md: 30 },
-          left: '50%',
-          transform: 'translateX(-50%)',
+          top: '50%',
+          left: { xs: 10, sm: 20, md: 30 },
+          transform: 'translateY(-50%)',
           display: 'flex',
+          flexDirection: 'column',
           gap: { xs: 0.8, sm: 1, lg: 1.2 },
           zIndex: 3,
         }}
