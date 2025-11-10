@@ -226,9 +226,11 @@ const Navbar = () => {
       <AppBar
         position="fixed"
         sx={{
-          background: 'linear-gradient(270deg, #4B11A9 0%, #29085D 100%)',
-          backdropFilter: 'blur(10px)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+          backgroundColor: 'rgba(15, 15, 25, 0.28)',
+          backdropFilter: 'blur(12px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(12px) saturate(140%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
           transition: 'all 0.3s ease-in-out',
         }}
       >
@@ -239,16 +241,26 @@ const Navbar = () => {
             whileTap={{ scale: 0.95 }}
           >
             <Box
-              component="img"
-              src={logoImage}
-              alt="DIGIMAAX Logo"
+              component={RouterLink}
+              to="/"
               sx={{
-                height: isMobile ? '40px' : '50px',
-                width: 'auto',
-                objectFit: 'contain',
-                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                textDecoration: 'none',
               }}
-            />
+            >
+              <Box
+                component="img"
+                src={logoImage}
+                alt="DIGIMAAX Logo"
+                sx={{
+                  height: isMobile ? '40px' : '50px',
+                  width: 'auto',
+                  objectFit: 'contain',
+                  cursor: 'pointer',
+                }}
+              />
+            </Box>
           </motion.div>
 
           {/* Desktop Navigation */}
