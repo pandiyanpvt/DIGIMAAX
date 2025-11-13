@@ -27,6 +27,7 @@ import {
   Instagram,
   LinkedIn,
 } from '@mui/icons-material';
+import { submitContactForm } from '../../api/contact';
 
 const ContactSection = () => {
   const theme = useTheme();
@@ -45,6 +46,7 @@ const ContactSection = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -77,6 +79,10 @@ const ContactSection = () => {
       newErrors.email = 'Email is invalid';
     }
     
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    }
+    
     if (!formData.subject.trim()) {
       newErrors.subject = 'Subject is required';
     }
@@ -98,12 +104,18 @@ const ContactSection = () => {
     }
     
     setIsSubmitting(true);
+    setApiError('');
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Form submitted:', formData);
+      await submitContactForm({
+        fullName: formData.name.trim(),
+        emailAddress: formData.email.trim(),
+        phoneNumber: formData.phone.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+        serviceInterest: formData.service || null,
+      });
+
       setShowSuccess(true);
       
       // Reset form
@@ -116,7 +128,11 @@ const ContactSection = () => {
         service: '',
       });
     } catch (error) {
-      console.error('Error submitting form:', error);
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Unable to send message. Please try again.';
+      setApiError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -329,6 +345,8 @@ const ContactSection = () => {
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
+                          error={!!errors.phone}
+                          helperText={errors.phone}
                           variant="outlined"
                           sx={{
                             '& .MuiOutlinedInput-root': {
@@ -721,7 +739,7 @@ const ContactSection = () => {
           </Grid>
         </Grid>
 
-        {/* Success Message */}
+        {/* Feedback Messages */}
         <Snackbar
           open={showSuccess}
           autoHideDuration={6000}
@@ -734,6 +752,20 @@ const ContactSection = () => {
             sx={{ width: '100%' }}
           >
             Message sent successfully! We'll get back to you soon.
+          </Alert>
+        </Snackbar>
+        <Snackbar
+          open={!!apiError}
+          autoHideDuration={6000}
+          onClose={() => setApiError('')}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={() => setApiError('')}
+            severity="error"
+            sx={{ width: '100%' }}
+          >
+            {apiError}
           </Alert>
         </Snackbar>
       </Container>

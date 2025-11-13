@@ -1,1187 +1,690 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Box,
-  Typography,
-  Divider,
-  IconButton,
-  Alert,
-  Tab,
-  Tabs,
+	Alert,
+	Box,
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
+	Divider,
+	IconButton,
+	InputAdornment,
+	Tab,
+	Tabs,
+	TextField,
+	Typography,
 } from '@mui/material';
-import { motion } from 'framer-motion';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '../context/AuthContext';
 
+const DEFAULT_USER_ROLE_ID = Number(
+	import.meta.env?.VITE_DEFAULT_USER_ROLE_ID ?? 2
+);
+
+const INITIAL_SIGN_IN = { email: '', password: '' };
+const INITIAL_SIGN_UP = {
+	firstName: '',
+	lastName: '',
+	email: '',
+	phoneNumber: '',
+	password: '',
+	confirmPassword: '',
+};
+
 const SignInModal = () => {
-  const { signInModalOpen, closeSignInModal, signIn } = useAuth();
-  const [activeTab, setActiveTab] = useState(0);
-  const [signInData, setSignInData] = useState({
-    email: '',
-    password: '',
-  });
-  const [signUpData, setSignUpData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({
-    signIn: { email: '', password: '' },
-    signUp: { firstName: '', lastName: '', email: '', password: '', confirmPassword: '' },
-  });
-  
-  // OTP and Forgot Password states
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showOtpVerification, setShowOtpVerification] = useState(false);
-  const [otpPurpose, setOtpPurpose] = useState(''); // 'signup' or 'forgot'
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [otpError, setOtpError] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [showResetPassword, setShowResetPassword] = useState(false);
+	const {
+		signInModalOpen,
+		closeSignInModal,
+		loginUser,
+		registerUser,
+		requestPasswordReset,
+	} = useAuth();
 
-  // Timer effect for OTP resend
-  React.useEffect(() => {
-    let interval = null;
-    if (resendTimer > 0) {
-      interval = setInterval(() => {
-        setResendTimer((time) => time - 1);
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [resendTimer]);
+	const [activeTab, setActiveTab] = useState(0);
+	const [mode, setMode] = useState('default'); // 'default' | 'forgot'
+	const [signInData, setSignInData] = useState(INITIAL_SIGN_IN);
+	const [signUpData, setSignUpData] = useState(INITIAL_SIGN_UP);
+	const [forgotEmail, setForgotEmail] = useState('');
+	const [loading, setLoading] = useState(false);
+	const [status, setStatus] = useState({ error: '', success: '' });
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [showSignInPassword, setShowSignInPassword] = useState(false);
 
-  // Validation functions
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      return 'Email is required';
-    }
-    if (!emailRegex.test(email)) {
-      return 'Please enter a valid email address';
-    }
-    return '';
-  };
+	const validators = useMemo(
+		() => ({
+			email(value) {
+				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+				if (!value) return 'Email is required';
+				if (!emailRegex.test(value)) return 'Please enter a valid email address';
+				return '';
+			},
+			password(value) {
+				if (!value) return 'Password is required';
+				if (value.length < 6) return 'Password must be at least 6 characters';
+				if (value.length > 50) return 'Password must be less than 50 characters';
+				return '';
+			},
+			name(value, label) {
+				if (!value?.trim()) return `${label} is required`;
+				if (value.length < 2) return `${label} must be at least 2 characters`;
+				if (value.length > 40) return `${label} must be less than 40 characters`;
+				if (!/^[a-zA-Z\s'-]+$/.test(value)) {
+					return `${label} contains invalid characters`;
+				}
+				return '';
+			},
+			phone(value) {
+				if (!value) return 'Phone number is required';
+				if (!/^[+\d][\d\s\-()]{6,20}$/.test(value)) {
+					return 'Please enter a valid phone number';
+				}
+				return '';
+			},
+		}),
+		[]
+	);
 
-  const validatePassword = (password) => {
-    if (!password) {
-      return 'Password is required';
-    }
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    if (password.length > 50) {
-      return 'Password must be less than 50 characters';
-    }
-    return '';
-  };
+	const handleTabChange = (_, newValue) => {
+		setActiveTab(newValue);
+		setMode('default');
+		setStatus({ error: '', success: '' });
+		setShowPassword(false);
+		setShowConfirmPassword(false);
+		setShowSignInPassword(false);
+	};
 
-  const validateName = (name, fieldName) => {
-    if (!name || name.trim() === '') {
-      return `${fieldName} is required`;
-    }
-    if (name.length < 2) {
-      return `${fieldName} must be at least 2 characters`;
-    }
-    if (name.length > 30) {
-      return `${fieldName} must be less than 30 characters`;
-    }
-    if (!/^[a-zA-Z\s-']+$/.test(name)) {
-      return `${fieldName} contains invalid characters`;
-    }
-    return '';
-  };
+	const handleClose = () => {
+		setMode('default');
+		setActiveTab(0);
+		setStatus({ error: '', success: '' });
+		setSignInData(INITIAL_SIGN_IN);
+		setSignUpData(INITIAL_SIGN_UP);
+		setForgotEmail('');
+		setShowPassword(false);
+		setShowConfirmPassword(false);
+		setShowSignInPassword(false);
+		closeSignInModal();
+	};
 
-  const validateConfirmPassword = (password, confirmPassword) => {
-    if (!confirmPassword) {
-      return 'Please confirm your password';
-    }
-    if (password !== confirmPassword) {
-      return 'Passwords do not match';
-    }
-    return '';
-  };
+	const handleSignIn = async () => {
+		const emailError = validators.email(signInData.email);
+		const passwordError = validators.password(signInData.password);
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    setError('');
-    setFieldErrors({
-      signIn: { email: '', password: '' },
-      signUp: { firstName: '', lastName: '', email: '', password: '', confirmPassword: '' },
-    });
-  };
+		if (emailError || passwordError) {
+			setStatus({
+				error: emailError || passwordError,
+				success: '',
+			});
+			return;
+		}
 
-  const handleSignInChange = (field) => (event) => {
-    const value = event.target.value;
-    setSignInData({ ...signInData, [field]: value });
-    setError('');
-    
-    // Clear field error when user starts typing
-    setFieldErrors({
-      ...fieldErrors,
-      signIn: { ...fieldErrors.signIn, [field]: '' },
-    });
-  };
+		setLoading(true);
+		setStatus({ error: '', success: '' });
+		try {
+			await loginUser({
+				email: signInData.email.trim(),
+				password: signInData.password,
+			});
+			setSignInData(INITIAL_SIGN_IN);
+		} catch (error) {
+			const message =
+				error?.response?.data?.message ||
+				error?.message ||
+				'Unable to sign in. Please try again.';
+			setStatus({ error: message, success: '' });
+		} finally {
+			setLoading(false);
+		}
+	};
 
-  const handleSignUpChange = (field) => (event) => {
-    const value = event.target.value;
-    setSignUpData({ ...signUpData, [field]: value });
-    setError('');
-    
-    // Clear field error when user starts typing
-    setFieldErrors({
-      ...fieldErrors,
-      signUp: { ...fieldErrors.signUp, [field]: '' },
-    });
-  };
+	const handleSignUp = async () => {
+		const errors = {
+			firstName: validators.name(signUpData.firstName, 'First name'),
+			lastName: validators.name(signUpData.lastName, 'Last name'),
+			email: validators.email(signUpData.email),
+			phoneNumber: validators.phone(signUpData.phoneNumber),
+			password: validators.password(signUpData.password),
+			confirmPassword: '',
+		};
 
-  const validateSignInForm = () => {
-    const errors = {
-      email: validateEmail(signInData.email),
-      password: validatePassword(signInData.password),
-    };
+		if (!signUpData.confirmPassword) {
+			errors.confirmPassword = 'Please confirm your password';
+		} else if (signUpData.password !== signUpData.confirmPassword) {
+			errors.confirmPassword = 'Passwords do not match';
+		}
 
-    setFieldErrors({
-      ...fieldErrors,
-      signIn: errors,
-    });
+		const firstError = Object.values(errors).find(Boolean);
+		if (firstError) {
+			setStatus({ error: firstError, success: '' });
+			return;
+		}
 
-    return !errors.email && !errors.password;
-  };
+		setLoading(true);
+		setStatus({ error: '', success: '' });
+		try {
+			await registerUser({
+				firstName: signUpData.firstName.trim(),
+				lastName: signUpData.lastName.trim(),
+				email: signUpData.email.trim(),
+				password: signUpData.password,
+				phoneNumber: signUpData.phoneNumber.trim(),
+				userRoleId: DEFAULT_USER_ROLE_ID,
+			});
 
-  const validateSignUpForm = () => {
-    const errors = {
-      firstName: validateName(signUpData.firstName, 'First name'),
-      lastName: validateName(signUpData.lastName, 'Last name'),
-      email: validateEmail(signUpData.email),
-      password: validatePassword(signUpData.password),
-      confirmPassword: validateConfirmPassword(signUpData.password, signUpData.confirmPassword),
-    };
+			await loginUser({
+				email: signUpData.email.trim(),
+				password: signUpData.password,
+			});
 
-    setFieldErrors({
-      ...fieldErrors,
-      signUp: errors,
-    });
+			setSignUpData(INITIAL_SIGN_UP);
+			setStatus({
+				error: '',
+				success: 'Account created successfully!',
+			});
+		} catch (error) {
+			const message =
+				error?.response?.data?.message ||
+				error?.message ||
+				'Unable to register. Please try again.';
+			setStatus({ error: message, success: '' });
+		} finally {
+			setLoading(false);
+		}
+	};
 
-    return !errors.firstName && !errors.lastName && !errors.email && !errors.password && !errors.confirmPassword;
-  };
+	const handleForgotPassword = async () => {
+		const emailError = validators.email(forgotEmail);
+		if (emailError) {
+			setStatus({ error: emailError, success: '' });
+			return;
+		}
 
-  const handleSignIn = async () => {
-    // Validate form
-    if (!validateSignInForm()) {
-      setError('Please fix the errors below');
-      return;
-    }
+		setLoading(true);
+		setStatus({ error: '', success: '' });
+		try {
+			const response = await requestPasswordReset({
+				email: forgotEmail.trim(),
+			});
+			setStatus({
+				error: '',
+				success:
+					response?.message ||
+					'If the email exists, a reset link was sent.',
+			});
+		} catch (error) {
+			const message =
+				error?.response?.data?.message ||
+				error?.message ||
+				'Sorry, we could not process your request.';
+			setStatus({ error: message, success: '' });
+		} finally {
+			setLoading(false);
+		}
+	};
 
-    setLoading(true);
-    setError('');
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful sign in
-      signIn({
-        id: 1,
-        firstName: 'John',
-        lastName: 'Doe',
-        email: signInData.email,
-      });
-    } catch (err) {
-      setError('Invalid email or password. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+	const renderSignIn = () => (
+		<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+			<TextField
+				fullWidth
+				label="Email"
+				type="email"
+				value={signInData.email}
+				onChange={(event) =>
+					setSignInData((prev) => ({
+						...prev,
+						email: event.target.value,
+					}))
+				}
+				InputProps={{
+					startAdornment: (
+						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<TextField
+				fullWidth
+				label="Password"
+				type={showSignInPassword ? 'text' : 'password'}
+				value={signInData.password}
+				onChange={(event) =>
+					setSignInData((prev) => ({
+						...prev,
+						password: event.target.value,
+					}))
+				}
+				InputProps={{
+					startAdornment: (
+						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+					endAdornment: (
+						<InputAdornment position="end">
+							<IconButton
+								onClick={() => setShowSignInPassword(!showSignInPassword)}
+								edge="end"
+								sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+							>
+								{showSignInPassword ? <VisibilityOff /> : <Visibility />}
+							</IconButton>
+						</InputAdornment>
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<Button
+				variant="text"
+				onClick={() => {
+					setMode('forgot');
+					setStatus({ error: '', success: '' });
+				}}
+				sx={{
+					alignSelf: 'flex-start',
+					color: '#64B5F6',
+					'&:hover': {
+						backgroundColor: 'rgba(100, 181, 246, 0.1)',
+					},
+				}}
+			>
+				Forgot Password?
+			</Button>
+		</Box>
+	);
 
-  const handleSignUp = async () => {
-    // Validate form
-    if (!validateSignUpForm()) {
-      setError('Please fix the errors below');
-      return;
-    }
+	const renderSignUp = () => (
+		<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+			<Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+				<TextField
+					fullWidth
+					label="First Name"
+					value={signUpData.firstName}
+					onChange={(event) =>
+						setSignUpData((prev) => ({
+							...prev,
+							firstName: event.target.value,
+						}))
+					}
+					InputProps={{
+						startAdornment: (
+							<PersonIcon
+								sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }}
+							/>
+						),
+					}}
+					sx={textFieldSx}
+				/>
+				<TextField
+					fullWidth
+					label="Last Name"
+					value={signUpData.lastName}
+					onChange={(event) =>
+						setSignUpData((prev) => ({
+							...prev,
+							lastName: event.target.value,
+						}))
+					}
+					InputProps={{
+						startAdornment: (
+							<PersonIcon
+								sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }}
+							/>
+						),
+					}}
+					sx={textFieldSx}
+				/>
+			</Box>
+			<TextField
+				fullWidth
+				label="Email"
+				type="email"
+				value={signUpData.email}
+				onChange={(event) =>
+					setSignUpData((prev) => ({
+						...prev,
+						email: event.target.value,
+					}))
+				}
+				InputProps={{
+					startAdornment: (
+						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<TextField
+				fullWidth
+				label="Phone Number"
+				value={signUpData.phoneNumber}
+				onChange={(event) =>
+					setSignUpData((prev) => ({
+						...prev,
+						phoneNumber: event.target.value,
+					}))
+				}
+				InputProps={{
+					startAdornment: (
+						<PhoneAndroidIcon
+							sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }}
+						/>
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<TextField
+				fullWidth
+				label="Password"
+				type={showPassword ? 'text' : 'password'}
+				value={signUpData.password}
+				onChange={(event) =>
+					setSignUpData((prev) => ({
+						...prev,
+						password: event.target.value,
+					}))
+				}
+				InputProps={{
+					startAdornment: (
+						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+					endAdornment: (
+						<InputAdornment position="end">
+							<IconButton
+								onClick={() => setShowPassword(!showPassword)}
+								edge="end"
+								sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+							>
+								{showPassword ? <VisibilityOff /> : <Visibility />}
+							</IconButton>
+						</InputAdornment>
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<TextField
+				fullWidth
+				label="Confirm Password"
+				type={showConfirmPassword ? 'text' : 'password'}
+				value={signUpData.confirmPassword}
+				onChange={(event) =>
+					setSignUpData((prev) => ({
+						...prev,
+						confirmPassword: event.target.value,
+					}))
+				}
+				InputProps={{
+					startAdornment: (
+						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+					endAdornment: (
+						<InputAdornment position="end">
+							<IconButton
+								onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+								edge="end"
+								sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+							>
+								{showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+							</IconButton>
+						</InputAdornment>
+					),
+				}}
+				sx={textFieldSx}
+			/>
+		</Box>
+	);
 
-    setLoading(true);
-    setError('');
-    try {
-      // Simulate sending OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show OTP verification screen
-      setOtpPurpose('signup');
-      setShowOtpVerification(true);
-      setOtpSent(true);
-      setResendTimer(60);
-      setError('');
-    } catch (err) {
-      setError('Failed to send OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+	const renderForgotPassword = () => (
+		<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 1 }}>
+			<Typography
+				variant="body1"
+				sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}
+			>
+				Enter your email address and we will send you a reset link.
+			</Typography>
+			<TextField
+				fullWidth
+				label="Email"
+				type="email"
+				value={forgotEmail}
+				onChange={(event) => setForgotEmail(event.target.value)}
+				InputProps={{
+					startAdornment: (
+						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<Box sx={{ display: 'flex', gap: 2 }}>
+				<Button
+					onClick={() => {
+						setMode('default');
+						setStatus({ error: '', success: '' });
+					}}
+					variant="outlined"
+					fullWidth
+					sx={{
+						color: 'white',
+						borderColor: 'rgba(255, 255, 255, 0.3)',
+						'&:hover': {
+							borderColor: 'rgba(255, 255, 255, 0.5)',
+							backgroundColor: 'rgba(255, 255, 255, 0.05)',
+						},
+					}}
+				>
+					Back
+				</Button>
+				<Button
+					onClick={handleForgotPassword}
+					variant="contained"
+					fullWidth
+					disabled={loading}
+					sx={primaryButtonSx}
+				>
+					{loading ? 'Sending...' : 'Send Reset Link'}
+				</Button>
+			</Box>
+		</Box>
+	);
 
-  const handleSendOtp = async (email, purpose) => {
-    setLoading(true);
-    setError('');
-    setOtpError('');
-    try {
-      // Simulate API call to send OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log(`OTP sent to ${email} for ${purpose}`);
-      setOtpSent(true);
-      setResendTimer(60);
-      setShowOtpVerification(true);
-      setOtpPurpose(purpose);
-    } catch (err) {
-      setError('Failed to send OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+	const dialogTitle =
+		mode === 'forgot'
+			? 'Forgot Password'
+			: activeTab === 0
+			? 'Welcome Back'
+			: 'Create Your Account';
 
-  const handleOtpChange = (index, value) => {
-    if (value.length > 1) {
-      value = value.slice(0, 1);
-    }
-    
-    if (!/^\d*$/.test(value)) {
-      return;
-    }
+	return (
+		<Dialog
+			open={signInModalOpen}
+			onClose={handleClose}
+			maxWidth="sm"
+			fullWidth
+			sx={{
+				'& .MuiBackdrop-root': {
+					backdropFilter: 'blur(8px)',
+					backgroundColor: 'rgba(0, 0, 0, 0.6)',
+				},
+				'& .MuiDialog-paper': {
+					borderRadius: 4,
+					background: 'rgba(255, 255, 255, 0.1)',
+					backdropFilter: 'blur(20px)',
+					border: '1px solid rgba(255, 255, 255, 0.2)',
+					boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+					color: 'white',
+				},
+			}}
+		>
+			<DialogTitle sx={{ pb: 0 }}>
+				<Box
+					sx={{
+						display: 'flex',
+						justifyContent: 'space-between',
+						alignItems: 'center',
+					}}
+				>
+					<Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white' }}>
+						{dialogTitle}
+					</Typography>
+					<IconButton
+						onClick={handleClose}
+						size="small"
+						sx={{
+							color: 'white',
+							'&:hover': {
+								backgroundColor: 'rgba(255, 255, 255, 0.1)',
+							},
+						}}
+					>
+						<CloseIcon />
+					</IconButton>
+				</Box>
+			</DialogTitle>
 
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    setOtpError('');
+			<DialogContent sx={{ px: 3, py: 2 }}>
+				{mode === 'default' && (
+					<Box sx={{ borderBottom: 1, borderColor: 'rgba(255, 255, 255, 0.2)', mb: 3 }}>
+						<Tabs
+							value={activeTab}
+							onChange={handleTabChange}
+							centered
+							sx={{
+								'& .MuiTab-root': {
+									color: 'rgba(255, 255, 255, 0.7)',
+									fontWeight: 600,
+									textTransform: 'none',
+								},
+								'& .Mui-selected': {
+									color: 'white !important',
+								},
+								'& .MuiTabs-indicator': {
+									backgroundColor: '#2196F3',
+									height: 3,
+								},
+							}}
+						>
+							<Tab label="Sign In" />
+							<Tab label="Sign Up" />
+						</Tabs>
+					</Box>
+				)}
 
-    // Auto-focus next input
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      if (nextInput) nextInput.focus();
-    }
-  };
+				{status.error && (
+					<Alert
+						severity="error"
+						sx={{
+							mb: 2,
+							backgroundColor: 'rgba(211, 47, 47, 0.2)',
+							color: '#FF6B6B',
+							border: '1px solid rgba(211, 47, 47, 0.3)',
+							backdropFilter: 'blur(10px)',
+							'& .MuiAlert-icon': {
+								color: '#FF6B6B',
+							},
+						}}
+					>
+						{status.error}
+					</Alert>
+				)}
 
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      if (prevInput) prevInput.focus();
-    }
-  };
+				{status.success && (
+					<Alert
+						severity="success"
+						sx={{
+							mb: 2,
+							backgroundColor: 'rgba(76, 175, 80, 0.2)',
+							color: '#A5D6A7',
+							border: '1px solid rgba(76, 175, 80, 0.3)',
+							backdropFilter: 'blur(10px)',
+							'& .MuiAlert-icon': {
+								color: '#A5D6A7',
+							},
+						}}
+					>
+						{status.success}
+					</Alert>
+				)}
 
-  const handleVerifyOtp = async () => {
-    const otpValue = otp.join('');
-    
-    if (otpValue.length !== 6) {
-      setOtpError('Please enter complete 6-digit OTP');
-      return;
-    }
+				{mode === 'forgot'
+					? renderForgotPassword()
+					: activeTab === 0
+					? renderSignIn()
+					: renderSignUp()}
+			</DialogContent>
 
-    setLoading(true);
-    setOtpError('');
-    try {
-      // Simulate OTP verification
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock OTP verification (in real app, verify with backend)
-      if (otpValue === '123456') {
-        if (otpPurpose === 'signup') {
-          // Complete signup - Sign in the user
-          signIn({
-            id: 1,
-            firstName: signUpData.firstName.trim(),
-            lastName: signUpData.lastName.trim(),
-            email: signUpData.email.trim(),
-          });
-          // Close modal and reset states
-          setShowOtpVerification(false);
-          resetAllStates();
-        } else if (otpPurpose === 'forgot') {
-          // Show reset password form for forgot password flow
-          setShowOtpVerification(false);
-          setShowResetPassword(true);
-        }
-      } else {
-        setOtpError('Invalid OTP. Please try again.');
-      }
-    } catch (err) {
-      setOtpError('Failed to verify OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+			{mode === 'default' && (
+				<DialogActions sx={{ px: 3, pb: 3 }}>
+					<Button
+						onClick={activeTab === 0 ? handleSignIn : handleSignUp}
+						variant="contained"
+						fullWidth
+						disabled={loading}
+						sx={primaryButtonSx}
+					>
+						{loading
+							? 'Please wait...'
+							: activeTab === 0
+							? 'Sign In'
+							: 'Create Account'}
+					</Button>
+				</DialogActions>
+			)}
 
-  const handleResendOtp = async () => {
-    if (resendTimer > 0) return;
-    
-    const email = otpPurpose === 'signup' ? signUpData.email : forgotPasswordEmail;
-    setOtp(['', '', '', '', '', '']);
-    await handleSendOtp(email, otpPurpose);
-  };
+			<Box sx={{ px: 3, pb: 2 }}>
+				<Divider sx={{ mb: 2, borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+				<Typography
+					variant="body2"
+					sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)' }}
+				>
+					By continuing, you agree to our Terms of Service and Privacy Policy.
+				</Typography>
+			</Box>
+		</Dialog>
+	);
+};
 
-  const handleForgotPassword = () => {
-    setShowForgotPassword(true);
-    setActiveTab(-1);
-  };
+const textFieldSx = {
+	'& .MuiOutlinedInput-root': {
+		backgroundColor: 'rgba(255, 255, 255, 0.1)',
+		color: 'white',
+		'& fieldset': {
+			borderColor: 'rgba(255, 255, 255, 0.3)',
+		},
+		'&:hover fieldset': {
+			borderColor: 'rgba(255, 255, 255, 0.5)',
+		},
+		'&.Mui-focused fieldset': {
+			borderColor: '#2196F3',
+		},
+	},
+	'& .MuiInputLabel-root': {
+		color: 'rgba(255, 255, 255, 0.7)',
+		'&.Mui-focused': {
+			color: '#2196F3',
+		},
+	},
+};
 
-  const handleForgotPasswordSubmit = async () => {
-    const emailError = validateEmail(forgotPasswordEmail);
-    if (emailError) {
-      setError(emailError);
-      return;
-    }
-
-    await handleSendOtp(forgotPasswordEmail, 'forgot');
-    setShowForgotPassword(false);
-  };
-
-  const handleResetPassword = async () => {
-    const passwordError = validatePassword(newPassword);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
-
-    const confirmError = validateConfirmPassword(newPassword, confirmNewPassword);
-    if (confirmError) {
-      setError(confirmError);
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    try {
-      // Simulate API call to reset password
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Reset successful
-      setError('');
-      setShowResetPassword(false);
-      setShowForgotPassword(false);
-      setShowOtpVerification(false);
-      setActiveTab(0);
-      resetAllStates();
-      alert('Password reset successful! Please sign in with your new password.');
-    } catch (err) {
-      setError('Failed to reset password. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetAllStates = () => {
-    setOtp(['', '', '', '', '', '']);
-    setOtpError('');
-    setOtpSent(false);
-    setForgotPasswordEmail('');
-    setNewPassword('');
-    setConfirmNewPassword('');
-    setShowForgotPassword(false);
-    setShowOtpVerification(false);
-    setShowResetPassword(false);
-    setResendTimer(0);
-  };
-
-  const handleClose = () => {
-    setError('');
-    setSignInData({ email: '', password: '' });
-    setSignUpData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
-    setFieldErrors({
-      signIn: { email: '', password: '' },
-      signUp: { firstName: '', lastName: '', email: '', password: '', confirmPassword: '' },
-    });
-    setActiveTab(0);
-    resetAllStates();
-    closeSignInModal();
-  };
-
-  const handleBackToSignIn = () => {
-    setShowForgotPassword(false);
-    setShowOtpVerification(false);
-    setShowResetPassword(false);
-    setActiveTab(0);
-    setError('');
-    resetAllStates();
-  };
-
-  return (
-    <Dialog
-      open={signInModalOpen}
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-      sx={{
-        '& .MuiBackdrop-root': {
-          backdropFilter: 'blur(8px)',
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        },
-        '& .MuiDialog-paper': {
-          borderRadius: 4,
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-          color: 'white',
-        },
-      }}
-    >
-      <DialogTitle sx={{ pb: 0 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'white' }}>
-            {showOtpVerification 
-              ? 'Verify OTP' 
-              : showForgotPassword 
-              ? 'Forgot Password' 
-              : showResetPassword
-              ? 'Reset Password'
-              : 'Welcome to Digimaax'}
-          </Typography>
-          <IconButton 
-            onClick={handleClose} 
-            size="small"
-            sx={{ 
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              }
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-
-      <DialogContent sx={{ px: 3, py: 2 }}>
-        {/* Tabs - only show when not in special screens */}
-        {!showForgotPassword && !showOtpVerification && !showResetPassword && (
-          <Box sx={{ borderBottom: 1, borderColor: 'rgba(255, 255, 255, 0.2)', mb: 3 }}>
-            <Tabs 
-              value={activeTab} 
-              onChange={handleTabChange} 
-              centered
-              sx={{
-                '& .MuiTab-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  fontWeight: 600,
-                },
-                '& .Mui-selected': {
-                  color: 'white !important',
-                },
-                '& .MuiTabs-indicator': {
-                  backgroundColor: '#2196F3',
-                  height: 3,
-                },
-              }}
-            >
-            <Tab label="Sign In" />
-            <Tab label="Sign Up" />
-          </Tabs>
-        </Box>
-        )}
-
-        {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 2,
-              backgroundColor: 'rgba(211, 47, 47, 0.2)',
-              color: '#FF6B6B',
-              border: '1px solid rgba(211, 47, 47, 0.3)',
-              backdropFilter: 'blur(10px)',
-              '& .MuiAlert-icon': {
-                color: '#FF6B6B',
-              },
-            }}
-          >
-            {error}
-          </Alert>
-        )}
-
-        {/* OTP Verification Screen */}
-        {showOtpVerification && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 2 }}>
-            <Typography variant="body1" sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}>
-              We've sent a 6-digit verification code to
-            </Typography>
-            <Typography variant="body2" sx={{ textAlign: 'center', color: '#2196F3', fontWeight: 600 }}>
-              {otpPurpose === 'signup' ? signUpData.email : forgotPasswordEmail}
-            </Typography>
-
-            {/* Development Note */}
-            <Alert 
-              severity="info" 
-              sx={{ 
-                backgroundColor: 'rgba(33, 150, 243, 0.2)',
-                color: '#64B5F6',
-                border: '1px solid rgba(33, 150, 243, 0.3)',
-                backdropFilter: 'blur(10px)',
-                '& .MuiAlert-icon': {
-                  color: '#64B5F6',
-                },
-              }}
-            >
-              <Typography variant="body2">
-                For testing: Use OTP <strong>123456</strong>
-              </Typography>
-            </Alert>
-
-            {/* OTP Input Boxes */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, my: 2 }}>
-              {otp.map((digit, index) => (
-                <TextField
-                  key={index}
-                  id={`otp-${index}`}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  inputProps={{
-                    maxLength: 1,
-                    style: { textAlign: 'center', fontSize: '24px', fontWeight: 'bold' },
-                  }}
-                  sx={{
-                    width: '50px',
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      color: 'white',
-                      '& fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#2196F3',
-                      },
-                    },
-                  }}
-                />
-              ))}
-            </Box>
-
-            {otpError && (
-              <Typography variant="body2" sx={{ textAlign: 'center', color: '#FF6B6B' }}>
-                {otpError}
-              </Typography>
-            )}
-
-            <Box sx={{ textAlign: 'center' }}>
-              {resendTimer > 0 ? (
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  Resend OTP in {resendTimer}s
-                </Typography>
-              ) : (
-                <Button
-                  onClick={handleResendOtp}
-                  variant="text"
-                  sx={{ color: '#64B5F6' }}
-                >
-                  Resend OTP
-                </Button>
-              )}
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                onClick={handleBackToSignIn}
-                variant="outlined"
-                fullWidth
-                sx={{
-                  color: 'white',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                  '&:hover': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  },
-                }}
-              >
-                Back
-              </Button>
-              <Button
-                onClick={handleVerifyOtp}
-                variant="contained"
-                fullWidth
-                disabled={loading}
-                sx={{
-                  background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #42A5F5 0%, #1E88E5 100%)',
-                  },
-                }}
-              >
-                {loading ? 'Verifying...' : 'Verify OTP'}
-              </Button>
-            </Box>
-          </Box>
-        )}
-
-        {/* Forgot Password Screen */}
-        {showForgotPassword && !showOtpVerification && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 2 }}>
-            <Typography variant="body1" sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}>
-              Enter your email address and we'll send you a verification code
-            </Typography>
-
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={forgotPasswordEmail}
-              onChange={(e) => setForgotPasswordEmail(e.target.value)}
-              InputProps={{
-                startAdornment: <EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2196F3',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  '&.Mui-focused': {
-                    color: '#2196F3',
-                  },
-                },
-              }}
-            />
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                onClick={handleBackToSignIn}
-                variant="outlined"
-                fullWidth
-                sx={{
-                  color: 'white',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                  '&:hover': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  },
-                }}
-              >
-                Back
-              </Button>
-              <Button
-                onClick={handleForgotPasswordSubmit}
-                variant="contained"
-                fullWidth
-                disabled={loading}
-                sx={{
-                  background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #42A5F5 0%, #1E88E5 100%)',
-                  },
-                }}
-              >
-                {loading ? 'Sending...' : 'Send OTP'}
-              </Button>
-            </Box>
-          </Box>
-        )}
-
-        {/* Reset Password Screen */}
-        {showResetPassword && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 2 }}>
-            <Typography variant="body1" sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}>
-              Create a new password for your account
-            </Typography>
-
-            <TextField
-              fullWidth
-              label="New Password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              InputProps={{
-                startAdornment: <LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2196F3',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  '&.Mui-focused': {
-                    color: '#2196F3',
-                  },
-                },
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Confirm New Password"
-              type="password"
-              value={confirmNewPassword}
-              onChange={(e) => setConfirmNewPassword(e.target.value)}
-              InputProps={{
-                startAdornment: <LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2196F3',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  '&.Mui-focused': {
-                    color: '#2196F3',
-                  },
-                },
-              }}
-            />
-
-            <Button
-              onClick={handleResetPassword}
-              variant="contained"
-              fullWidth
-              disabled={loading}
-              sx={{
-                background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                color: 'white',
-                py: 1.5,
-                fontWeight: 'bold',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #42A5F5 0%, #1E88E5 100%)',
-                },
-              }}
-            >
-              {loading ? 'Resetting...' : 'Reset Password'}
-            </Button>
-          </Box>
-        )}
-
-        {/* Sign In/Sign Up Forms - only show when not in special screens */}
-        {!showForgotPassword && !showOtpVerification && !showResetPassword && activeTab === 0 ? (
-          // Sign In Form
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={signInData.email}
-              onChange={handleSignInChange('email')}
-              error={!!fieldErrors.signIn.email}
-              helperText={fieldErrors.signIn.email}
-              InputProps={{
-                startAdornment: <EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2196F3',
-                  },
-                  '&.Mui-error fieldset': {
-                    borderColor: '#FF6B6B',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  '&.Mui-focused': {
-                    color: '#2196F3',
-                  },
-                  '&.Mui-error': {
-                    color: '#FF6B6B',
-                  },
-                },
-                '& .MuiFormHelperText-root': {
-                  color: '#FF6B6B',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  margin: 0,
-                  paddingLeft: 1,
-                  paddingTop: 0.5,
-                },
-              }}
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              value={signInData.password}
-              onChange={handleSignInChange('password')}
-              error={!!fieldErrors.signIn.password}
-              helperText={fieldErrors.signIn.password}
-              InputProps={{
-                startAdornment: <LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2196F3',
-                  },
-                  '&.Mui-error fieldset': {
-                    borderColor: '#FF6B6B',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  '&.Mui-focused': {
-                    color: '#2196F3',
-                  },
-                  '&.Mui-error': {
-                    color: '#FF6B6B',
-                  },
-                },
-                '& .MuiFormHelperText-root': {
-                  color: '#FF6B6B',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  margin: 0,
-                  paddingLeft: 1,
-                  paddingTop: 0.5,
-                },
-              }}
-            />
-            <Button
-              onClick={handleForgotPassword}
-              variant="text"
-              sx={{ 
-                alignSelf: 'flex-start', 
-                color: '#64B5F6',
-                '&:hover': {
-                  backgroundColor: 'rgba(100, 181, 246, 0.1)',
-                }
-              }}
-            >
-              Forgot Password?
-            </Button>
-          </Box>
-        ) : !showForgotPassword && !showOtpVerification && !showResetPassword && activeTab === 1 ? (
-          // Sign Up Form
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                fullWidth
-                label="First Name"
-                value={signUpData.firstName}
-                onChange={handleSignUpChange('firstName')}
-                error={!!fieldErrors.signUp.firstName}
-                helperText={fieldErrors.signUp.firstName}
-                InputProps={{
-                  startAdornment: <PersonIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    color: 'white',
-                    '& fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#2196F3',
-                    },
-                    '&.Mui-error fieldset': {
-                      borderColor: '#FF6B6B',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    '&.Mui-focused': {
-                      color: '#2196F3',
-                    },
-                    '&.Mui-error': {
-                      color: '#FF6B6B',
-                    },
-                  },
-                  '& .MuiFormHelperText-root': {
-                    color: '#FF6B6B',
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                    margin: 0,
-                    paddingLeft: 1,
-                    paddingTop: 0.5,
-                  },
-                }}
-              />
-              <TextField
-                fullWidth
-                label="Last Name"
-                value={signUpData.lastName}
-                onChange={handleSignUpChange('lastName')}
-                error={!!fieldErrors.signUp.lastName}
-                helperText={fieldErrors.signUp.lastName}
-                InputProps={{
-                  startAdornment: <PersonIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    color: 'white',
-                    '& fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#2196F3',
-                    },
-                    '&.Mui-error fieldset': {
-                      borderColor: '#FF6B6B',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    '&.Mui-focused': {
-                      color: '#2196F3',
-                    },
-                    '&.Mui-error': {
-                      color: '#FF6B6B',
-                    },
-                  },
-                  '& .MuiFormHelperText-root': {
-                    color: '#FF6B6B',
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                    margin: 0,
-                    paddingLeft: 1,
-                    paddingTop: 0.5,
-                  },
-                }}
-              />
-            </Box>
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={signUpData.email}
-              onChange={handleSignUpChange('email')}
-              error={!!fieldErrors.signUp.email}
-              helperText={fieldErrors.signUp.email}
-              InputProps={{
-                startAdornment: <EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2196F3',
-                  },
-                  '&.Mui-error fieldset': {
-                    borderColor: '#FF6B6B',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  '&.Mui-focused': {
-                    color: '#2196F3',
-                  },
-                  '&.Mui-error': {
-                    color: '#FF6B6B',
-                  },
-                },
-                '& .MuiFormHelperText-root': {
-                  color: '#FF6B6B',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  margin: 0,
-                  paddingLeft: 1,
-                  paddingTop: 0.5,
-                },
-              }}
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              value={signUpData.password}
-              onChange={handleSignUpChange('password')}
-              error={!!fieldErrors.signUp.password}
-              helperText={fieldErrors.signUp.password}
-              InputProps={{
-                startAdornment: <LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2196F3',
-                  },
-                  '&.Mui-error fieldset': {
-                    borderColor: '#FF6B6B',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  '&.Mui-focused': {
-                    color: '#2196F3',
-                  },
-                  '&.Mui-error': {
-                    color: '#FF6B6B',
-                  },
-                },
-                '& .MuiFormHelperText-root': {
-                  color: '#FF6B6B',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  margin: 0,
-                  paddingLeft: 1,
-                  paddingTop: 0.5,
-                },
-              }}
-            />
-            <TextField
-              fullWidth
-              label="Confirm Password"
-              type="password"
-              value={signUpData.confirmPassword}
-              onChange={handleSignUpChange('confirmPassword')}
-              error={!!fieldErrors.signUp.confirmPassword}
-              helperText={fieldErrors.signUp.confirmPassword}
-              InputProps={{
-                startAdornment: <LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2196F3',
-                  },
-                  '&.Mui-error fieldset': {
-                    borderColor: '#FF6B6B',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  '&.Mui-focused': {
-                    color: '#2196F3',
-                  },
-                  '&.Mui-error': {
-                    color: '#FF6B6B',
-                  },
-                },
-                '& .MuiFormHelperText-root': {
-                  color: '#FF6B6B',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  margin: 0,
-                  paddingLeft: 1,
-                  paddingTop: 0.5,
-                },
-              }}
-            />
-          </Box>
-        ) : null}
-      </DialogContent>
-
-      {/* Dialog Actions - only show for normal sign in/sign up */}
-      {!showForgotPassword && !showOtpVerification && !showResetPassword && (
-      <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button
-          onClick={activeTab === 0 ? handleSignIn : handleSignUp}
-          variant="contained"
-          fullWidth
-          disabled={loading}
-          sx={{
-              background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-              color: 'white',
-            py: 1.5,
-            fontWeight: 'bold',
-              borderRadius: 2,
-              boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
-              '&:hover': { 
-                background: 'linear-gradient(135deg, #42A5F5 0%, #1E88E5 100%)',
-                boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
-              },
-              '&:disabled': {
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: 'rgba(255, 255, 255, 0.5)',
-              },
-          }}
-        >
-          {loading ? 'Please wait...' : (activeTab === 0 ? 'Sign In' : 'Sign Up')}
-        </Button>
-      </DialogActions>
-      )}
-
-      <Box sx={{ px: 3, pb: 2 }}>
-        <Divider sx={{ mb: 2, borderColor: 'rgba(255, 255, 255, 0.2)' }} />
-        <Typography variant="body2" sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)' }}>
-          By signing in, you agree to our Terms of Service and Privacy Policy
-        </Typography>
-      </Box>
-    </Dialog>
-  );
+const primaryButtonSx = {
+	background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+	color: 'white',
+	py: 1.4,
+	fontWeight: 'bold',
+	borderRadius: 2,
+	boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
+	textTransform: 'none',
+	'&:hover': {
+		background: 'linear-gradient(135deg, #42A5F5 0%, #1E88E5 100%)',
+		boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
+	},
+	'&:disabled': {
+		background: 'rgba(255, 255, 255, 0.1)',
+		color: 'rgba(255, 255, 255, 0.5)',
+	},
 };
 
 export default SignInModal;

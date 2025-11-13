@@ -35,9 +35,10 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { updateUser as updateUserRequest } from '../api/user';
 
 const ProfilePage = () => {
-  const { user, signIn } = useAuth();
+  const { user, updateUserSession } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [editPasswordMode, setEditPasswordMode] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -47,7 +48,7 @@ const ProfilePage = () => {
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
+    phoneNumber: '',
     dateOfBirth: '',
     gender: '',
     address: '',
@@ -64,7 +65,7 @@ const ProfilePage = () => {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        phone: user.phone || '',
+        phoneNumber: user.phoneNumber || '',
         dateOfBirth: user.dateOfBirth || '',
         gender: user.gender || '',
         address: user.address || '',
@@ -96,19 +97,54 @@ const ProfilePage = () => {
   };
 
   const handleSaveProfile = async () => {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      signIn({
-        ...user,
-        ...profileData,
-      });
-      
+    if (!user) return;
+
+    const payload = {};
+    if (profileData.firstName !== user.firstName) {
+      payload.firstName = profileData.firstName;
+    }
+    if (profileData.lastName !== user.lastName) {
+      payload.lastName = profileData.lastName;
+    }
+    if (profileData.email !== user.email) {
+      payload.email = profileData.email;
+    }
+    if (profileData.phoneNumber !== (user.phoneNumber || '')) {
+      payload.phoneNumber = profileData.phoneNumber;
+    }
+
+    if (Object.keys(payload).length === 0) {
+      setSuccessMessage('No changes to update.');
+      setTimeout(() => setSuccessMessage(''), 3000);
       setEditMode(false);
-      setSuccessMessage('Profile updated successfully!');
+      return;
+    }
+
+    try {
+      const response = await updateUserRequest(user.id, payload);
+      const updatedUser = response.user || {};
+
+      setProfileData((prev) => ({
+        ...prev,
+        firstName: updatedUser.firstName ?? prev.firstName,
+        lastName: updatedUser.lastName ?? prev.lastName,
+        email: updatedUser.email ?? prev.email,
+        phoneNumber: updatedUser.phoneNumber ?? prev.phoneNumber,
+      }));
+
+      updateUserSession({
+        ...profileData,
+        ...updatedUser,
+        phoneNumber: updatedUser.phoneNumber ?? profileData.phoneNumber,
+      });
+
+      setEditMode(false);
+      setSuccessMessage(response.message || 'Profile updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      setErrorMessage('Failed to update profile');
+      const message =
+        err?.response?.data?.message || err?.message || 'Failed to update profile';
+      setErrorMessage(message);
       setTimeout(() => setErrorMessage(''), 3000);
     }
   };
@@ -119,7 +155,7 @@ const ProfilePage = () => {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        phone: user.phone || '',
+        phoneNumber: user.phoneNumber || '',
         dateOfBirth: user.dateOfBirth || '',
         gender: user.gender || '',
         address: user.address || '',
@@ -153,8 +189,8 @@ const ProfilePage = () => {
     }
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await updateUserRequest(user.id, { password: newPassword });
+
       setEditPasswordMode(false);
       setPasswordData({
         currentPassword: '',
@@ -164,7 +200,9 @@ const ProfilePage = () => {
       setSuccessMessage('Password changed successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      setErrorMessage('Failed to change password');
+      const message =
+        err?.response?.data?.message || err?.message || 'Failed to change password';
+      setErrorMessage(message);
       setTimeout(() => setErrorMessage(''), 3000);
     }
   };
@@ -425,8 +463,8 @@ const ProfilePage = () => {
                     <TextField
                       fullWidth
                       label="Phone Number"
-                      value={profileData.phone}
-                      onChange={handleProfileChange('phone')}
+                      value={profileData.phoneNumber}
+                      onChange={handleProfileChange('phoneNumber')}
                       disabled={!editMode}
                       placeholder={editMode ? "+1 (555) 000-0000" : "Not provided"}
                       InputProps={{
