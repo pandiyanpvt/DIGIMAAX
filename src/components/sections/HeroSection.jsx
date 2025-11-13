@@ -23,6 +23,7 @@ import rectangle96 from '../../assets/hero/header-slider/Rectangle 96.png';
 import rectangle97 from '../../assets/hero/header-slider/Rectangle 97.png';
 import rectangle98 from '../../assets/hero/header-slider/Rectangle 98.png';
 import rectangle99 from '../../assets/hero/header-slider/Rectangle 99.png';
+import { getHeaderImages } from '../../api/headerImages';
 
 const HeroSection = () => {
   const theme = useTheme();
@@ -36,7 +37,7 @@ const HeroSection = () => {
     { icon: <WhatsApp />, color: '#25D366' },
   ];
 
-  const sliderImages = [
+  const fallbackImages = [
     rectangle94,
     rectangle95,
     rectangle96,
@@ -45,9 +46,36 @@ const HeroSection = () => {
     rectangle99,
   ];
 
+  const [sliderImages, setSliderImages] = useState(fallbackImages);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const slideInOffset = isMobile ? -60 : -120;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchHeaderImages = async () => {
+      try {
+        const { images } = await getHeaderImages({ min: 1, max: 6 });
+        const ordered = images
+          .filter((img) => img?.img_url)
+          .sort((a, b) => (a.order_no || 0) - (b.order_no || 0))
+          .map((img) => img.img_url);
+
+        if (isMounted && ordered.length) {
+          setSliderImages(ordered);
+        }
+      } catch (error) {
+        console.error('Failed to load header images', error);
+      }
+    };
+
+    fetchHeaderImages();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const preloadImages = () => {
@@ -71,7 +99,11 @@ const HeroSection = () => {
     };
 
     preloadImages();
-  }, []);
+  }, [sliderImages]);
+
+  useEffect(() => {
+    setCurrentSlide(0);
+  }, [sliderImages.length]);
 
   useEffect(() => {
     if (!imagesLoaded) return;
