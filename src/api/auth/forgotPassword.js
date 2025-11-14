@@ -1,19 +1,18 @@
 import apiClient from '../client';
 
 /**
- * Forgot password - placeholder integration.
- * NOTE: Backend endpoint not found. Expected:
- *   POST /api/user/forgotPassword  -> { email }
- *   or /api/user/requestPasswordReset
- * When backend endpoint is available, this function will work as is by path update.
+ * Forgot password
+ * Backend endpoint: POST /api/user/forgot-password
+ * body: { email }
+ * response: { message }
  */
 export async function forgotPassword({ email }) {
 	if (!email) {
 		throw new Error('email is required');
 	}
 
-	// Update the path below once the backend route exists
-	const endpoint = '/api/user/forgotPassword';
+	// Backend endpoint: POST /api/user/forgot-password
+	const endpoint = '/api/user/forgot-password';
 
 	try {
 		const { data } = await apiClient.post(endpoint, { email });

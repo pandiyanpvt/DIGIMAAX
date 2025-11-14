@@ -87,7 +87,7 @@ const Footer = () => {
             alignItems: 'flex-start',
           }}
         >
-          <Grid item xs={12} sm={6} md={2.5}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
