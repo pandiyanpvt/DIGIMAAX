@@ -1,11 +1,4 @@
 
-import rectangle94 from '../assets/hero/header-slider/Rectangle 94.png';
-import rectangle95 from '../assets/hero/header-slider/Rectangle 95.png';
-import rectangle96 from '../assets/hero/header-slider/Rectangle 96.png';
-import rectangle97 from '../assets/hero/header-slider/Rectangle 97.png';
-import rectangle98 from '../assets/hero/header-slider/Rectangle 98.png';
-import rectangle99 from '../assets/hero/header-slider/Rectangle 99.png';
-
 // Hero section images (legacy - used in ServicesSection)
 import heroRectangle94 from '../assets/hero/Rectangle 94.png';
 import heroRectangle95 from '../assets/hero/Rectangle 95.png';
@@ -32,31 +25,8 @@ import cctvImage from '../assets/products/services/CCTVInstallation.jpg';
 import printingImage from '../assets/products/services/PrintedModels.jpg';
 import serverStorageImage from '../assets/products/services/Server Storage.jpg';
 
-// Gallery images
-import gallery1 from '../assets/products/Gellary/2bae113f6e9839dd87fee0c9c3d2326f7aaf74c7.jpg';
-import gallery2 from '../assets/products/Gellary/7ad6bc835097a5e543f9b4d8e92f2c86dd0fc1dc.jpg';
-import gallery3 from '../assets/products/Gellary/b8e63afc60119e2b7f569522e7f62dfde200e4a6.jpg';
-import gallery4 from '../assets/products/Gellary/Rectangle 10.png';
-import gallery5 from '../assets/products/Gellary/Rectangle 11.png';
-import gallery6 from '../assets/products/Gellary/Rectangle 12.png';
-import gallery7 from '../assets/products/Gellary/Rectangle 13.png';
-import gallery8 from '../assets/products/Gellary/Rectangle 14.png';
-import gallery9 from '../assets/products/Gellary/Rectangle 15.png';
-import gallery10 from '../assets/products/Gellary/Rectangle 16.png';
-import gallery11 from '../assets/products/Gellary/Rectangle 17.png';
-import gallery12 from '../assets/products/Gellary/Rectangle 18.png';
-import gallery13 from '../assets/products/Gellary/Rectangle 19.png';
-import gallery14 from '../assets/products/Gellary/Rectangle 20.png';
-
 // Collect all images in an array
 const allImages = [
-  // Header slider images
-  rectangle94,
-  rectangle95,
-  rectangle96,
-  rectangle97,
-  rectangle98,
-  rectangle99,
   // Hero section images (ServicesSection)
   heroRectangle94,
   heroRectangle95,
@@ -78,21 +48,6 @@ const allImages = [
   cctvImage,
   printingImage,
   serverStorageImage,
-  // Gallery
-  gallery1,
-  gallery2,
-  gallery3,
-  gallery4,
-  gallery5,
-  gallery6,
-  gallery7,
-  gallery8,
-  gallery9,
-  gallery10,
-  gallery11,
-  gallery12,
-  gallery13,
-  gallery14,
 ];
 
 /**

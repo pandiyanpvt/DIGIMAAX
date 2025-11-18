@@ -17,13 +17,7 @@ import {
   Apple,
   WhatsApp,
 } from '@mui/icons-material';
-import rectangle94 from '../../assets/hero/header-slider/Rectangle 94.png';
-import rectangle95 from '../../assets/hero/header-slider/Rectangle 95.png';
-import rectangle96 from '../../assets/hero/header-slider/Rectangle 96.png';
-import rectangle97 from '../../assets/hero/header-slider/Rectangle 97.png';
-import rectangle98 from '../../assets/hero/header-slider/Rectangle 98.png';
-import rectangle99 from '../../assets/hero/header-slider/Rectangle 99.png';
-import { getHeaderImages } from '../../api/headerImages';
+import { getHeaderImagesByOrderRange } from '../../api/headerImages';
 
 const HeroSection = () => {
   const theme = useTheme();
@@ -37,32 +31,25 @@ const HeroSection = () => {
     { icon: <WhatsApp />, color: '#25D366' },
   ];
 
-  const fallbackImages = [
-    rectangle94,
-    rectangle95,
-    rectangle96,
-    rectangle97,
-    rectangle98,
-    rectangle99,
-  ];
-
-  const [sliderImages, setSliderImages] = useState(fallbackImages);
+  const [sliderImages, setSliderImages] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const slideInOffset = isMobile ? -60 : -120;
+  const hasSlides = sliderImages.length > 0;
 
   useEffect(() => {
     let isMounted = true;
 
     const fetchHeaderImages = async () => {
       try {
-        const { images } = await getHeaderImages({ min: 1, max: 6 });
+        const { images } = await getHeaderImagesByOrderRange({ min: 1, max: 6 });
         const ordered = images
           .filter((img) => img?.img_url)
+          .filter((img) => Number(img?.is_active) === 1)
           .sort((a, b) => (a.order_no || 0) - (b.order_no || 0))
           .map((img) => img.img_url);
 
-        if (isMounted && ordered.length) {
+        if (isMounted) {
           setSliderImages(ordered);
         }
       } catch (error) {
@@ -78,6 +65,11 @@ const HeroSection = () => {
   }, []);
 
   useEffect(() => {
+    if (!sliderImages.length) {
+      setImagesLoaded(true);
+      return;
+    }
+
     const preloadImages = () => {
       const imagePromises = sliderImages.map((src) => {
         return new Promise((resolve, reject) => {
@@ -106,7 +98,7 @@ const HeroSection = () => {
   }, [sliderImages.length]);
 
   useEffect(() => {
-    if (!imagesLoaded) return;
+    if (!imagesLoaded || sliderImages.length === 0) return;
 
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
@@ -142,30 +134,56 @@ const HeroSection = () => {
           zIndex: 0,
         }}
       >
-        {sliderImages.map((src, index) => (
-          <Box
-            key={`preload-${index}`}
-            component="img"
-            src={src}
-            alt=""
-            sx={{
-              position: 'absolute',
-              width: 0,
-              height: 0,
-              opacity: 0,
-              pointerEvents: 'none',
-            }}
-          />
-        ))}
+        {hasSlides &&
+          sliderImages.map((src, index) => (
+            <Box
+              key={`preload-${index}`}
+              component="img"
+              src={src}
+              alt=""
+              sx={{
+                position: 'absolute',
+                width: 0,
+                height: 0,
+                opacity: 0,
+                pointerEvents: 'none',
+              }}
+            />
+          ))}
         
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide}
-            initial={{ opacity: 0, y: slideInOffset }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 60 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            style={{
+        {hasSlides ? (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0, y: slideInOffset }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 60 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              <Box
+                component="img"
+                src={sliderImages[currentSlide]}
+                alt={`Hero background ${currentSlide + 1}`}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <Box
+            sx={{
               position: 'absolute',
               top: 0,
               left: 0,
@@ -173,20 +191,10 @@ const HeroSection = () => {
               bottom: 0,
               width: '100%',
               height: '100%',
+              background: 'linear-gradient(135deg, #2a0a5f 0%, #150532 100%)',
             }}
-          >
-            <Box
-              component="img"
-              src={sliderImages[currentSlide]}
-              alt={`Hero background ${currentSlide + 1}`}
-              sx={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-          </motion.div>
-        </AnimatePresence>
+          />
+        )}
         
         <Box
           sx={{
@@ -314,39 +322,42 @@ const HeroSection = () => {
       </Container>
 
       {/* Slider indicators */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: { xs: 10, sm: 20, md: 30 },
-          transform: 'translateY(-50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: { xs: 0.8, sm: 1, lg: 1.2 },
-          zIndex: 3,
-        }}
-      >
-        {sliderImages.map((_, index) => (
-          <Box
-            key={index}
-            onClick={() => goToSlide(index)}
-            sx={{
-              width: { xs: 8, sm: 10, lg: 12 },
-              height: { xs: 8, sm: 10, lg: 12 },
-              borderRadius: '50%',
-              backgroundColor: currentSlide === index 
-                ? 'white' 
-                : 'rgba(255, 255, 255, 0.4)',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                transform: 'scale(1.2)',
-              },
-            }}
-          />
-        ))}
-      </Box>
+      {hasSlides && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: { xs: 10, sm: 20, md: 30 },
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: { xs: 0.8, sm: 1, lg: 1.2 },
+            zIndex: 3,
+          }}
+        >
+          {sliderImages.map((_, index) => (
+            <Box
+              key={index}
+              onClick={() => goToSlide(index)}
+              sx={{
+                width: { xs: 8, sm: 10, lg: 12 },
+                height: { xs: 8, sm: 10, lg: 12 },
+                borderRadius: '50%',
+                backgroundColor:
+                  currentSlide === index
+                    ? 'white'
+                    : 'rgba(255, 255, 255, 0.4)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                  transform: 'scale(1.2)',
+                },
+              }}
+            />
+          ))}
+        </Box>
+      )}
     </Box>
   );
 };

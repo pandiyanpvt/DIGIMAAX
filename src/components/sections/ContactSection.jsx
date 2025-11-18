@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Container,
@@ -26,12 +26,18 @@ import {
   Twitter,
   Instagram,
   LinkedIn,
+  WhatsApp,
+  Telegram,
+  Public,
 } from '@mui/icons-material';
 import { submitContactForm } from '../../api/contact';
+import { useAuth } from '../../context/AuthContext';
+import { getSocialMediaLinks } from '../../api/socialMedia';
 
 const ContactSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { user, isAuthenticated } = useAuth();
   
   // Form state management
   const [formData, setFormData] = useState({
@@ -47,6 +53,89 @@ const ContactSection = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [apiError, setApiError] = useState('');
+  const SOCIAL_ICON_META = useMemo(
+    () => ({
+      facebook: { Icon: Facebook, color: '#1877F2' },
+      instagram: { Icon: Instagram, color: '#E4405F' },
+      twitter: { Icon: Twitter, color: '#1DA1F2' },
+      whatsapp: { Icon: WhatsApp, color: '#25D366' },
+      telegram: { Icon: Telegram, color: '#0088cc' },
+      linkedin: { Icon: LinkedIn, color: '#0A66C2' },
+      default: { Icon: Public, color: '#FFD700' },
+    }),
+    []
+  );
+
+  const buildSocialLinks = useCallback(
+    (items = []) =>
+      items
+        .slice()
+        .reverse()
+        .map((item, index) => {
+          const key = (item.social_media || '').toLowerCase().trim();
+          const meta = SOCIAL_ICON_META[key] || SOCIAL_ICON_META.default;
+          return {
+            id: item.id || `social-${index}`,
+            label: item.social_media || 'Social',
+            href: item.link || '#',
+            color: meta.color,
+            Icon: meta.Icon,
+          };
+        }),
+    [SOCIAL_ICON_META]
+  );
+
+  const fallbackSocialLinks = useMemo(
+    () =>
+      buildSocialLinks([
+        { social_media: 'Facebook', link: 'https://facebook.com/digimaax' },
+        { social_media: 'Instagram', link: 'https://instagram.com/digimaax' },
+        { social_media: 'Twitter', link: 'https://twitter.com/digimaax' },
+        { social_media: 'LinkedIn', link: 'https://linkedin.com/company/digimaax' },
+      ]),
+    [buildSocialLinks]
+  );
+
+  const [socialLinks, setSocialLinks] = useState(fallbackSocialLinks);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      return;
+    }
+
+    const autoName = [user.firstName || user.firstname, user.lastName || user.lastname]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    const autoEmail = user.email || user.emailAddress || '';
+    const autoPhone = user.phoneNumber || user.phone || '';
+
+    setFormData((prev) => {
+      if (
+        prev.name === autoName &&
+        prev.email === autoEmail &&
+        prev.phone === autoPhone
+      ) {
+        return prev;
+      }
+      return {
+        ...prev,
+        name: autoName || prev.name,
+        email: autoEmail || prev.email,
+        phone: autoPhone || prev.phone,
+      };
+    });
+  }, [
+    isAuthenticated,
+    user?.firstName,
+    user?.firstname,
+    user?.lastName,
+    user?.lastname,
+    user?.email,
+    user?.emailAddress,
+    user?.phoneNumber,
+    user?.phone,
+  ]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -172,6 +261,30 @@ const ContactSection = () => {
     'POS Systems',
     'Product Advertisement',
   ];
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchSocialLinks = async () => {
+      try {
+        const { links } = await getSocialMediaLinks();
+        const activeLinks = (links || []).filter(
+          (link) => Number(link?.is_active) === 1 && link?.link
+        );
+        if (isMounted && activeLinks.length) {
+          setSocialLinks(buildSocialLinks(activeLinks));
+        }
+      } catch (error) {
+        console.error('Failed to load social media links', error);
+      }
+    };
+
+    fetchSocialLinks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [buildSocialLinks]);
 
   return (
     <Box
@@ -660,66 +773,29 @@ const ContactSection = () => {
                       Connect With Us
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                      <IconButton
-                        sx={{
-                          color: 'white',
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          '&:hover': {
-                            backgroundColor: '#1877F2',
-                            transform: 'translateY(-2px)',
-                          },
-                          transition: 'all 0.3s ease',
-                        }}
-                      >
-                        <Facebook />
-                      </IconButton>
-                      <IconButton
-                        sx={{
-                          color: 'white',
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          '&:hover': {
-                            backgroundColor: '#1DA1F2',
-                            transform: 'translateY(-2px)',
-                          },
-                          transition: 'all 0.3s ease',
-                        }}
-                      >
-                        <Twitter />
-                      </IconButton>
-                      <IconButton
-                        sx={{
-                          color: 'white',
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          '&:hover': {
-                            backgroundColor: '#E4405F',
-                            transform: 'translateY(-2px)',
-                          },
-                          transition: 'all 0.3s ease',
-                        }}
-                      >
-                        <Instagram />
-                      </IconButton>
-                      <IconButton
-                        sx={{
-                          color: 'white',
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          '&:hover': {
-                            backgroundColor: '#0A66C2',
-                            transform: 'translateY(-2px)',
-                          },
-                          transition: 'all 0.3s ease',
-                        }}
-                      >
-                        <LinkedIn />
-                      </IconButton>
+                      {socialLinks.map((social) => (
+                        <IconButton
+                          key={social.id}
+                          aria-label={social.label}
+                          component="a"
+                          href={social.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          sx={{
+                            color: 'white',
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            '&:hover': {
+                              backgroundColor: social.color,
+                              transform: 'translateY(-2px)',
+                            },
+                            transition: 'all 0.3s ease',
+                          }}
+                        >
+                          <social.Icon />
+                        </IconButton>
+                      ))}
                     </Box>
                     <Typography
                       variant="body2"
