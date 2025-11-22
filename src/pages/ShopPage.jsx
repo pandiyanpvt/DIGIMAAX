@@ -35,15 +35,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useCart } from '../context/CartContext';
 import { formatLKR } from '../utils/currency';
 import { getProducts } from '../services/products';
-
-const categories = [
-  'Customized Wall Clock',
-  'Customized T-Shirt',
-  'Customized Mug',
-  'Gift Items',
-  'Corporate Items',
-  'Branding Items',
-];
+import { getCategories } from '../api/categories';
 
 const ShopPage = () => {
   const navigate = useNavigate();
@@ -56,71 +48,124 @@ const ShopPage = () => {
   const [sortBy, setSortBy] = useState('trending');
   const [page, setPage] = useState(1);
   const [products, setProducts] = useState([]);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    items_per_page: 12,
+  });
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const itemsPerPage = 8;
+  const itemsPerPage = 12;
 
-  const filtered = useMemo(() => {
-    if (!products || !Array.isArray(products)) return [];
-    let items = products.filter(p => {
-      if (!p) return false;
-      const matchCat = !selectedCategory || (p.category && p.category === selectedCategory);
-      const q = debouncedQuery.trim().toLowerCase();
-      const matchSearch = !q || (p.title && p.title.toLowerCase().includes(q)) || (p.desc && p.desc.toLowerCase().includes(q));
-      const matchPrice = p.price != null && p.price >= priceRange[0] && p.price <= priceRange[1];
-      return matchCat && matchSearch && matchPrice;
-    });
-    switch (sortBy) {
-      case 'priceAsc':
-        items.sort((a, b) => a.price - b.price);
-        break;
-      case 'priceDesc':
-        items.sort((a, b) => b.price - a.price);
-        break;
-      case 'newest':
-        items.sort((a, b) => b.id - a.id);
-        break;
-      case 'popular':
-        items.sort((a, b) => b.rating - a.rating);
-        break;
-      default:
-        break;
-    }
-    return items;
-  }, [products, debouncedQuery, selectedCategory, priceRange, sortBy]);
+  // Products are already filtered and paginated by the API
+  const paged = products;
+  const totalPages = pagination.total_pages || 1;
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const paged = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query), 300);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedQuery, selectedCategory, priceRange, sortBy]);
-
+  // Load categories on mount
   useEffect(() => {
     const abortController = new AbortController();
-    setLoading(true);
-    setError('');
-    getProducts()
-      .then((data) => {
-        if (!abortController.signal.aborted) setProducts(data);
+    setCategoriesLoading(true);
+    getCategories()
+      .then((result) => {
+        if (!abortController.signal.aborted) {
+          // Reverse the categories array to show from ID 1
+          const categoriesData = result.data || [];
+          setCategories([...categoriesData].reverse());
+        }
       })
       .catch(() => {
-        if (!abortController.signal.aborted) setError('Failed to load products.');
+        if (!abortController.signal.aborted) {
+          console.error('Failed to load categories');
+        }
       })
       .finally(() => {
-        if (!abortController.signal.aborted) setLoading(false);
+        if (!abortController.signal.aborted) {
+          setCategoriesLoading(false);
+        }
       });
     return () => {
       abortController.abort();
     };
   }, []);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedQuery, selectedCategory, priceRange, sortBy]);
+
+  // Fetch products with filters
+  useEffect(() => {
+    const abortController = new AbortController();
+    setLoading(true);
+    setError('');
+
+    const filters = {
+      page,
+      limit: itemsPerPage,
+    };
+
+    // Add category filter if selected
+    if (selectedCategory) {
+      filters.category = selectedCategory;
+    }
+
+    // Add search filter
+    if (debouncedQuery.trim()) {
+      filters.search = debouncedQuery.trim();
+    }
+
+    // Add price range filters
+    if (priceRange[0] > 0) {
+      filters.min_price = priceRange[0];
+    }
+    if (priceRange[1] < 10000) {
+      filters.max_price = priceRange[1];
+    }
+
+    // Add sort filter
+    if (sortBy) {
+      filters.sort = sortBy;
+    }
+
+    getProducts(filters)
+      .then((result) => {
+        if (!abortController.signal.aborted) {
+          setProducts(result.products || []);
+          setPagination(result.pagination || {
+            current_page: 1,
+            total_pages: 1,
+            total_items: 0,
+            items_per_page: itemsPerPage,
+          });
+        }
+      })
+      .catch((err) => {
+        if (!abortController.signal.aborted) {
+          setError('Failed to load products.');
+          console.error('Error loading products:', err);
+        }
+      })
+      .finally(() => {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      abortController.abort();
+    };
+  }, [page, debouncedQuery, selectedCategory, priceRange, sortBy]);
 
   const handleResetFilters = () => {
     setSelectedCategory('');
@@ -196,54 +241,62 @@ const ShopPage = () => {
                 Categories
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Button
-                  onClick={() => setSelectedCategory('')}
-                  sx={{
-                    justifyContent: 'flex-start',
-                    textTransform: 'none',
-                    color: selectedCategory === '' ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
-                    fontWeight: selectedCategory === '' ? 700 : 500,
-                    background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                    border: selectedCategory === '' ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: 2,
-                    py: 1.5,
-                    px: 2,
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                      borderColor: '#FFD700',
-                      transform: 'translateX(4px)',
-                    },
-                  }}
-                >
-                  All Categories
-                </Button>
-                {categories.map((cat) => (
-                  <Button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    sx={{
-                      justifyContent: 'flex-start',
-                      textTransform: 'none',
-                      color: selectedCategory === cat ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
-                      fontWeight: selectedCategory === cat ? 700 : 500,
-                      background: selectedCategory === cat ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                      border: selectedCategory === cat ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: 2,
-                      py: 1.5,
-                      px: 2,
-                      fontSize: '0.875rem',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        background: selectedCategory === cat ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                        borderColor: '#FFD700',
-                        transform: 'translateX(4px)',
-                      },
-                    }}
-                  >
-                    {cat}
-                  </Button>
-                ))}
+                {categoriesLoading ? (
+                  <CircularProgress size={24} sx={{ color: '#FFD700', alignSelf: 'center', my: 2 }} />
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => setSelectedCategory('')}
+                      sx={{
+                        justifyContent: 'flex-start',
+                        textTransform: 'none',
+                        color: selectedCategory === '' ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
+                        fontWeight: selectedCategory === '' ? 700 : 500,
+                        background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        border: selectedCategory === '' ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: 2,
+                        py: 1.5,
+                        px: 2,
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                          borderColor: '#FFD700',
+                          transform: 'translateX(4px)',
+                        },
+                      }}
+                    >
+                      All Categories
+                    </Button>
+                    {categories
+                      .filter((cat) => cat.is_active === 1)
+                      .map((cat) => (
+                        <Button
+                          key={cat.id}
+                          onClick={() => setSelectedCategory(String(cat.id))}
+                          sx={{
+                            justifyContent: 'flex-start',
+                            textTransform: 'none',
+                            color: selectedCategory === String(cat.id) ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
+                            fontWeight: selectedCategory === String(cat.id) ? 700 : 500,
+                            background: selectedCategory === String(cat.id) ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                            border: selectedCategory === String(cat.id) ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: 2,
+                            py: 1.5,
+                            px: 2,
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              background: selectedCategory === String(cat.id) ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                              borderColor: '#FFD700',
+                              transform: 'translateX(4px)',
+                            },
+                          }}
+                        >
+                          {cat.name}
+                        </Button>
+                      ))}
+                  </>
+                )}
               </Box>
             </Box>
           </Box>
@@ -461,9 +514,9 @@ const ShopPage = () => {
               <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                 {loading
                   ? 'Loading...'
-                  : filtered.length === 0
+                  : products.length === 0
                   ? 'No products found'
-                  : `Showing ${(page - 1) * itemsPerPage + 1}-${Math.min(page * itemsPerPage, filtered.length)} of ${filtered.length} products`}
+                  : `Showing ${(pagination.current_page - 1) * pagination.items_per_page + 1}-${Math.min(pagination.current_page * pagination.items_per_page, pagination.total_items)} of ${pagination.total_items} products`}
               </Typography>
             </Box>
 
@@ -487,12 +540,8 @@ const ShopPage = () => {
                 <Button
                   variant="contained"
                   onClick={() => {
-                    setLoading(true);
-                    setError('');
-                    getProducts()
-                      .then(setProducts)
-                      .catch(() => setError('Failed to load products.'))
-                      .finally(() => setLoading(false));
+                    setPage(1);
+                    // Trigger re-fetch by updating a dependency
                   }}
                   sx={{
                   background: '#2196F3',
@@ -508,7 +557,7 @@ const ShopPage = () => {
               </Box>
             )}
 
-            {!loading && !error && filtered.length === 0 && (
+            {!loading && !error && products.length === 0 && (
               <Box
                 sx={{
                   textAlign: 'center',
@@ -543,7 +592,7 @@ const ShopPage = () => {
               </Box>
             )}
 
-            {!loading && !error && filtered.length > 0 && (
+            {!loading && !error && products.length > 0 && (
               <Grid container spacing={2}>
                 <AnimatePresence mode="wait">
                   {paged.map((product, index) => {
@@ -614,7 +663,7 @@ const ShopPage = () => {
                               />
                             )}
                             <Chip
-                              label={product?.category || 'Product'}
+                              label={product?.category_name || product?.category || 'Product'}
                               size="small"
                               sx={{
                                 position: 'absolute',
@@ -821,56 +870,64 @@ const ShopPage = () => {
             </IconButton>
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <Button
-              onClick={() => {
-                setSelectedCategory('');
-                setFilterDrawerOpen(false);
-              }}
-              sx={{
-                justifyContent: 'flex-start',
-                textTransform: 'none',
-                color: selectedCategory === '' ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
-                fontWeight: selectedCategory === '' ? 700 : 500,
-                background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                border: selectedCategory === '' ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: 2,
-                py: 1.5,
-                px: 2,
-                '&:hover': {
-                  background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                  borderColor: '#FFD700',
-                },
-              }}
-            >
-              All Categories
-            </Button>
-            {categories.map((cat) => (
-              <Button
-                key={cat}
-                onClick={() => {
-                  setSelectedCategory(cat);
-                  setFilterDrawerOpen(false);
-                }}
-                sx={{
-                  justifyContent: 'flex-start',
-                  textTransform: 'none',
-                  color: selectedCategory === cat ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
-                  fontWeight: selectedCategory === cat ? 700 : 500,
-                  background: selectedCategory === cat ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                  border: selectedCategory === cat ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: 2,
-                  py: 1.5,
-                  px: 2,
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    background: selectedCategory === cat ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                    borderColor: '#FFD700',
-                  },
-                }}
-              >
-                {cat}
-              </Button>
-            ))}
+            {categoriesLoading ? (
+              <CircularProgress size={24} sx={{ color: '#FFD700', alignSelf: 'center', my: 2 }} />
+            ) : (
+              <>
+                <Button
+                  onClick={() => {
+                    setSelectedCategory('');
+                    setFilterDrawerOpen(false);
+                  }}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    textTransform: 'none',
+                    color: selectedCategory === '' ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
+                    fontWeight: selectedCategory === '' ? 700 : 500,
+                    background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                    border: selectedCategory === '' ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: 2,
+                    py: 1.5,
+                    px: 2,
+                    '&:hover': {
+                      background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                      borderColor: '#FFD700',
+                    },
+                  }}
+                >
+                  All Categories
+                </Button>
+                {categories
+                  .filter((cat) => cat.is_active === 1)
+                  .map((cat) => (
+                    <Button
+                      key={cat.id}
+                      onClick={() => {
+                        setSelectedCategory(String(cat.id));
+                        setFilterDrawerOpen(false);
+                      }}
+                      sx={{
+                        justifyContent: 'flex-start',
+                        textTransform: 'none',
+                        color: selectedCategory === String(cat.id) ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
+                        fontWeight: selectedCategory === String(cat.id) ? 700 : 500,
+                        background: selectedCategory === String(cat.id) ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        border: selectedCategory === String(cat.id) ? '1px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: 2,
+                        py: 1.5,
+                        px: 2,
+                        fontSize: '0.875rem',
+                        '&:hover': {
+                          background: selectedCategory === String(cat.id) ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                          borderColor: '#FFD700',
+                        },
+                      }}
+                    >
+                      {cat.name} {cat.product_count > 0 && `(${cat.product_count})`}
+                    </Button>
+                  ))}
+              </>
+            )}
           </Box>
         </Drawer>
 

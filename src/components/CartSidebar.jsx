@@ -27,7 +27,6 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useCart } from '../context/CartContext';
 import { formatLKR } from '../utils/currency';
-import { TAX_RATE, FLAT_SHIPPING_LKR } from '../config/commerce';
 import { useAuth } from '../context/AuthContext';
 
 const CartSidebar = () => {
@@ -38,12 +37,11 @@ const CartSidebar = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, itemId: null, itemName: '' });
   const [clearDialog, setClearDialog] = useState(false);
+  const [checkoutDialog, setCheckoutDialog] = useState(false);
 
   const items = Array.from(cartItems.values());
   const subtotal = getCartTotalPrice();
-  const shipping = items.length > 0 ? FLAT_SHIPPING_LKR : 0;
-  const tax = subtotal * TAX_RATE;
-  const total = subtotal + shipping + tax;
+  const total = subtotal;
 
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
@@ -57,9 +55,9 @@ const CartSidebar = () => {
     setDeleteDialog({ open: true, itemId, itemName });
   };
 
-  const confirmRemove = () => {
+  const confirmRemove = async () => {
     if (deleteDialog.itemId) {
-      removeFromCart(deleteDialog.itemId);
+      await removeFromCart(deleteDialog.itemId);
       showSnackbar(`${deleteDialog.itemName} removed from cart`, 'info');
       setDeleteDialog({ open: false, itemId: null, itemName: '' });
     }
@@ -69,20 +67,20 @@ const CartSidebar = () => {
     setClearDialog(true);
   };
 
-  const confirmClearCart = () => {
-    clearCart();
+  const confirmClearCart = async () => {
+    await clearCart();
     showSnackbar('Cart cleared successfully', 'info');
     setClearDialog(false);
   };
 
-  const handleQuantityChange = (itemId, change) => {
+  const handleQuantityChange = async (itemId, change) => {
     const item = cartItems.get(itemId);
     if (item) {
       const newQuantity = item.quantity + change;
       if (newQuantity <= 0) {
         handleRemoveProduct(itemId, item.title);
       } else {
-        updateCartQuantity(itemId, newQuantity);
+        await updateCartQuantity(itemId, newQuantity);
         showSnackbar('Quantity updated', 'success');
       }
     }
@@ -97,8 +95,7 @@ const CartSidebar = () => {
     if (items.length === 0) {
       return;
     }
-    setCartDrawerOpen(false);
-    navigate('/checkout');
+    setCheckoutDialog(true);
   };
 
   const handleViewCart = () => {
@@ -224,7 +221,7 @@ const CartSidebar = () => {
                             }}
                             onClick={() => {
                               setCartDrawerOpen(false);
-                              navigate(`/product/${item.id}`);
+                              navigate(`/product/${item.product_id || item.id}`);
                             }}
                           >
                             <Box
@@ -257,7 +254,7 @@ const CartSidebar = () => {
                                 }}
                                 onClick={() => {
                                   setCartDrawerOpen(false);
-                                  navigate(`/product/${item.id}`);
+                                  navigate(`/product/${item.product_id || item.id}`);
                                 }}
                               >
                                 {item.title}
@@ -280,7 +277,7 @@ const CartSidebar = () => {
                             </Box>
 
                             {/* Variants */}
-                            {(item.color || item.size) && (
+                            {(item.color || item.size || item.customText) && (
                               <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap' }}>
                                 {item.color && (
                                   <Chip
@@ -301,6 +298,18 @@ const CartSidebar = () => {
                                     sx={{
                                       background: 'rgba(255, 64, 129, 0.2)',
                                       color: '#FF79B0',
+                                      fontSize: '0.7rem',
+                                      height: 20,
+                                    }}
+                                  />
+                                )}
+                                {item.customText && (
+                                  <Chip
+                                    label={`Text: ${item.customText}`}
+                                    size="small"
+                                    sx={{
+                                      background: 'rgba(255, 215, 0, 0.2)',
+                                      color: '#FFD700',
                                       fontSize: '0.7rem',
                                       height: 20,
                                     }}
@@ -388,31 +397,6 @@ const CartSidebar = () => {
           {items.length > 0 && (
             <Box sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(0, 0, 0, 0.2)' }}>
               <Box sx={{ mb: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    Subtotal
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
-                    {formatLKR(subtotal)}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    Shipping
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
-                    {formatLKR(shipping)}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    Tax (15%)
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
-                    {formatLKR(tax)}
-                  </Typography>
-                </Box>
-                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', my: 1.5 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
                     Total
@@ -566,6 +550,43 @@ const CartSidebar = () => {
             }}
           >
             Clear All
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Checkout Unavailable Dialog */}
+      <Dialog
+        open={checkoutDialog}
+        onClose={() => setCheckoutDialog(false)}
+        PaperProps={{
+          sx: {
+            background: 'rgba(26, 26, 46, 0.95)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: 3,
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
+          Checkout Unavailable
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+            Checkout is unavailable right now. Please try again later.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setCheckoutDialog(false)}
+            variant="contained"
+            sx={{
+              background: '#2196F3',
+              '&:hover': {
+                background: '#1976D2',
+              },
+            }}
+          >
+            OK
           </Button>
         </DialogActions>
       </Dialog>
