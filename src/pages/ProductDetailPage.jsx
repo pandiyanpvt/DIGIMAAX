@@ -579,6 +579,7 @@ const ProductDetailPage = () => {
                         {product.title}
                       </Typography>
 
+
                       {/* Rating */}
                       <Box 
                         sx={{ 
