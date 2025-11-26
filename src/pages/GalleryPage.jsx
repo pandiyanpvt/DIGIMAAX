@@ -15,7 +15,7 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import { Close as CloseIcon, ZoomIn as ZoomInIcon } from '@mui/icons-material';
+import { Close as CloseIcon, ArrowBack as ArrowBackIcon, ArrowForward as ArrowForwardIcon } from '@mui/icons-material';
 import { getGalleryItems } from '../api/gallery';
 
 const GalleryPage = () => {
@@ -66,13 +66,28 @@ const GalleryPage = () => {
 
   const handleImageClick = (item) => {
     if (!item?.img_url) return;
-    setSelectedImage(item);
+    const index = filteredItems.findIndex((i) => i.id === item.id);
+    setSelectedImage({ ...item, index });
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
     setSelectedImage(null);
+  };
+
+  const handleNext = () => {
+    if (!selectedImage || selectedImage.index === undefined) return;
+    const nextIndex = (selectedImage.index + 1) % filteredItems.length;
+    const nextItem = filteredItems[nextIndex];
+    setSelectedImage({ ...nextItem, index: nextIndex });
+  };
+
+  const handlePrevious = () => {
+    if (!selectedImage || selectedImage.index === undefined) return;
+    const prevIndex = selectedImage.index === 0 ? filteredItems.length - 1 : selectedImage.index - 1;
+    const prevItem = filteredItems[prevIndex];
+    setSelectedImage({ ...prevItem, index: prevIndex });
   };
 
   return (
@@ -181,7 +196,7 @@ const GalleryPage = () => {
                       sx={{
                         position: 'relative',
                         width: '100%',
-                        height: { xs: 240, sm: 260, md: 300, lg: 320 },
+                        aspectRatio: '1 / 1',
                         background: 'transparent',
                         display: 'flex',
                         alignItems: 'center',
@@ -196,10 +211,9 @@ const GalleryPage = () => {
                         alt={item.name}
                         loading="lazy"
                         sx={{
+                          width: '100%',
                           height: '100%',
-                          width: 'auto',
-                          maxWidth: '100%',
-                          objectFit: 'contain',
+                          objectFit: 'cover',
                           transition: 'transform 0.6s ease',
                           filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.35))',
                           '&:hover': {
@@ -238,20 +252,59 @@ const GalleryPage = () => {
           </Box>
         </motion.div>
 
-        {/* Image Modal */}
+        {/* Image Modal with Glass Effect - Full Screen */}
         <Dialog
           open={open}
           onClose={handleClose}
-          maxWidth="md"
+          maxWidth={false}
           fullWidth
-          sx={{
-            '& .MuiDialog-paper': {
-              background: 'linear-gradient(180deg, #4B11A9 0%, #29085D 100%)',
-              borderRadius: 3,
+          fullScreen
+          PaperProps={{
+            sx: {
+              width: '100vw',
+              height: '100vh',
+              maxWidth: '100vw',
+              maxHeight: '100vh',
+              margin: 0,
+              borderRadius: 0,
+              background: 'rgba(75, 17, 169, 0.1)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: 'none',
+              boxShadow: 'none',
+              overflow: 'hidden',
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            },
+          }}
+          slotProps={{
+            backdrop: {
+              sx: {
+                background: 'rgba(41, 8, 93, 0.7)',
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
+              },
             },
           }}
         >
-          <DialogContent sx={{ p: 0, position: 'relative' }}>
+          <DialogContent 
+            sx={{ 
+              p: 0, 
+              position: 'relative', 
+              display: 'flex', 
+              flexDirection: 'column',
+              overflow: 'hidden',
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+          >
+            {/* Close Button */}
             <IconButton
               onClick={handleClose}
               sx={{
@@ -259,29 +312,126 @@ const GalleryPage = () => {
                 top: 16,
                 right: 16,
                 color: 'white',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                zIndex: 10,
                 '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  transform: 'scale(1.1)',
                 },
+                transition: 'all 0.3s ease',
               }}
             >
               <CloseIcon />
             </IconButton>
-            {selectedImage && (
+
+            {/* Navigation Buttons */}
+            {filteredItems.length > 1 && (
               <>
+                <IconButton
+                  onClick={handlePrevious}
+                  sx={{
+                    position: 'absolute',
+                    left: 16,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    zIndex: 10,
+                    width: { xs: 40, md: 48 },
+                    height: { xs: 40, md: 48 },
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      transform: 'translateY(-50%) scale(1.1)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <ArrowBackIcon />
+                </IconButton>
+                <IconButton
+                  onClick={handleNext}
+                  sx={{
+                    position: 'absolute',
+                    right: 16,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    zIndex: 10,
+                    width: { xs: 40, md: 48 },
+                    height: { xs: 40, md: 48 },
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      transform: 'translateY(-50%) scale(1.1)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <ArrowForwardIcon />
+                </IconButton>
+              </>
+            )}
+
+            {selectedImage && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  width: '100%',
+                  height: '100%',
+                  maxHeight: '95vh',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Image Container - Fits Viewport */}
                 <Box
-                  component="img"
-                  src={selectedImage.img_url}
-                  alt={selectedImage.name}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flex: 1,
+                    p: { xs: 2, md: 3 },
+                    width: '100%',
+                    minHeight: 0,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={selectedImage.img_url}
+                    alt={selectedImage.name}
+                    sx={{
+                      maxWidth: 'calc(100vw - 120px)',
+                      maxHeight: 'calc(100vh - 200px)',
+                      width: 'auto',
+                      height: 'auto',
+                      objectFit: 'contain',
+                      borderRadius: 2,
+                      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                      display: 'block',
+                    }}
+                  />
+                </Box>
+
+                {/* Image Info with Glass Effect */}
+                <Box
                   sx={{
                     width: '100%',
-                    height: { xs: '320px', md: '520px' },
-                    objectFit: 'contain',
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    flexShrink: 0,
+                    p: { xs: 2, md: 3 },
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    backdropFilter: 'blur(10px)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                   }}
-                />
-                <Box sx={{ p: 3 }}>
+                >
                   <Typography
                     variant="h5"
                     sx={{
@@ -289,23 +439,42 @@ const GalleryPage = () => {
                       fontWeight: 'bold',
                       mb: 1,
                       fontFamily: 'sans-serif',
+                      textAlign: 'center',
+                      fontSize: { xs: '1.2rem', md: '1.5rem' },
                     }}
                   >
                     {selectedImage.name}
                   </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: 'white',
-                      mb: 2,
-                      fontFamily: 'sans-serif',
-                    }}
-                  >
-                    {selectedImage.description}
-                  </Typography>
-                  {/* Category tag removed */}
+                  {selectedImage.description && (
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        mb: 1,
+                        fontFamily: 'sans-serif',
+                        textAlign: 'center',
+                        fontSize: { xs: '0.9rem', md: '1rem' },
+                      }}
+                    >
+                      {selectedImage.description}
+                    </Typography>
+                  )}
+                  {filteredItems.length > 1 && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        display: 'block',
+                        textAlign: 'center',
+                        mt: 1,
+                        fontFamily: 'sans-serif',
+                      }}
+                    >
+                      {selectedImage.index !== undefined ? selectedImage.index + 1 : 1} / {filteredItems.length}
+                    </Typography>
+                  )}
                 </Box>
-              </>
+              </Box>
             )}
           </DialogContent>
         </Dialog>

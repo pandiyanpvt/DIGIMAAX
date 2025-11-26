@@ -35,6 +35,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useCart } from '../context/CartContext';
 import { formatLKR } from '../utils/currency';
 import { getProducts } from '../services/products';
+import { productCardStyles } from '../utils/productCardStyles';
 import { getCategories } from '../api/categories';
 
 const ShopPage = () => {
@@ -623,28 +624,12 @@ const ShopPage = () => {
                             },
                           }}
                         >
-                          <Box
-                            sx={{
-                              position: 'relative',
-                              width: '100%',
-                              pt: '75%',
-                              background: 'rgba(0, 0, 0, 0.2)',
-                              overflow: 'hidden',
-                            }}
-                          >
+                          <Box sx={productCardStyles.imageContainer}>
                             <CardMedia
                               component="img"
                               image={product?.image || ''}
                               alt={product?.title || 'Product'}
-                              sx={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'contain',
-                                p: 2,
-                              }}
+                              sx={productCardStyles.image}
                             />
                             {product?.badge && (
                               <Chip
@@ -678,38 +663,12 @@ const ShopPage = () => {
                             />
                           </Box>
 
-                          <CardContent sx={{ flexGrow: 1, p: 2.5, display: 'flex', flexDirection: 'column' }}>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                color: 'white',
-                                fontWeight: 700,
-                                fontSize: '1rem',
-                                mb: 1,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                lineHeight: 1.3,
-                              }}
-                            >
+                          <CardContent sx={productCardStyles.cardContent}>
+                            <Typography variant="h6" sx={productCardStyles.title}>
                               {product?.title || 'Product'}
                             </Typography>
 
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: 'rgba(255, 255, 255, 0.8)',
-                                mb: 2,
-                                minHeight: '40px',
-                                overflow: 'hidden',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                flexGrow: 1,
-                                lineHeight: 1.5,
-                                fontSize: '0.875rem',
-                              }}
-                            >
+                            <Typography variant="body2" sx={productCardStyles.description}>
                               {product?.desc || ''}
                             </Typography>
 
@@ -718,17 +677,10 @@ const ShopPage = () => {
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                mb: 2,
+                                mb: 0,
                               }}
                             >
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  color: '#FFD700',
-                                  fontWeight: 900,
-                                  fontSize: '1.25rem',
-                                }}
-                              >
+                              <Typography variant="h6" sx={productCardStyles.price}>
                                 {formatLKR(product?.price || 0)}
                               </Typography>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -756,7 +708,7 @@ const ShopPage = () => {
                             </Box>
                           </CardContent>
 
-                          <CardActions sx={{ p: 2, pt: 0, gap: 1 }}>
+                          <CardActions sx={productCardStyles.cardActions}>
                             <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
                               <Button
                                 variant="outlined"
