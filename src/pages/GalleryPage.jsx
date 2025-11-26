@@ -1,147 +1,71 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box,
   Container,
   Typography,
-  Grid,
   Card,
   CardMedia,
-  Button,
   Dialog,
   DialogContent,
   DialogActions,
   IconButton,
+  Skeleton,
+  Alert,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
 import { Close as CloseIcon, ZoomIn as ZoomInIcon } from '@mui/icons-material';
-
-import gallery1 from '../assets/products/Gellary/2bae113f6e9839dd87fee0c9c3d2326f7aaf74c7.jpg';
-import gallery2 from '../assets/products/Gellary/7ad6bc835097a5e543f9b4d8e92f2c86dd0fc1dc.jpg';
-import gallery3 from '../assets/products/Gellary/b8e63afc60119e2b7f569522e7f62dfde200e4a6.jpg';
-import gallery4 from '../assets/products/Gellary/Rectangle 19.png';
-import gallery5 from '../assets/products/Gellary/Rectangle 18.png';
-import gallery6 from '../assets/products/Gellary/Rectangle 17.png';
-import gallery7 from '../assets/products/Gellary/Rectangle 20.png';
-import gallery8 from '../assets/products/Gellary/Rectangle 14.png';
-import gallery9 from '../assets/products/Gellary/Rectangle 15.png';
-import gallery10 from '../assets/products/Gellary/Rectangle 11.png';
-import gallery11 from '../assets/products/Gellary/Rectangle 16.png';
-import gallery12 from '../assets/products/Gellary/Rectangle 13.png';
-import gallery13 from '../assets/products/Gellary/Rectangle 12.png';
-import gallery14 from '../assets/products/Gellary/Rectangle 10.png';
+import { getGalleryItems } from '../api/gallery';
 
 const GalleryPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [open, setOpen] = useState(false);
 
-  const galleryItems = [
-    {
-      id: 1,
-      title: 'Creative Design Work',
-      category: 'Interior Design',
-      image: gallery1,
-      description: 'Artistic watercolor illustration with cosmic design elements'
-    },
-    {
-      id: 2,
-      title: 'Modern Office Space',
-      category: 'Interior Design',
-      image: gallery2,
-      description: 'Industrial office interior with exposed ceiling and modern furniture'
-    },
-    {
-      id: 3,
-      title: 'Product Photography',
-      category: 'Advertising',
-      image: gallery3,
-      description: 'Clean product shots with water droplets and professional lighting'
-    },
-    {
-      id: 4,
-      title: 'Brand Identity Design',
-      category: 'Advertising',
-      image: gallery4,
-      description: 'Eco-friendly product branding and packaging design'
-    },
-    {
-      id: 5,
-      title: 'Character Design',
-      category: 'Advertising',
-      image: gallery5,
-      description: 'Superhero character illustration and design work'
-    },
-    {
-      id: 6,
-      title: 'Architectural Photography',
-      category: 'Interior Design',
-      image: gallery6,
-      description: 'Modern minimalist house exterior with clean lines'
-    },
-    {
-      id: 7,
-      title: 'Fashion Photography',
-      category: 'Advertising',
-      image: gallery7,
-      description: 'Professional fashion shoot with elegant styling'
-    },
-    {
-      id: 8,
-      title: 'Fashion Editorial',
-      category: 'Advertising',
-      image: gallery8,
-      description: 'Creative fashion editorial with abstract background'
-    },
-    {
-      id: 9,
-      title: 'Product Branding',
-      category: 'Advertising',
-      image: gallery9,
-      description: 'Nature-inspired product branding and packaging'
-    },
-    {
-      id: 10,
-      title: 'Product Line Design',
-      category: 'Printing',
-      image: gallery10,
-      description: 'Consistent product line design with nature themes'
-    },
-    {
-      id: 11,
-      title: 'Cosmetic Branding',
-      category: 'Printing',
-      image: gallery11,
-      description: 'Luxury cosmetic product with elegant packaging design'
-    },
-    {
-      id: 12,
-      title: 'Kitchen Design',
-      category: 'Interior Design',
-      image: gallery12,
-      description: 'Modern kitchen interior with light wood and stainless steel'
-    },
-    {
-      id: 13,
-      title: 'Perfume Branding',
-      category: 'Printing',
-      image: gallery13,
-      description: 'Luxury perfume bottle design with floral elements'
-    },
-    {
-      id: 14,
-      title: 'Beverage Design',
-      category: 'Printing',
-      image: gallery14,
-      description: 'Colorful soda can designs with fruit themes'
-    }
-  ];
+  useEffect(() => {
+    let isMounted = true;
 
-  const filteredItems = galleryItems;
+    const fetchGallery = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const { items } = await getGalleryItems();
+        if (isMounted) {
+          setGalleryItems(
+            items
+              .filter((item) => Number(item?.is_active) === 1 && item?.img_url)
+              .sort((a, b) => (b.id || 0) - (a.id || 0))
+          );
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err?.response?.data?.message || 'Failed to load gallery items. Please try again later.');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchGallery();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredItems = useMemo(() => galleryItems, [galleryItems]);
+  const hasItems = filteredItems.length > 0;
+  const placeholderCount = isMobile ? 6 : 10;
 
   const handleImageClick = (item) => {
+    if (!item?.img_url) return;
     setSelectedImage(item);
     setOpen(true);
   };
@@ -216,81 +140,101 @@ const GalleryPage = () => {
               px: { xs: 1, sm: 2, md: 3 },
             }}
           >
-            {filteredItems.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Card
+            {loading &&
+              Array.from({ length: placeholderCount }).map((_, index) => (
+                <Skeleton
+                  key={`placeholder-${index}`}
+                  variant="rounded"
                   sx={{
-                    background: 'transparent',
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    border: 'none',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    '&:hover': {
-                      transform: 'scale(1.02)',
-                      zIndex: 10,
-                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.25)',
-                    },
+                    width: '100%',
+                    aspectRatio: '1 / 1.2',
+                    borderRadius: 3,
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))',
                   }}
-                  onClick={() => handleImageClick(item)}
+                />
+              ))}
+            {!loading &&
+              hasItems &&
+              filteredItems.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.05 }}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.97 }}
                 >
-                  <Box sx={{ position: 'relative', aspectRatio: '1' }}>
-                    <CardMedia
-                      component="img"
-                      image={item.image}
-                      alt={item.title}
-                      sx={{
-                        objectFit: 'cover',
-                        width: '100%',
-                        height: '100%',
-                        transition: 'transform 0.3s ease',
-                        display: 'block',
-                      }}
-                    />
+                  <Card
+                    sx={{
+                      background: 'transparent',
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      transition: 'all 0.4s ease',
+                      border: 'none',
+                      boxShadow: '0 18px 45px rgba(9, 4, 31, 0.35)',
+                      position: 'relative',
+                    }}
+                    onClick={() => handleImageClick(item)}
+                  >
                     <Box
                       sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.8) 100%)',
+                        position: 'relative',
+                        width: '100%',
+                        height: { xs: 240, sm: 260, md: 300, lg: 320 },
+                        background: 'transparent',
                         display: 'flex',
-                        alignItems: 'flex-end',
+                        alignItems: 'center',
                         justifyContent: 'center',
-                        opacity: 0,
-                        transition: 'opacity 0.3s ease',
-                        '&:hover': {
-                          opacity: 1,
-                        },
+                        overflow: 'hidden',
+                        px: 0,
                       }}
                     >
-                      <IconButton
+                      <CardMedia
+                        component="img"
+                        image={item.img_url}
+                        alt={item.name}
+                        loading="lazy"
                         sx={{
-                          color: 'white',
-                          backgroundColor: 'rgba(255, 215, 0, 0.2)',
-                          backdropFilter: 'blur(10px)',
-                          mb: 2,
+                          height: '100%',
+                          width: 'auto',
+                          maxWidth: '100%',
+                          objectFit: 'contain',
+                          transition: 'transform 0.6s ease',
+                          filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.35))',
                           '&:hover': {
-                            backgroundColor: 'rgba(255, 215, 0, 0.4)',
+                            transform: 'scale(1.05)',
                           },
                         }}
-                      >
-                        <ZoomInIcon />
-                      </IconButton>
+                      />
                     </Box>
-                  </Box>
-                </Card>
-              </motion.div>
-            ))}
+                  </Card>
+                </motion.div>
+              ))}
+            {!loading && !hasItems && (
+              <Alert
+                severity="info"
+                sx={{
+                  gridColumn: '1 / -1',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                }}
+              >
+                No gallery items available right now. Please check back soon.
+              </Alert>
+            )}
+            {!!error && !loading && (
+              <Alert
+                severity="error"
+                sx={{
+                  gridColumn: '1 / -1',
+                  backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                  color: 'white',
+                }}
+              >
+                {error}
+              </Alert>
+            )}
           </Box>
         </motion.div>
 
@@ -328,12 +272,13 @@ const GalleryPage = () => {
               <>
                 <Box
                   component="img"
-                  src={selectedImage.image}
-                  alt={selectedImage.title}
+                  src={selectedImage.img_url}
+                  alt={selectedImage.name}
                   sx={{
                     width: '100%',
-                    height: { xs: '300px', md: '500px' },
-                    objectFit: 'cover',
+                    height: { xs: '320px', md: '520px' },
+                    objectFit: 'contain',
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
                   }}
                 />
                 <Box sx={{ p: 3 }}>
@@ -346,7 +291,7 @@ const GalleryPage = () => {
                       fontFamily: 'sans-serif',
                     }}
                   >
-                    {selectedImage.title}
+                    {selectedImage.name}
                   </Typography>
                   <Typography
                     variant="body1"

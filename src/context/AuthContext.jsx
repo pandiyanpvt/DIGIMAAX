@@ -1,62 +1,152 @@
-import React, { createContext, useContext, useState } from 'react';
-
-
+import React, {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from 'react';
+import {
+	login as loginRequest,
+	register as registerRequest,
+	forgotPassword as forgotPasswordRequest,
+} from '../api/auth';
+import { clearAuthToken, setAuthToken } from '../api/client';
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+	const context = useContext(AuthContext);
+	if (!context) {
+		throw new Error('useAuth must be used within an AuthProvider');
+	}
+	return context;
+};
+
+const getInitialAuthState = () => {
+	try {
+		const stored = localStorage.getItem('auth');
+		if (stored) {
+			const parsed = JSON.parse(stored);
+			return {
+				user: parsed.user || null,
+				token: parsed.token || null,
+			};
+		}
+	} catch (error) {
+		console.error('Failed to parse auth state from storage', error);
+	}
+	return { user: null, token: null };
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [signInModalOpen, setSignInModalOpen] = useState(false);
+	const [authState, setAuthState] = useState(() => getInitialAuthState());
+	const [signInModalOpen, setSignInModalOpen] = useState(false);
+	const [initializing, setInitializing] = useState(true);
 
-  const signIn = (userData) => {
-    setUser(userData);
-    setSignInModalOpen(false);
-    // Store user data in localStorage for persistence
-    localStorage.setItem('user', JSON.stringify(userData));
-  };
+	useEffect(() => {
+		// Remove legacy storage key if it exists
+		localStorage.removeItem('user');
 
-  const signOut = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-  };
+		if (authState?.token) {
+			setAuthToken(authState.token);
+		}
+		setInitializing(false);
+	}, []);
 
-  const openSignInModal = () => {
-    setSignInModalOpen(true);
-  };
+	const persistAuthState = useCallback((nextState) => {
+		setAuthState(nextState);
 
-  const closeSignInModal = () => {
-    setSignInModalOpen(false);
-  };
+		if (nextState?.token) {
+			setAuthToken(nextState.token);
+		} else {
+			clearAuthToken();
+		}
 
-  // Check if user is logged in on app load
-  React.useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
+		if (nextState?.user || nextState?.token) {
+			localStorage.setItem('auth', JSON.stringify(nextState));
+		} else {
+			localStorage.removeItem('auth');
+		}
+	}, []);
 
-  const value = {
-    user,
-    signInModalOpen,
-    signIn,
-    signOut,
-    openSignInModal,
-    closeSignInModal,
-    isAuthenticated: !!user,
-  };
+	const loginUser = useCallback(
+		async ({ email, password }) => {
+			const response = await loginRequest({ email, password });
+			persistAuthState({
+				user: response.user || null,
+				token: response.token || null,
+			});
+			setSignInModalOpen(false);
+			return response;
+		},
+		[persistAuthState]
+	);
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+	const registerUser = useCallback(async (payload) => {
+		const response = await registerRequest(payload);
+		return response;
+	}, []);
+
+	const requestPasswordReset = useCallback(async ({ email }) => {
+		const response = await forgotPasswordRequest({ email });
+		return response;
+	}, []);
+
+	const updateUserSession = useCallback(
+		(updates) => {
+			if (!updates || typeof updates !== 'object') return;
+			setAuthState((prev) => {
+				const nextUser = { ...(prev?.user || {}), ...updates };
+				const nextState = { ...prev, user: nextUser };
+				localStorage.setItem('auth', JSON.stringify(nextState));
+				return nextState;
+			});
+		},
+		[]
+	);
+
+	const signOut = useCallback(() => {
+		persistAuthState({ user: null, token: null });
+	}, [persistAuthState]);
+
+	const openSignInModal = useCallback(() => setSignInModalOpen(true), []);
+	const closeSignInModal = useCallback(
+		() => setSignInModalOpen(false),
+		[]
+	);
+
+	const value = useMemo(
+		() => ({
+			user: authState.user,
+			token: authState.token,
+			isAuthenticated: Boolean(authState.user && authState.token),
+			signInModalOpen,
+			openSignInModal,
+			closeSignInModal,
+			loginUser,
+			registerUser,
+			requestPasswordReset,
+			updateUserSession,
+			signOut,
+			initializing,
+		}),
+		[
+			authState.user,
+			authState.token,
+			signInModalOpen,
+			openSignInModal,
+			closeSignInModal,
+			loginUser,
+			registerUser,
+			requestPasswordReset,
+			updateUserSession,
+			signOut,
+			initializing,
+		]
+	);
+
+	return (
+		<AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+	);
 };

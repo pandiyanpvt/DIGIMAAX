@@ -1,35 +1,163 @@
-import mugImg from '../assets/products/shop/Customized Mug.jpg';
-import clockImg from '../assets/products/shop/Customized Wall Clock.jpg';
-import shirtImg from '../assets/products/shop/shirt.jpg';
-import tshirtImg from '../assets/products/shop/tshit.jpg';
+import apiClient from '../api/client';
 
-const MOCK_PRODUCTS = [
-  { id: 1, title: 'Customized Wall Clock', category: 'Customized Wall Clock', price: 4499, rating: 4.8, image: clockImg, desc: 'Premium custom printed wall clock.', inStock: true, badge: 'Best Seller' },
-  { id: 2, title: 'Customized T-Shirt', category: 'Customized T-Shirt', price: 2599, rating: 4.7, image: tshirtImg || shirtImg, desc: 'Soft cotton tee with your design.', inStock: true, badge: 'New' },
-  { id: 3, title: 'Customized Mug', category: 'Customized Mug', price: 1499, rating: 4.9, image: mugImg, desc: 'Ceramic mug with photo print.', inStock: true, badge: 'Popular' },
-  { id: 4, title: 'Gift Box Set', category: 'Gift Items', price: 5299, rating: 4.6, image: clockImg, desc: 'Curated premium gift set.', inStock: true },
-  { id: 5, title: 'Corporate Notebook', category: 'Corporate Items', price: 1999, rating: 4.4, image: shirtImg, desc: 'Brandable notebook for teams.', inStock: true },
-  { id: 6, title: 'Branding Sticker Pack', category: 'Branding Items', price: 999, rating: 4.5, image: mugImg, desc: 'Die-cut stickers, assorted.', inStock: true },
-  { id: 7, title: 'Photo Frame Premium', category: 'Gift Items', price: 3799, rating: 4.5, image: clockImg, desc: 'Elegant frame for your memories.', inStock: true },
-  { id: 8, title: 'Corporate Pen Set', category: 'Corporate Items', price: 2899, rating: 4.3, image: shirtImg, desc: 'Engraved pen gift set.', inStock: true },
-  { id: 9, title: 'Logo Sticker Sheet', category: 'Branding Items', price: 1299, rating: 4.6, image: mugImg, desc: 'High-quality vinyl stickers.', inStock: true },
-  { id: 10, title: 'Graphic Tee Limited', category: 'Customized T-Shirt', price: 2999, rating: 4.8, image: tshirtImg || shirtImg, desc: 'Limited edition graphic tee.', inStock: true },
-  { id: 11, title: 'Modern Wall Clock XL', category: 'Customized Wall Clock', price: 5699, rating: 4.7, image: clockImg, desc: 'Oversized wall clock, modern design.', inStock: true },
-  { id: 12, title: 'Color Mug Duo', category: 'Customized Mug', price: 2599, rating: 4.9, image: mugImg, desc: 'Two-tone mugs set.', inStock: true },
-];
+/**
+ * Normalize product data from API response to match component expectations
+ * @param {Object} product - Product object from API
+ * @returns {Object} Normalized product
+ */
+const normalizeProduct = (product) => {
+  if (!product) return null;
+  
+  // Extract images array - API returns images array for getById, primary_image for getAll
+  const imagesArray = Array.isArray(product.images) 
+    ? [...product.images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    : [];
+  
+  // Extract all image URLs for gallery - handle both object format {image_url: "..."} and direct URLs
+  const galleryUrls = imagesArray
+    .map(img => {
+      // If image is already a string URL, return it
+      if (typeof img === 'string' && img.trim() !== '') return img;
+      // If image is an object with image_url property, return image_url
+      if (img && typeof img === 'object' && img.image_url && typeof img.image_url === 'string') {
+        return img.image_url;
+      }
+      return null;
+    })
+    .filter(Boolean); // Remove any null/undefined values
+  
+  // Get primary image:
+  // 1. From images array (find is_primary === 1, or first image)
+  // 2. From primary_image field (for getAll products response)
+  let primaryImageUrl = '';
+  
+  // Try to get from images array first (getById response)
+  if (imagesArray.length > 0) {
+    const primaryImageObj = imagesArray.find(img => img.is_primary === 1) || imagesArray[0];
+    if (primaryImageObj) {
+      primaryImageUrl = typeof primaryImageObj === 'string' 
+        ? primaryImageObj 
+        : (primaryImageObj.image_url || '');
+    }
+  }
+  
+  // Fallback to primary_image field (from getAll products response)
+  if (!primaryImageUrl && product.primary_image && typeof product.primary_image === 'string') {
+    primaryImageUrl = product.primary_image;
+    // If we have primary_image but no gallery, add it to gallery
+    if (galleryUrls.length === 0 && primaryImageUrl) {
+      galleryUrls.push(primaryImageUrl);
+    }
+  }
+  
+  return {
+    id: product.id,
+    title: product.title || '',
+    description: product.description || product.short_desc || '',
+    desc: product.short_desc || product.description || '',
+    price: parseFloat(product.price) || 0,
+    rating: parseFloat(product.rating || product.public_rating) || 0,
+    image: primaryImageUrl,
+    category: product.category_name || product.category?.name || '',
+    category_id: product.category_id,
+    category_name: product.category_name || product.category?.name || '',
+    inStock: product.in_stock === 1,
+    in_stock: product.in_stock,
+    stock_quantity: product.stock_quantity,
+    badge: product.badge,
+    is_featured: product.is_featured === 1,
+    gallery: galleryUrls.length > 0 ? galleryUrls : (primaryImageUrl ? [primaryImageUrl] : []),
+    images: imagesArray,
+    primary_image: product.primary_image || primaryImageUrl,
+  };
+};
 
-export async function getProducts() {
-  // Simulate a network request
-  await new Promise((r) => setTimeout(r, 400));
-  return MOCK_PRODUCTS;
+/**
+ * Fetch products with optional filters
+ * @param {Object} filters - Filter parameters
+ * @param {number|string} filters.category - Category ID
+ * @param {string} filters.search - Search query (maps to 'search' param)
+ * @param {string} filters.name - Name filter (maps to 'name' param)
+ * @param {number} filters.min_price - Minimum price
+ * @param {number} filters.max_price - Maximum price
+ * @param {string} filters.sort - Sort option ('newest', 'popular', 'priceAsc', 'priceDesc', etc.)
+ * @param {number} filters.page - Page number
+ * @param {number} filters.limit - Items per page
+ * @returns {Promise<{products: Array, pagination: Object}>}
+ */
+export async function getProducts(filters = {}) {
+  const params = new URLSearchParams();
+  
+  if (filters.category) params.append('category', filters.category);
+  if (filters.search) params.append('search', filters.search);
+  if (filters.name) params.append('name', filters.name);
+  if (filters.min_price !== undefined && filters.min_price !== null) {
+    params.append('min_price', filters.min_price);
+  }
+  if (filters.max_price !== undefined && filters.max_price !== null) {
+    params.append('max_price', filters.max_price);
+  }
+  if (filters.sort) {
+    // Map UI sort options to API sort options
+    // API accepts: newest, popular, trending (based on image query params)
+    // Map price sorting to standard format if needed
+    const sortValue = filters.sort === 'priceAsc' ? 'price_asc' 
+                   : filters.sort === 'priceDesc' ? 'price_desc'
+                   : filters.sort;
+    params.append('sort', sortValue);
+  }
+  if (filters.page) params.append('page', filters.page);
+  if (filters.limit) params.append('limit', filters.limit);
+
+  const queryString = params.toString();
+  const url = queryString ? `/api/products?${queryString}` : '/api/products';
+  
+  const { data } = await apiClient.get(url);
+  
+  const productsData = data?.data || {};
+  const products = Array.isArray(productsData.products) 
+    ? productsData.products.map(normalizeProduct).filter(Boolean)
+    : [];
+  
+  return {
+    products,
+    pagination: productsData.pagination || {
+      current_page: 1,
+      total_pages: 1,
+      total_items: products.length,
+      items_per_page: filters.limit || 12,
+    },
+  };
 }
 
+/**
+ * Fetch a single product by ID
+ * @param {number|string} id
+ * @returns {Promise<Object>}
+ */
 export async function getProductById(id) {
-  await new Promise((r) => setTimeout(r, 300));
-  const product = MOCK_PRODUCTS.find(p => String(p.id) === String(id));
-  if (!product) throw new Error('Product not found');
-  // Attach a simple gallery mock
-  return { ...product, gallery: [product.image, product.image, product.image] };
+  if (id === undefined || id === null) {
+    throw new Error('Product id is required');
+  }
+  const { data } = await apiClient.get(`/api/products/${id}`);
+  
+  if (!data?.success || !data?.data) {
+    throw new Error('Product not found');
+  }
+  
+  const normalized = normalizeProduct(data.data);
+  
+  // Debug: Log normalized product to verify images are extracted
+  console.log('Normalized product from getProductById:', {
+    id: normalized.id,
+    title: normalized.title,
+    image: normalized.image,
+    gallery: normalized.gallery,
+    images: normalized.images,
+    rawImages: data.data.images,
+  });
+  
+  return normalized;
 }
 
 
