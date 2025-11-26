@@ -24,11 +24,13 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { formatLKR } from '../utils/currency';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById, getProducts } from '../services/products';
 import { getCategoryById } from '../api/categories';
-import { CircularProgress } from '@mui/material';
+import { productCardStyles } from '../utils/productCardStyles';
+import { CircularProgress, Snackbar, Alert } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ProductDetailPage = () => {
@@ -39,6 +41,7 @@ const ProductDetailPage = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const { addToCart } = useCart();
+  const { isAuthenticated, openSignInModal } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
@@ -48,6 +51,8 @@ const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [relatedLoading, setRelatedLoading] = useState(false);
   const [error, setError] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [addingToCart, setAddingToCart] = useState(false);
 
   // Load product and category details
   useEffect(() => {
@@ -128,26 +133,58 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!product) return;
+    if (!product) {
+      setSnackbar({ open: true, message: 'Product not available', severity: 'error' });
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setSnackbar({ 
+        open: true, 
+        message: 'Please sign in to add items to your cart', 
+        severity: 'info' 
+      });
+      openSignInModal();
+      return;
+    }
+
+    setAddingToCart(true);
     
-    // Prepare customization data based on category settings
-    const itemDetails = {
-      quantity: qty || 1,
-      color: category?.customization_color === 1 ? color : undefined,
-      size: category?.customization_size === 1 ? size : undefined,
-      customText: category?.customization_text === 1 && customText?.trim() ? customText.trim() : undefined,
-      // TODO: Handle image file upload - need to upload image first to get URL
-      customImageUrl: category?.customization_image === 1 && imagePreview ? imagePreview : undefined,
-    };
+    try {
+      // Prepare customization data based on category settings
+      const itemDetails = {
+        quantity: qty || 1,
+        color: category?.customization_color === 1 ? color : undefined,
+        size: category?.customization_size === 1 ? size : undefined,
+        customText: category?.customization_text === 1 && customText?.trim() ? customText.trim() : undefined,
+        // Handle image file upload - use base64 data URL if available
+        customImageUrl: category?.customization_image === 1 && imagePreview ? imagePreview : undefined,
+      };
 
-    // Remove undefined values
-    Object.keys(itemDetails).forEach(key => {
-      if (itemDetails[key] === undefined) {
-        delete itemDetails[key];
-      }
-    });
+      // Remove undefined values
+      Object.keys(itemDetails).forEach(key => {
+        if (itemDetails[key] === undefined) {
+          delete itemDetails[key];
+        }
+      });
 
-    await addToCart(product.id, itemDetails);
+      await addToCart(product.id, itemDetails);
+      setSnackbar({ 
+        open: true, 
+        message: `${product.title} added to cart successfully!`, 
+        severity: 'success' 
+      });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.message || 'Failed to add item to cart. Please try again.', 
+        severity: 'error' 
+      });
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   // Ensure we always have at least the main product image
@@ -218,22 +255,42 @@ const ProductDetailPage = () => {
   return (
     <Box
       sx={{
-        background: 'linear-gradient(180deg, #29085D 0%, #1a0540 100%)',
+        background: 'linear-gradient(180deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%)',
         minHeight: '100vh',
         pt: { xs: 8, md: 10 },
         pb: 6,
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(33, 150, 243, 0.1) 0%, transparent 50%)',
+          pointerEvents: 'none',
+        },
       }}
     >
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
         <Breadcrumbs
-          separator={<NavigateNextIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.6)' }} />}
+          separator={<NavigateNextIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.5)' }} />}
           sx={{ mb: 4 }}
         >
           <Link
             underline="hover"
             color="#FFD700"
             href="/shop"
-            sx={{ cursor: 'pointer', '&:hover': { color: '#FFD700' } }}
+            sx={{ 
+              cursor: 'pointer', 
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              transition: 'all 0.3s ease',
+              '&:hover': { 
+                color: '#FFA000',
+                transform: 'translateX(2px)',
+              } 
+            }}
             onClick={(e) => {
               e.preventDefault();
               navigate('/shop');
@@ -243,36 +300,52 @@ const ProductDetailPage = () => {
           </Link>
           {/* Only show category name if it's different from product title */}
           {product?.category_name && product?.category_name !== product?.title && (
-            <Typography color="rgba(255,255,255,0.8)">{product.category_name}</Typography>
+            <Typography 
+              color="rgba(255,255,255,0.7)"
+              sx={{ fontSize: '0.9rem' }}
+            >
+              {product.category_name}
+            </Typography>
           )}
-          <Typography color="white">{product?.title || 'Product'}</Typography>
+          <Typography 
+            color="rgba(255,255,255,0.9)"
+            sx={{ fontSize: '0.9rem', fontWeight: 500 }}
+          >
+            {product?.title || 'Product'}
+          </Typography>
         </Breadcrumbs>
 
         {error && (
           <Card
             sx={{
-              p: 4,
+              p: 5,
               mb: 3,
               textAlign: 'center',
-              background: 'rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 3,
+              background: 'rgba(255,255,255,0.05)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 4,
+              boxShadow: '0 15px 40px rgba(0, 0, 0, 0.4)',
             }}
           >
-            <Typography sx={{ color: 'white', mb: 2, fontSize: '1.1rem' }}>{error}</Typography>
+            <Typography sx={{ color: 'white', mb: 3, fontSize: '1.1rem', fontWeight: 600 }}>{error}</Typography>
             <Button
               variant="contained"
               onClick={() => navigate('/shop')}
               sx={{
-                background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                background: 'linear-gradient(135deg, #2196F3 0%, #FF4081 100%)',
                 textTransform: 'none',
-                fontWeight: 800,
-                px: 3,
-                py: 1,
+                fontWeight: 700,
+                px: 4,
+                py: 1.25,
+                borderRadius: 2.5,
+                boxShadow: '0 6px 20px rgba(33, 150, 243, 0.4)',
                 '&:hover': {
-                  background: 'linear-gradient(45deg, #1976D2, #E91E63)',
+                  background: 'linear-gradient(135deg, #1976D2 0%, #E91E63 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 25px rgba(33, 150, 243, 0.5)',
                 },
+                transition: 'all 0.3s ease',
               }}
             >
               Back to Shop
@@ -290,13 +363,18 @@ const ProductDetailPage = () => {
           <>
             <Card
               sx={{
-                p: { xs: 2, md: 3 },
+                p: { xs: 2.5, md: 4 },
                 mb: 6,
-                borderRadius: 3,
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                borderRadius: 4,
+                background: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 25px 70px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 215, 0, 0.1) inset',
+                  borderColor: 'rgba(255, 215, 0, 0.2)',
+                },
               }}
             >
               <Grid container spacing={2}>
@@ -332,25 +410,25 @@ const ProductDetailPage = () => {
                                   <Card
                                     onClick={() => setActiveImg(src)}
                                     sx={{
-                                      width: { xs: 70, md: 90 },
-                                      height: { xs: 70, md: 90 },
+                                      width: { xs: 75, md: 95 },
+                                      height: { xs: 75, md: 95 },
                                       cursor: 'pointer',
-                                      background: 'rgba(255, 255, 255, 0.06)',
+                                      background: 'rgba(255, 255, 255, 0.04)',
                                       border: isActive 
                                         ? '3px solid #FFD700' 
-                                        : '2px solid rgba(255, 255, 255, 0.2)',
-                                      borderRadius: 2,
+                                        : '2px solid rgba(255, 255, 255, 0.15)',
+                                      borderRadius: 2.5,
                                       overflow: 'hidden',
-                                      transition: 'all 0.3s ease',
-                                      opacity: isActive ? 1 : 0.7,
+                                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                      opacity: isActive ? 1 : 0.6,
                                       boxShadow: isActive
-                                        ? '0 4px 15px rgba(255, 215, 0, 0.5)'
-                                        : '0 2px 6px rgba(0, 0, 0, 0.2)',
+                                        ? '0 6px 20px rgba(255, 215, 0, 0.4), 0 0 0 1px rgba(255, 215, 0, 0.2) inset'
+                                        : '0 2px 8px rgba(0, 0, 0, 0.3)',
                                       '&:hover': {
                                         borderColor: '#FFD700',
                                         opacity: 1,
-                                        transform: 'translateX(4px)',
-                                        boxShadow: '0 4px 15px rgba(255, 215, 0, 0.6)',
+                                        transform: 'translateX(4px) scale(1.05)',
+                                        boxShadow: '0 8px 25px rgba(255, 215, 0, 0.5)',
                                       },
                                     }}
                                   >
@@ -383,11 +461,12 @@ const ProductDetailPage = () => {
                           <Card
                             sx={{
                               width: '100%',
-                              background: 'rgba(255, 255, 255, 0.06)',
+                              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
                               border: '1px solid rgba(255, 255, 255, 0.1)',
-                              borderRadius: 3,
+                              borderRadius: 4,
                               overflow: 'hidden',
-                              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                              boxShadow: '0 15px 50px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+                              transition: 'all 0.3s ease',
                             }}
                           >
                             <Box
@@ -395,7 +474,7 @@ const ProductDetailPage = () => {
                                 position: 'relative',
                                 width: '100%',
                                 height: { xs: 400, md: 600 },
-                                background: 'rgba(0, 0, 0, 0.2)',
+                                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%)',
                                 overflow: 'hidden',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -486,17 +565,34 @@ const ProductDetailPage = () => {
                         variant="h3"
                         sx={{
                           color: 'white',
-                          fontWeight: 900,
-                          mb: 2,
-                          fontSize: { xs: '1.75rem', md: '2.25rem' },
-                          lineHeight: 1.2,
+                          fontWeight: 800,
+                          mb: 1,
+                          fontSize: { xs: '1.85rem', md: '2.5rem' },
+                          lineHeight: 1.3,
+                          letterSpacing: '-0.02em',
+                          background: 'linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%)',
+                          backgroundClip: 'text',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
                         }}
                       >
                         {product.title}
                       </Typography>
 
                       {/* Rating */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                      <Box 
+                        sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 1.5, 
+                          mb: 1.5,
+                          p: 1.25,
+                          borderRadius: 2,
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          width: 'fit-content',
+                        }}
+                      >
                         <Rating
                           value={product.rating || 0}
                           precision={0.1}
@@ -507,28 +603,36 @@ const ProductDetailPage = () => {
                               color: '#FFD700',
                             },
                             '& .MuiRating-iconEmpty': {
-                              color: 'rgba(255, 255, 255, 0.2)',
+                              color: 'rgba(255, 255, 255, 0.15)',
                             },
                           }}
                         />
                         <Typography
                           variant="body2"
-                          sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem' }}
+                          sx={{ 
+                            color: 'rgba(255,255,255,0.75)', 
+                            fontSize: '0.9rem',
+                            fontWeight: 500,
+                          }}
                         >
                           ({product.rating || 0}) {product.rating ? 'rating' : 'No ratings yet'}
                         </Typography>
                       </Box>
 
-                      <Divider sx={{ my: 2.5, borderColor: 'rgba(255, 255, 255, 0.15)' }} />
+                      <Divider sx={{ my: 1.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
                       {/* Price & Stock */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, mb: 1.5 }}>
                         <Typography
                           variant="h3"
                           sx={{
-                            color: '#FFD700',
+                            background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
+                            backgroundClip: 'text',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
                             fontWeight: 900,
-                            fontSize: { xs: '2rem', md: '2.5rem' },
+                            fontSize: { xs: '2.25rem', md: '3rem' },
+                            letterSpacing: '-0.03em',
                           }}
                         >
                           {formatLKR(product.price || 0)}
@@ -537,13 +641,14 @@ const ProductDetailPage = () => {
                           <Chip
                             label="In Stock"
                             sx={{
-                              background: '#4CAF50',
+                              background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
                               color: 'white',
                               fontWeight: 700,
-                              fontSize: '0.85rem',
-                              px: 1.5,
-                              height: 32,
-                              boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)',
+                              fontSize: '0.8rem',
+                              px: 2,
+                              height: 28,
+                              boxShadow: '0 4px 12px rgba(76, 175, 80, 0.4)',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
                             }}
                           />
                         )}
@@ -551,17 +656,26 @@ const ProductDetailPage = () => {
 
                       {/* Description */}
                       {(product.description || product.desc) && (
-                        <Typography
-                          variant="body1"
+                        <Box
                           sx={{
-                            color: 'rgba(255,255,255,0.85)',
-                            mb: 3,
-                            lineHeight: 1.7,
-                            fontSize: '1rem',
+                            p: 1.5,
+                            mb: 1.5,
+                            borderRadius: 2.5,
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
                           }}
                         >
-                          {product.description || product.desc}
-                        </Typography>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              color: 'rgba(255,255,255,0.9)',
+                              lineHeight: 1.8,
+                              fontSize: '0.95rem',
+                            }}
+                          >
+                            {product.description || product.desc}
+                          </Typography>
+                        </Box>
                       )}
 
                       {/* Customization Section */}
@@ -570,33 +684,52 @@ const ProductDetailPage = () => {
                         category?.customization_text === 1 ||
                         category?.customization_image === 1) && (
                         <>
-                          <Divider sx={{ my: 3, borderColor: 'rgba(255, 255, 255, 0.15)' }} />
-                          <Typography
+                          <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                          <Box
                             sx={{
-                              color: 'white',
-                              fontWeight: 700,
-                              mb: 2.5,
-                              fontSize: '1.1rem',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px',
+                              p: 1.5,
+                              borderRadius: 3,
+                              background: 'rgba(255, 255, 255, 0.03)',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              mb: 1.5,
                             }}
                           >
-                            Customization Options
-                          </Typography>
+                            <Typography
+                              sx={{
+                                color: 'white',
+                                fontWeight: 700,
+                                mb: 1.5,
+                                fontSize: '1rem',
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                '&::before': {
+                                  content: '""',
+                                  width: 4,
+                                  height: 20,
+                                  background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
+                                  borderRadius: 2,
+                                },
+                              }}
+                            >
+                              Customization Options
+                            </Typography>
 
                           {category?.customization_color === 1 && (
-                            <Box sx={{ mb: 3 }}>
+                            <Box sx={{ mb: 1.5 }}>
                               <Typography
                                 sx={{
-                                  color: 'rgba(255, 255, 255, 0.9)',
+                                  color: 'rgba(255, 255, 255, 0.95)',
                                   fontWeight: 600,
-                                  mb: 1.5,
+                                  mb: 1,
                                   fontSize: '0.95rem',
                                 }}
                               >
-                                Color: <span style={{ color: '#FFD700' }}>{color}</span>
+                                Color: <span style={{ color: '#FFD700', fontWeight: 700 }}>{color}</span>
                               </Typography>
-                              <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                              <Stack direction="row" spacing={2} flexWrap="wrap">
                                 {[
                                   { name: 'Black', color: '#000000' },
                                   { name: 'White', color: '#FFFFFF' },
@@ -609,20 +742,23 @@ const ProductDetailPage = () => {
                                     key={colorOption.name}
                                     onClick={() => setColor(colorOption.name)}
                                     sx={{
-                                      width: 42,
-                                      height: 42,
+                                      width: 48,
+                                      height: 48,
                                       borderRadius: '50%',
-                                      border: color === colorOption.name ? '3px solid #FFD700' : '2px solid rgba(255, 255, 255, 0.3)',
+                                      border: color === colorOption.name 
+                                        ? '3px solid #FFD700' 
+                                        : '2px solid rgba(255, 255, 255, 0.2)',
                                       cursor: 'pointer',
                                       background: colorOption.color,
                                       boxShadow: color === colorOption.name 
-                                        ? '0 4px 12px rgba(255, 215, 0, 0.4)' 
-                                        : '0 2px 6px rgba(0, 0, 0, 0.2)',
-                                      transition: 'all 0.3s ease',
+                                        ? '0 6px 20px rgba(255, 215, 0, 0.5), 0 0 0 2px rgba(255, 215, 0, 0.2)' 
+                                        : '0 2px 8px rgba(0, 0, 0, 0.3)',
+                                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                       position: 'relative',
                                       '&:hover': {
-                                        transform: 'scale(1.15)',
+                                        transform: 'scale(1.2)',
                                         borderColor: '#FFD700',
+                                        boxShadow: '0 8px 25px rgba(255, 215, 0, 0.6)',
                                       },
                                     }}
                                   />
@@ -632,17 +768,18 @@ const ProductDetailPage = () => {
                           )}
 
                           {category?.customization_size === 1 && (
-                            <Box sx={{ mb: 3 }}>
+                            <Box sx={{ mb: 1.5 }}>
                               <Typography
                                 sx={{
-                                  color: 'rgba(255, 255, 255, 0.9)',
+                                  color: 'rgba(255, 255, 255, 0.95)',
                                   fontWeight: 600,
-                                  mb: 1.5,
+                                  mb: 1,
                                   fontSize: '0.95rem',
                                   textTransform: 'uppercase',
+                                  letterSpacing: '0.5px',
                                 }}
                               >
-                                REGULAR
+                                Size
                               </Typography>
                               <Stack direction="row" spacing={1.5} flexWrap="wrap">
                                 {['S', 'M', 'L', 'XL', 'XXL'].map((s) => (
@@ -651,23 +788,30 @@ const ProductDetailPage = () => {
                                     onClick={() => setSize(s)}
                                     variant={size === s ? 'contained' : 'outlined'}
                                     sx={{
-                                      minWidth: 50,
-                                      height: 45,
-                                      borderRadius: 2,
+                                      minWidth: 55,
+                                      height: 48,
+                                      borderRadius: 2.5,
                                       fontWeight: 700,
                                       fontSize: '0.9rem',
-                                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                                      color: size === s ? '#000' : 'rgba(255, 255, 255, 0.9)',
+                                      borderColor: size === s ? '#FFD700' : 'rgba(255, 255, 255, 0.25)',
+                                      color: size === s ? '#000' : 'rgba(255, 255, 255, 0.95)',
                                       background: size === s 
-                                        ? 'linear-gradient(45deg, #FFD700, #FFA000)' 
-                                        : 'rgba(255, 255, 255, 0.05)',
+                                        ? 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)' 
+                                        : 'rgba(255, 255, 255, 0.04)',
+                                      boxShadow: size === s
+                                        ? '0 4px 15px rgba(255, 215, 0, 0.4)'
+                                        : 'none',
                                       '&:hover': {
                                         borderColor: '#FFD700',
                                         backgroundColor: size === s 
-                                          ? 'rgba(255, 215, 0, 0.9)' 
-                                          : 'rgba(255, 255, 255, 0.1)',
+                                          ? 'linear-gradient(135deg, #FFA000 0%, #FFD700 100%)' 
+                                          : 'rgba(255, 255, 255, 0.08)',
+                                        transform: 'translateY(-2px)',
+                                        boxShadow: size === s
+                                          ? '0 6px 20px rgba(255, 215, 0, 0.5)'
+                                          : '0 4px 12px rgba(255, 215, 0, 0.2)',
                                       },
-                                      transition: 'all 0.3s ease',
+                                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                     }}
                                   >
                                     {s}
@@ -678,7 +822,7 @@ const ProductDetailPage = () => {
                           )}
 
                           {category?.customization_text === 1 && (
-                            <Box sx={{ mb: 3 }}>
+                            <Box sx={{ mb: 1.5 }}>
                               <TextField
                                 fullWidth
                                 size="medium"
@@ -689,19 +833,24 @@ const ProductDetailPage = () => {
                                 sx={{
                                   '& .MuiOutlinedInput-root': {
                                     color: 'white',
-                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                                    borderRadius: 2.5,
                                     '& fieldset': {
-                                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                                      borderColor: 'rgba(255, 255, 255, 0.15)',
                                     },
                                     '&:hover fieldset': {
-                                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                                      borderColor: 'rgba(255, 255, 255, 0.25)',
                                     },
                                     '&.Mui-focused fieldset': {
                                       borderColor: '#FFD700',
+                                      borderWidth: 2,
                                     },
                                   },
                                   '& .MuiInputLabel-root': {
                                     color: 'rgba(255, 255, 255, 0.7)',
+                                    '&.Mui-focused': {
+                                      color: '#FFD700',
+                                    },
                                   },
                                 }}
                               />
@@ -709,22 +858,27 @@ const ProductDetailPage = () => {
                           )}
 
                           {category?.customization_image === 1 && (
-                            <Box sx={{ mb: 3 }}>
+                            <Box sx={{ mb: 1.5 }}>
                               <Button
                                 component="label"
                                 variant="outlined"
                                 startIcon={<CloudUploadIcon />}
                                 sx={{
                                   color: '#FFD700',
-                                  borderColor: 'rgba(255,215,0,0.6)',
+                                  borderColor: 'rgba(255,215,0,0.5)',
                                   textTransform: 'none',
                                   fontWeight: 700,
                                   py: 1.5,
                                   px: 3,
+                                  borderRadius: 2.5,
+                                  background: 'rgba(255, 215, 0, 0.05)',
                                   '&:hover': {
                                     borderColor: '#FFD700',
-                                    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                                    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0 6px 20px rgba(255, 215, 0, 0.3)',
                                   },
+                                  transition: 'all 0.3s ease',
                                 }}
                               >
                                 Upload Your Image
@@ -736,50 +890,63 @@ const ProductDetailPage = () => {
                                 />
                               </Button>
                               {imagePreview && (
-                                <Box sx={{ mt: 2 }}>
+                                <Box sx={{ mt: 2.5 }}>
                                   <CardMedia
                                     component="img"
                                     image={imagePreview}
                                     alt="Preview"
                                     sx={{
-                                      maxWidth: 200,
-                                      maxHeight: 200,
-                                      borderRadius: 2,
-                                      border: '2px solid rgba(255, 215, 0, 0.5)',
+                                      maxWidth: 220,
+                                      maxHeight: 220,
+                                      borderRadius: 2.5,
+                                      border: '2px solid rgba(255, 215, 0, 0.4)',
+                                      boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
                                     }}
                                   />
                                 </Box>
                               )}
                             </Box>
                           )}
+                          </Box>
                         </>
                       )}
 
                       {/* Quantity and Add to Cart */}
-                      <Box sx={{ mt: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                      <Box 
+                        sx={{ 
+                          mt: 2,
+                          p: 1.5,
+                          borderRadius: 3,
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
                           <Typography
                             sx={{
-                              color: 'rgba(255, 255, 255, 0.9)',
+                              color: 'rgba(255, 255, 255, 0.95)',
                               fontWeight: 600,
                               fontSize: '0.95rem',
                             }}
                           >
                             Quantity:
                           </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <IconButton
                               onClick={() => setQty(Math.max(1, qty - 1))}
                               sx={{
                                 color: '#FFD700',
-                                border: '2px solid rgba(255, 215, 0, 0.5)',
-                                borderRadius: 1,
-                                width: 36,
-                                height: 36,
+                                border: '2px solid rgba(255, 215, 0, 0.4)',
+                                borderRadius: 2,
+                                width: 40,
+                                height: 40,
+                                background: 'rgba(255, 215, 0, 0.05)',
                                 '&:hover': {
                                   borderColor: '#FFD700',
-                                  backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                                  backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                                  transform: 'scale(1.1)',
                                 },
+                                transition: 'all 0.3s ease',
                               }}
                             >
                               −
@@ -789,16 +956,16 @@ const ProductDetailPage = () => {
                               inputProps={{ 
                                 min: 1,
                                 readOnly: true,
-                                style: { textAlign: 'center', width: 60, color: 'white', fontWeight: 700, cursor: 'default' }
+                                style: { textAlign: 'center', width: 70, color: 'white', fontWeight: 700, cursor: 'default' }
                               }}
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-                                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
                                   '& fieldset': {
-                                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                                    borderColor: 'rgba(255, 255, 255, 0.15)',
                                   },
                                   '&:hover fieldset': {
-                                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                                    borderColor: 'rgba(255, 255, 255, 0.25)',
                                   },
                                   '&.Mui-focused fieldset': {
                                     borderColor: '#FFD700',
@@ -810,14 +977,17 @@ const ProductDetailPage = () => {
                               onClick={() => setQty(qty + 1)}
                               sx={{
                                 color: '#FFD700',
-                                border: '2px solid rgba(255, 215, 0, 0.5)',
-                                borderRadius: 1,
-                                width: 36,
-                                height: 36,
+                                border: '2px solid rgba(255, 215, 0, 0.4)',
+                                borderRadius: 2,
+                                width: 40,
+                                height: 40,
+                                background: 'rgba(255, 215, 0, 0.05)',
                                 '&:hover': {
                                   borderColor: '#FFD700',
-                                  backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                                  backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                                  transform: 'scale(1.1)',
                                 },
+                                transition: 'all 0.3s ease',
                               }}
                             >
                               +
@@ -828,24 +998,31 @@ const ProductDetailPage = () => {
                         <Button
                           variant="contained"
                           fullWidth
-                          startIcon={<AddShoppingCartIcon />}
+                          startIcon={addingToCart ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <AddShoppingCartIcon />}
                           onClick={handleAddToCart}
+                          disabled={addingToCart || !product}
                           sx={{
-                            background: '#2196F3',
+                            background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
                             textTransform: 'none',
-                            fontWeight: 800,
-                            py: 1.75,
-                            fontSize: '1.1rem',
-                            boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
+                            fontWeight: 700,
+                            py: 1.5,
+                            fontSize: '0.95rem',
+                            borderRadius: 2.5,
+                            boxShadow: '0 6px 20px rgba(33, 150, 243, 0.4)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
                             '&:hover': {
-                              background: '#1976D2',
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 6px 20px rgba(33, 150, 243, 0.5)',
+                              background: 'linear-gradient(135deg, #1976D2 0%, #1565C0 100%)',
+                              transform: 'translateY(-3px)',
+                              boxShadow: '0 10px 30px rgba(33, 150, 243, 0.5)',
                             },
-                            transition: 'all 0.3s ease',
+                            '&:disabled': {
+                              background: 'rgba(33, 150, 243, 0.5)',
+                              transform: 'none',
+                            },
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                           }}
                         >
-                          ADD TO CART
+                          {addingToCart ? 'ADDING...' : 'ADD TO CART'}
                         </Button>
                       </Box>
                     </Box>
@@ -855,14 +1032,29 @@ const ProductDetailPage = () => {
             </Card>
 
             {/* Related Products Section */}
-            <Box sx={{ mt: 6 }}>
+            <Box sx={{ mt: 8 }}>
               <Typography
                 variant="h4"
                 sx={{
-                  color: 'white',
-                  fontWeight: 900,
-                  mb: 3,
-                  fontSize: { xs: '1.75rem', md: '2rem' },
+                  background: 'linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: 800,
+                  mb: 4,
+                  fontSize: { xs: '1.85rem', md: '2.25rem' },
+                  letterSpacing: '-0.02em',
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: -12,
+                    left: 0,
+                    width: 60,
+                    height: 4,
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
+                    borderRadius: 2,
+                  },
                 }}
               >
                 Related Products
@@ -888,43 +1080,29 @@ const ProductDetailPage = () => {
                               height: '100%',
                               display: 'flex',
                               flexDirection: 'column',
-                              background: 'rgba(255, 255, 255, 0.08)',
-                              backdropFilter: 'blur(10px)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
-                              borderRadius: 3,
+                              background: 'rgba(255, 255, 255, 0.04)',
+                              backdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              borderRadius: 4,
                               overflow: 'hidden',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
                               '&:hover': {
-                                transform: 'translateY(-8px)',
-                                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
-                                borderColor: 'rgba(255, 215, 0, 0.5)',
+                                transform: 'translateY(-12px) scale(1.02)',
+                                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 215, 0, 0.2) inset',
+                                borderColor: 'rgba(255, 215, 0, 0.4)',
                               },
                             }}
                             onClick={() => navigate(`/product/${relatedProduct.id}`)}
                           >
-                            <Box
-                              sx={{
-                                position: 'relative',
-                                width: '100%',
-                                pt: '75%',
-                                background: 'rgba(0, 0, 0, 0.2)',
-                                overflow: 'hidden',
-                              }}
-                            >
+                            <Box sx={productCardStyles.imageContainer}>
                               <CardMedia
                                 component="img"
                                 image={relatedProduct.image || ''}
                                 alt={relatedProduct.title || 'Product'}
                                 sx={{
-                                  position: 'absolute',
-                                  top: 0,
-                                  left: 0,
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'contain',
-                                  p: 2,
+                                  ...productCardStyles.image,
                                   transition: 'transform 0.3s ease',
                                   '&:hover': {
                                     transform: 'scale(1.1)',
@@ -932,33 +1110,23 @@ const ProductDetailPage = () => {
                                 }}
                               />
                             </Box>
-                            <CardContent sx={{ flexGrow: 1, p: 2.5 }}>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  color: 'white',
-                                  fontWeight: 700,
-                                  fontSize: '1rem',
-                                  mb: 1,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
+                            <CardContent sx={productCardStyles.cardContent}>
+                              <Typography variant="h6" sx={productCardStyles.title}>
                                 {relatedProduct.title}
                               </Typography>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  color: '#FFD700',
-                                  fontWeight: 900,
-                                  fontSize: '1.2rem',
-                                }}
-                              >
+                              {(relatedProduct.description || relatedProduct.desc) && (
+                                <Typography variant="body2" sx={productCardStyles.description}>
+                                  {relatedProduct.description || relatedProduct.desc || ''}
+                                </Typography>
+                              )}
+                              {!(relatedProduct.description || relatedProduct.desc) && (
+                                <Box sx={productCardStyles.descriptionSpacer} />
+                              )}
+                              <Typography variant="h6" sx={productCardStyles.price}>
                                 {formatLKR(relatedProduct.price || 0)}
                               </Typography>
                             </CardContent>
-                            <CardActions sx={{ p: 2, pt: 0 }}>
+                            <CardActions sx={productCardStyles.cardActions}>
                               <Button
                                 fullWidth
                                 variant="outlined"
@@ -1020,6 +1188,31 @@ const ProductDetailPage = () => {
             </Box>
           </>
         )}
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{
+              width: '100%',
+              backgroundColor: snackbar.severity === 'success' 
+                ? 'rgba(76, 175, 80, 0.95)' 
+                : 'rgba(211, 47, 47, 0.95)',
+              color: 'white',
+              '& .MuiAlert-icon': {
+                color: 'white',
+              },
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   );

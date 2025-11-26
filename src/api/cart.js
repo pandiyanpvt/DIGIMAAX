@@ -27,8 +27,9 @@ export async function addCartItem(itemData) {
   if (itemData.size) {
     payload.size = itemData.size;
   }
-  if (itemData.custom_image_url) {
-    payload.custom_image_url = itemData.custom_image_url;
+  // Backend expects 'custom_image' but we accept 'custom_image_url' for consistency
+  if (itemData.custom_image_url || itemData.custom_image) {
+    payload.custom_image = itemData.custom_image_url || itemData.custom_image;
   }
 
   const { data } = await apiClient.post('/api/cart/items', payload);
