@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import {
   addCartItem,
   getCart,
-  getCartByUserId,
   removeCartItem as removeCartItemAPI,
   clearCart as clearCartAPI,
   updateCartItem as updateCartItemAPI,
@@ -84,7 +83,7 @@ export const CartProvider = ({ children }) => {
     setCartLoading(true);
     setCartError(null);
     try {
-      const result = await getCartByUserId(user.id);
+      const result = await getCart();
       if (result && result.success && result.data?.items) {
         const itemsMap = new Map();
         result.data.items.forEach((item) => {
@@ -153,7 +152,7 @@ export const CartProvider = ({ children }) => {
     setCartLoading(true);
     setCartError(null);
     try {
-      const result = await removeCartItemAPI(cartItemId, user.id);
+      const result = await removeCartItemAPI(cartItemId);
 
       if (result.success) {
         // Optimistically update UI
@@ -239,7 +238,7 @@ export const CartProvider = ({ children }) => {
     setCartLoading(true);
     setCartError(null);
     try {
-      const result = await clearCartAPI(user.id);
+      const result = await clearCartAPI();
 
       if (result.success) {
         setCartItems(new Map());

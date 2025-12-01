@@ -82,17 +82,12 @@ export async function getCartByUserId(userId) {
  * @param {number|string} userId - User ID
  * @returns {Promise<{success: boolean, message: string}>}
  */
-export async function removeCartItem(itemId, userId) {
+export async function removeCartItem(itemId) {
   if (itemId === undefined || itemId === null) {
     throw new Error('Item id is required');
   }
-  if (userId === undefined || userId === null) {
-    throw new Error('User id is required');
-  }
 
-  const { data } = await apiClient.delete(`/api/cart/items/${itemId}`, {
-    data: { user_id: userId },
-  });
+  const { data } = await apiClient.delete(`/api/cart/items/${itemId}`);
   return {
     success: data?.success ?? true,
     message: data?.message || 'Item removed from cart',
@@ -104,14 +99,8 @@ export async function removeCartItem(itemId, userId) {
  * @param {number|string} userId - User ID
  * @returns {Promise<{success: boolean, message: string}>}
  */
-export async function clearCart(userId) {
-  if (userId === undefined || userId === null) {
-    throw new Error('User id is required');
-  }
-
-  const { data } = await apiClient.delete('/api/cart', {
-    data: { user_id: userId },
-  });
+export async function clearCart() {
+  const { data } = await apiClient.delete('/api/cart');
   return {
     success: data?.success ?? true,
     message: data?.message || 'Cart cleared',

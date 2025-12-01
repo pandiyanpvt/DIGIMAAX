@@ -938,6 +938,23 @@ const textFieldSx = {
 		'&.Mui-focused fieldset': {
 			borderColor: '#2196F3',
 		},
+		'& input:-webkit-autofill': {
+			WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.1) inset !important',
+			WebkitTextFillColor: 'white !important',
+			caretColor: 'white',
+		},
+		'& input:-webkit-autofill:hover': {
+			WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.1) inset !important',
+			WebkitTextFillColor: 'white !important',
+		},
+		'& input:-webkit-autofill:focus': {
+			WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.1) inset !important',
+			WebkitTextFillColor: 'white !important',
+		},
+		'& input:-webkit-autofill:active': {
+			WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.1) inset !important',
+			WebkitTextFillColor: 'white !important',
+		},
 	},
 	'& .MuiInputLabel-root': {
 		color: 'rgba(255, 255, 255, 0.7)',
