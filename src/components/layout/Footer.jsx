@@ -21,6 +21,8 @@ import {
   WhatsApp,
   Facebook,
   Twitter,
+  LinkedIn,
+  YouTube,
   Phone,
   Email,
   LocationOn,
@@ -55,6 +57,8 @@ const Footer = () => {
       facebook: { Icon: Facebook, color: '#1877F2' },
       instagram: { Icon: Instagram, color: '#E4405F' },
       twitter: { Icon: Twitter, color: '#1DA1F2' },
+      linkedin: { Icon: LinkedIn, color: '#0077B5' },
+      youtube: { Icon: YouTube, color: '#FF0000' },
       whatsapp: { Icon: WhatsApp, color: '#25D366' },
       telegram: { Icon: Telegram, color: '#0088cc' },
       default: { Icon: Public, color: '#FFD700' },
@@ -407,11 +411,11 @@ const Footer = () => {
               >
                 Follow Us
               </Typography>
-              <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 {socialMedia.map((social, index) => (
                   <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.1, y: -3 }}
+                    key={social.id || index}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <IconButton
@@ -422,17 +426,21 @@ const Footer = () => {
                       rel="noopener noreferrer"
                       sx={{
                         color: 'white',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        width: 36,
-                        height: 36,
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        backdropFilter: 'blur(15px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(15px) saturate(180%)',
+                        border: '1px solid rgba(255, 255, 255, 0.25)',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
                         '&:hover': {
                           backgroundColor: social.color,
                           borderColor: social.color,
-                          boxShadow: `0 4px 15px ${social.color}40`,
+                          boxShadow: `0 12px 40px ${social.color}50`,
+                          transform: 'translateY(-3px) scale(1.05)',
+                          backdropFilter: 'blur(20px) saturate(200%)',
+                          WebkitBackdropFilter: 'blur(20px) saturate(200%)',
                         },
-                        transition: 'all 0.3s ease',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       }}
                     >
                       <social.Icon />

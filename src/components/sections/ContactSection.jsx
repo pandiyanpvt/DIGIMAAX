@@ -380,6 +380,7 @@ const ContactSection = () => {
                           error={!!errors.name}
                           helperText={errors.name}
                           variant="outlined"
+                          autoComplete="off"
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 2,
@@ -421,6 +422,7 @@ const ContactSection = () => {
                           error={!!errors.email}
                           helperText={errors.email}
                           variant="outlined"
+                          autoComplete="off"
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 2,
@@ -461,6 +463,7 @@ const ContactSection = () => {
                           error={!!errors.phone}
                           helperText={errors.phone}
                           variant="outlined"
+                          autoComplete="off"
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 2,
@@ -503,6 +506,7 @@ const ContactSection = () => {
                             shrink: true,
                           }}
                           variant="outlined"
+                          autoComplete="off"
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 2,
@@ -551,6 +555,7 @@ const ContactSection = () => {
                           error={!!errors.subject}
                           helperText={errors.subject}
                           variant="outlined"
+                          autoComplete="off"
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 2,
@@ -593,6 +598,7 @@ const ContactSection = () => {
                           multiline
                           rows={5}
                           variant="outlined"
+                          autoComplete="off"
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               borderRadius: 2,

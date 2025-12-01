@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Container,
-  Grid,
   Typography,
   TextField,
   InputAdornment,
@@ -596,12 +595,23 @@ const ShopPage = () => {
             )}
 
             {!loading && !error && products.length > 0 && (
-              <Grid container spacing={2}>
-                <AnimatePresence mode="wait">
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)',
+                    md: 'repeat(3, 1fr)',
+                    lg: 'repeat(4, 1fr)',
+                  },
+                  gap: 2,
+                }}
+              >
+                <AnimatePresence>
                   {paged.map((product, index) => {
                     if (!product || !product.id) return null;
                     return (
-                    <Grid item xs={12} sm={6} md={3} lg={3} key={product.id}>
+                    <Box key={product.id}>
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -789,11 +799,11 @@ const ShopPage = () => {
                           </CardActions>
                         </Card>
                       </motion.div>
-                    </Grid>
+                    </Box>
                     );
                   })}
                 </AnimatePresence>
-              </Grid>
+              </Box>
             )}
 
             {!loading && !error && totalPages > 1 && (
