@@ -562,14 +562,14 @@ const ContactSection = () => {
                                 borderColor: 'rgba(255, 255, 255, 0.5)',
                               },
                               '&.Mui-focused fieldset': {
-                                borderColor: '#2196F3',
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
                               },
                             },
                             '& .MuiInputLabel-root': {
                               color: 'rgba(255, 255, 255, 0.7)',
                             },
                             '& .MuiInputLabel-root.Mui-focused': {
-                              color: '#2196F3',
+                              color: 'rgba(255, 255, 255, 0.9)',
                             },
                             '& .MuiOutlinedInput-input': {
                               color: 'white',
@@ -604,14 +604,14 @@ const ContactSection = () => {
                                 borderColor: 'rgba(255, 255, 255, 0.5)',
                               },
                               '&.Mui-focused fieldset': {
-                                borderColor: '#2196F3',
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
                               },
                             },
                             '& .MuiInputLabel-root': {
                               color: 'rgba(255, 255, 255, 0.7)',
                             },
                             '& .MuiInputLabel-root.Mui-focused': {
-                              color: '#2196F3',
+                              color: 'rgba(255, 255, 255, 0.9)',
                             },
                             '& .MuiOutlinedInput-input': {
                               color: 'white',

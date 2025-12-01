@@ -516,7 +516,7 @@ const CartPage = () => {
                             </Box>
 
                             {/* Product Variants */}
-                            <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                            <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                               {item.color && (
                                 <Chip
                                   label={`Color: ${item.color}`}
@@ -545,7 +545,7 @@ const CartPage = () => {
                               )}
                               {item.customText && (
                                 <Chip
-                                  label={`Text: ${item.customText}`}
+                                  label={`Text: ${item.customText.length > 15 ? item.customText.substring(0, 15) + '...' : item.customText}`}
                                   size="small"
                                   sx={{
                                     background: 'rgba(255, 215, 0, 0.2)',
@@ -555,6 +555,40 @@ const CartPage = () => {
                                     height: 24,
                                   }}
                                 />
+                              )}
+                              {item.customImageUrl && (
+                                <Tooltip title="Custom Image">
+                                  <Box
+                                    sx={{
+                                      width: 40,
+                                      height: 40,
+                                      borderRadius: 1,
+                                      overflow: 'hidden',
+                                      border: '2px solid rgba(255, 215, 0, 0.5)',
+                                      cursor: 'pointer',
+                                      '&:hover': {
+                                        borderColor: '#FFD700',
+                                        transform: 'scale(1.1)',
+                                      },
+                                      transition: 'all 0.3s ease',
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.open(item.customImageUrl, '_blank');
+                                    }}
+                                  >
+                                    <CardMedia
+                                      component="img"
+                                      image={item.customImageUrl}
+                                      alt="Custom Image"
+                                      sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                      }}
+                                    />
+                                  </Box>
+                                </Tooltip>
                               )}
                             </Box>
 

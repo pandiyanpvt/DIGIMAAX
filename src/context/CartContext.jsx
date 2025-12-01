@@ -68,7 +68,7 @@ const transformUIToApiItem = (productId, itemDetails = {}) => {
 };
 
 export const CartProvider = ({ children }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, openSignInModal } = useAuth();
   const [cartItems, setCartItems] = useState(new Map());
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
@@ -119,6 +119,7 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (productId, itemDetails = {}) => {
     if (!isAuthenticated || !user?.id) {
       setCartError('Please sign in to add items to cart');
+      openSignInModal();
       return;
     }
 

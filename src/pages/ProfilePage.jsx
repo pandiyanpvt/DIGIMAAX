@@ -12,10 +12,13 @@ import {
   Card,
   CardContent,
   Alert,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  IconButton,
+  InputAdornment,
 } from '@mui/material';
 import {
   Edit,
@@ -26,37 +29,33 @@ import {
   Person,
   Verified,
   Phone,
-  Cake,
-  Wc,
-  Home,
-  LocationCity,
-  Public,
-  Info,
+  Delete,
+  Warning,
+  Visibility,
+  VisibilityOff,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { updateUser as updateUserRequest } from '../api/user';
+import { updateUser as updateUserRequest, deleteUser as deleteUserRequest } from '../api/user';
+import { forgotPassword, resetPassword } from '../api/auth';
+import { useNavigate } from 'react-router-dom';
 
 const ProfilePage = () => {
-  const { user, updateUserSession } = useAuth();
+  const { user, updateUserSession, signOut } = useAuth();
+  const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [editPasswordMode, setEditPasswordMode] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phoneNumber: '',
-    dateOfBirth: '',
-    gender: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
-    bio: '',
   });
 
   useEffect(() => {
@@ -66,23 +65,20 @@ const ProfilePage = () => {
         lastName: user.lastName || '',
         email: user.email || '',
         phoneNumber: user.phoneNumber || '',
-        dateOfBirth: user.dateOfBirth || '',
-        gender: user.gender || '',
-        address: user.address || '',
-        city: user.city || '',
-        state: user.state || '',
-        zipCode: user.zipCode || '',
-        country: user.country || '',
-        bio: user.bio || '',
       });
     }
   }, [user]);
 
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
     newPassword: '',
     confirmPassword: '',
+    otp: '',
   });
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const getInitials = (firstName, lastName) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
@@ -156,22 +152,54 @@ const ProfilePage = () => {
         lastName: user.lastName || '',
         email: user.email || '',
         phoneNumber: user.phoneNumber || '',
-        dateOfBirth: user.dateOfBirth || '',
-        gender: user.gender || '',
-        address: user.address || '',
-        city: user.city || '',
-        state: user.state || '',
-        zipCode: user.zipCode || '',
-        country: user.country || '',
-        bio: user.bio || '',
       });
     }
     setEditMode(false);
   };
 
+  const handleRequestOtp = async () => {
+    if (!user?.email) {
+      setErrorMessage('Email not found. Please contact support.');
+      setTimeout(() => setErrorMessage(''), 5000);
+      return;
+    }
+
+    try {
+      setSendingOtp(true);
+      setErrorMessage('');
+      setSuccessMessage('');
+      await forgotPassword({ email: user.email });
+      setOtpSent(true);
+      setSuccessMessage('Password reset OTP sent to your email. Please check your inbox.');
+      setTimeout(() => setSuccessMessage(''), 8000);
+    } catch (err) {
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to send OTP. Please try again.';
+      
+      // Check if error is due to unverified email
+      if (err?.response?.status === 403 || errorMessage.includes('not verified') || errorMessage.includes('verify')) {
+        setErrorMessage(
+          'Your email address is not verified. Please verify your email first before resetting your password. Check your inbox for the verification email or contact support.'
+        );
+      } else {
+        setErrorMessage(errorMessage);
+      }
+      
+      setOtpSent(false); // Don't show OTP input if request failed
+      setTimeout(() => setErrorMessage(''), 8000);
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
   const handleSavePassword = async () => {
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
       setErrorMessage('Please fill in all password fields');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    if (!otpSent || !passwordData.otp) {
+      setErrorMessage('Please request and enter the OTP first');
       setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
@@ -189,31 +217,73 @@ const ProfilePage = () => {
     }
 
     try {
-      await updateUserRequest(user.id, { password: newPassword });
+      setResettingPassword(true);
+      setErrorMessage('');
+      await resetPassword({
+        email: user.email,
+        otp: passwordData.otp,
+        newPassword: passwordData.newPassword,
+      });
 
       setEditPasswordMode(false);
+      setOtpSent(false);
       setPasswordData({
-        currentPassword: '',
         newPassword: '',
         confirmPassword: '',
+        otp: '',
       });
-      setSuccessMessage('Password changed successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+      setSuccessMessage('Password changed successfully! You can now log in with your new password.');
+      setTimeout(() => setSuccessMessage(''), 5000);
     } catch (err) {
       const message =
-        err?.response?.data?.message || err?.message || 'Failed to change password';
+        err?.response?.data?.message || err?.message || 'Failed to reset password. Please check your OTP and try again.';
       setErrorMessage(message);
-      setTimeout(() => setErrorMessage(''), 3000);
+      setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      setResettingPassword(false);
     }
   };
 
   const handleCancelPasswordEdit = () => {
     setPasswordData({
-      currentPassword: '',
       newPassword: '',
       confirmPassword: '',
+      otp: '',
     });
+    setOtpSent(false);
     setEditPasswordMode(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      setErrorMessage('Please type "DELETE" to confirm account deletion');
+      setTimeout(() => setErrorMessage(''), 5000);
+      return;
+    }
+
+    try {
+      setDeletingAccount(true);
+      setErrorMessage('');
+      await deleteUserRequest(user.id);
+      
+      setDeleteDialogOpen(false);
+      setSuccessMessage('Your account has been deleted successfully. You will be signed out.');
+      setTimeout(() => {
+        signOut();
+        navigate('/');
+      }, 2000);
+    } catch (err) {
+      const message =
+        err?.response?.data?.message || err?.message || 'Failed to delete account. Please try again.';
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(''), 8000);
+    } finally {
+      setDeletingAccount(false);
+    }
   };
 
   const textFieldStyle = (isEditable) => ({
@@ -403,7 +473,7 @@ const ProfilePage = () => {
 
           <Grid container spacing={3}>
             {/* Basic Information Card */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card
                 elevation={0}
                 sx={{
@@ -477,186 +547,8 @@ const ProfilePage = () => {
               </Card>
             </Grid>
 
-            {/* Personal Details Card */}
-            <Grid item xs={12} md={6}>
-              <Card
-                elevation={0}
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: 4,
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold', mb: 1 }}>
-                    Personal Details
-                  </Typography>
-                  <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 3 }} />
-
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                    <TextField
-                      fullWidth
-                      label="Date of Birth"
-                      type="date"
-                      value={profileData.dateOfBirth}
-                      onChange={handleProfileChange('dateOfBirth')}
-                      disabled={!editMode}
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{
-                        startAdornment: <Cake sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
-                        placeholder: !profileData.dateOfBirth && !editMode ? "Not provided" : ""
-                      }}
-                      sx={textFieldStyle(editMode)}
-                    />
-
-                    <FormControl fullWidth disabled={!editMode}>
-                      <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Gender</InputLabel>
-                      <Select
-                        value={profileData.gender}
-                        onChange={handleProfileChange('gender')}
-                        label="Gender"
-                        displayEmpty
-                        startAdornment={<Wc sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />}
-                        sx={{
-                          backgroundColor: editMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-                          color: 'white',
-                          '& fieldset': {
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'rgba(255, 255, 255, 0.3)',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#2196F3',
-                          },
-                          '& .MuiSvgIcon-root': {
-                            color: 'rgba(255, 255, 255, 0.7)',
-                          },
-                        }}
-                      >
-                        <MenuItem value="">
-                          <em style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Select gender</em>
-                        </MenuItem>
-                        <MenuItem value="male">Male</MenuItem>
-                        <MenuItem value="female">Female</MenuItem>
-                        <MenuItem value="other">Other</MenuItem>
-                        <MenuItem value="prefer-not-to-say">Prefer not to say</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    <TextField
-                      fullWidth
-                      label="Bio / About Me"
-                      value={profileData.bio}
-                      onChange={handleProfileChange('bio')}
-                      disabled={!editMode}
-                      multiline
-                      rows={4}
-                      placeholder={editMode ? "Tell us about yourself, your interests, hobbies..." : !profileData.bio ? "No bio added yet" : ""}
-                      InputProps={{
-                        startAdornment: <Info sx={{ mr: 1, mt: 1, color: 'rgba(255, 255, 255, 0.5)', alignSelf: 'flex-start' }} />,
-                      }}
-                      sx={textFieldStyle(editMode)}
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Address Information Card */}
-            <Grid item xs={12}>
-              <Card
-                elevation={0}
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: 4,
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold', mb: 1 }}>
-                    Address Information
-                  </Typography>
-                  <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 3 }} />
-
-                  <Grid container spacing={2.5}>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Street Address"
-                        value={profileData.address}
-                        onChange={handleProfileChange('address')}
-                        disabled={!editMode}
-                        placeholder={editMode ? "123 Main Street, Apt 4B" : !profileData.address ? "No address added" : ""}
-                        InputProps={{
-                          startAdornment: <Home sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
-                        }}
-                        sx={textFieldStyle(editMode)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        label="City"
-                        value={profileData.city}
-                        onChange={handleProfileChange('city')}
-                        disabled={!editMode}
-                        placeholder={editMode ? "New York" : !profileData.city ? "Not provided" : ""}
-                        InputProps={{
-                          startAdornment: <LocationCity sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
-                        }}
-                        sx={textFieldStyle(editMode)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={3}>
-                      <TextField
-                        fullWidth
-                        label="State/Province"
-                        value={profileData.state}
-                        onChange={handleProfileChange('state')}
-                        disabled={!editMode}
-                        placeholder={editMode ? "NY" : !profileData.state ? "Not set" : ""}
-                        sx={textFieldStyle(editMode)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={3}>
-                      <TextField
-                        fullWidth
-                        label="ZIP Code"
-                        value={profileData.zipCode}
-                        onChange={handleProfileChange('zipCode')}
-                        disabled={!editMode}
-                        placeholder={editMode ? "10001" : !profileData.zipCode ? "Not set" : ""}
-                        sx={textFieldStyle(editMode)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Country"
-                        value={profileData.country}
-                        onChange={handleProfileChange('country')}
-                        disabled={!editMode}
-                        placeholder={editMode ? "United States" : !profileData.country ? "Not provided" : ""}
-                        InputProps={{
-                          startAdornment: <Public sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
-                        }}
-                        sx={textFieldStyle(editMode)}
-                      />
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-
             {/* Change Password Card */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card
                 elevation={0}
                 sx={{
@@ -674,60 +566,136 @@ const ProfilePage = () => {
 
                   {editPasswordMode ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                      <TextField
-                        fullWidth
-                        label="Current Password"
-                        type="password"
-                        value={passwordData.currentPassword}
-                        onChange={handlePasswordChange('currentPassword')}
-                        InputProps={{
-                          startAdornment: <Lock sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
-                        }}
-                        sx={textFieldStyle(true)}
-                      />
+                      {!otpSent ? (
+                        <>
+                          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1 }}>
+                            To change your password, we'll send a verification code to your email: <strong>{user?.email}</strong>
+                          </Typography>
+                          {errorMessage && (errorMessage.includes('not verified') || errorMessage.includes('verify')) && (
+                            <Alert severity="warning" sx={{ mb: 2, backgroundColor: 'rgba(255, 152, 0, 0.1)', border: '1px solid rgba(255, 152, 0, 0.3)' }}>
+                              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                                Your email address needs to be verified first. Please check your inbox for the verification email, or contact support if you need help.
+                              </Typography>
+                            </Alert>
+                          )}
+                          <Button
+                            onClick={handleRequestOtp}
+                            variant="contained"
+                            disabled={sendingOtp}
+                            fullWidth
+                            sx={{
+                              background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                              color: 'white',
+                              fontWeight: 'bold',
+                              py: 1.2,
+                              borderRadius: 2,
+                              '&:hover': {
+                                background: 'linear-gradient(135deg, #1976D2 0%, #1565C0 100%)',
+                              },
+                            }}
+                          >
+                            {sendingOtp ? 'Sending OTP...' : 'Send Verification Code'}
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <TextField
+                            fullWidth
+                            label="Verification Code (OTP)"
+                            value={passwordData.otp}
+                            onChange={handlePasswordChange('otp')}
+                            placeholder="Enter the 6-digit code sent to your email"
+                            InputProps={{
+                              startAdornment: <Email sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
+                            }}
+                            sx={textFieldStyle(true)}
+                          />
 
-                      <TextField
-                        fullWidth
-                        label="New Password"
-                        type="password"
-                        value={passwordData.newPassword}
-                        onChange={handlePasswordChange('newPassword')}
-                        InputProps={{
-                          startAdornment: <Lock sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
-                        }}
-                        sx={textFieldStyle(true)}
-                      />
+                          <TextField
+                            fullWidth
+                            label="New Password"
+                            type={showNewPassword ? 'text' : 'password'}
+                            value={passwordData.newPassword}
+                            onChange={handlePasswordChange('newPassword')}
+                            InputProps={{
+                              startAdornment: <Lock sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                    edge="end"
+                                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                  >
+                                    {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
+                            }}
+                            sx={textFieldStyle(true)}
+                          />
 
-                      <TextField
-                        fullWidth
-                        label="Confirm New Password"
-                        type="password"
-                        value={passwordData.confirmPassword}
-                        onChange={handlePasswordChange('confirmPassword')}
-                        InputProps={{
-                          startAdornment: <Lock sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
-                        }}
-                        sx={textFieldStyle(true)}
-                      />
+                          <TextField
+                            fullWidth
+                            label="Confirm New Password"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={passwordData.confirmPassword}
+                            onChange={handlePasswordChange('confirmPassword')}
+                            InputProps={{
+                              startAdornment: <Lock sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    edge="end"
+                                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                  >
+                                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
+                            }}
+                            sx={textFieldStyle(true)}
+                          />
+
+                          <Button
+                            onClick={handleRequestOtp}
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              color: '#2196F3',
+                              borderColor: 'rgba(33, 150, 243, 0.5)',
+                              '&:hover': {
+                                borderColor: '#2196F3',
+                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                              },
+                            }}
+                          >
+                            Resend OTP
+                          </Button>
+                        </>
+                      )}
 
                       <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                        <Button
-                          onClick={handleSavePassword}
-                          variant="contained"
-                          fullWidth
-                          sx={{
-                            background: 'linear-gradient(135deg, #4CAF50 0%, #45A049 100%)',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            py: 1.2,
-                            borderRadius: 2,
-                            '&:hover': {
-                              background: 'linear-gradient(135deg, #5DBF61 0%, #4CAF50 100%)',
-                            },
-                          }}
-                        >
-                          Save Password
-                        </Button>
+                        {otpSent && (
+                          <Button
+                            onClick={handleSavePassword}
+                            variant="contained"
+                            disabled={resettingPassword}
+                            fullWidth
+                            sx={{
+                              background: 'linear-gradient(135deg, #4CAF50 0%, #45A049 100%)',
+                              color: 'white',
+                              fontWeight: 'bold',
+                              py: 1.2,
+                              borderRadius: 2,
+                              '&:hover': {
+                                background: 'linear-gradient(135deg, #5DBF61 0%, #4CAF50 100%)',
+                              },
+                            }}
+                          >
+                            {resettingPassword ? 'Resetting Password...' : 'Reset Password'}
+                          </Button>
+                        )}
                         <Button
                           onClick={handleCancelPasswordEdit}
                           variant="outlined"
@@ -777,103 +745,165 @@ const ProfilePage = () => {
               </Card>
             </Grid>
 
-            {/* Account Statistics */}
-            <Grid item xs={12} md={6}>
+            {/* Delete Account Section */}
+            <Grid size={{ xs: 12 }}>
               <Card
                 elevation={0}
                 sx={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(255, 107, 107, 0.05)',
                   backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 107, 107, 0.2)',
                   borderRadius: 4,
                 }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold', mb: 1 }}>
-                    Account Statistics
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Warning sx={{ color: '#FF6B6B', fontSize: 28 }} />
+                    <Typography variant="h6" sx={{ color: '#FF6B6B', fontWeight: 'bold' }}>
+                      Danger Zone
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ borderColor: 'rgba(255, 107, 107, 0.2)', mb: 3 }} />
+                  
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 2 }}>
+                    Once you delete your account, there is no going back. Please be certain.
                   </Typography>
-                  <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 3 }} />
+                  
+                  <Box sx={{ mb: 2 }}>
+                    <Alert severity="warning" sx={{ mb: 2, backgroundColor: 'rgba(255, 152, 0, 0.1)', border: '1px solid rgba(255, 152, 0, 0.3)' }}>
+                      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, mb: 0.5 }}>
+                        What will be deleted:
+                      </Typography>
+                      <Typography variant="body2" component="ul" sx={{ color: 'rgba(255, 255, 255, 0.8)', pl: 2, mb: 0 }}>
+                        <li>Your profile information</li>
+                        <li>Your shopping cart items</li>
+                        <li>Your account access</li>
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, mt: 1, mb: 0.5 }}>
+                        What will be preserved:
+                      </Typography>
+                      <Typography variant="body2" component="ul" sx={{ color: 'rgba(255, 255, 255, 0.8)', pl: 2, mb: 0 }}>
+                        <li>Your order history (for business records)</li>
+                        <li>Your payment records (for accounting)</li>
+                      </Typography>
+                    </Alert>
+                  </Box>
 
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <Box
-                        sx={{
-                          textAlign: 'center',
-                          p: 2,
-                          borderRadius: 2,
-                          background: 'rgba(33, 150, 243, 0.1)',
-                          border: '1px solid rgba(33, 150, 243, 0.2)',
-                        }}
-                      >
-                        <Typography variant="h4" sx={{ color: '#2196F3', fontWeight: 'bold', mb: 0.5 }}>
-                          0
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                          Total Orders
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Box
-                        sx={{
-                          textAlign: 'center',
-                          p: 2,
-                          borderRadius: 2,
-                          background: 'rgba(76, 175, 80, 0.1)',
-                          border: '1px solid rgba(76, 175, 80, 0.2)',
-                        }}
-                      >
-                        <Typography variant="h4" sx={{ color: '#4CAF50', fontWeight: 'bold', mb: 0.5 }}>
-                          0
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                          Completed
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Box
-                        sx={{
-                          textAlign: 'center',
-                          p: 2,
-                          borderRadius: 2,
-                          background: 'rgba(255, 152, 0, 0.1)',
-                          border: '1px solid rgba(255, 152, 0, 0.2)',
-                        }}
-                      >
-                        <Typography variant="h4" sx={{ color: '#FF9800', fontWeight: 'bold', mb: 0.5 }}>
-                          0
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                          Pending
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Box
-                        sx={{
-                          textAlign: 'center',
-                          p: 2,
-                          borderRadius: 2,
-                          background: 'rgba(156, 39, 176, 0.1)',
-                          border: '1px solid rgba(156, 39, 176, 0.2)',
-                        }}
-                      >
-                        <Typography variant="h5" sx={{ color: '#9C27B0', fontWeight: 'bold', mb: 0.5 }}>
-                          New
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                          Member Status
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
+                  <Button
+                    onClick={() => setDeleteDialogOpen(true)}
+                    variant="outlined"
+                    startIcon={<Delete />}
+                    sx={{
+                      color: '#FF6B6B',
+                      borderColor: '#FF6B6B',
+                      fontWeight: 'bold',
+                      py: 1.2,
+                      px: 3,
+                      borderRadius: 2,
+                      '&:hover': {
+                        borderColor: '#FF8888',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                      },
+                    }}
+                  >
+                    Delete My Account
+                  </Button>
                 </CardContent>
               </Card>
             </Grid>
           </Grid>
         </motion.div>
       </Container>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !deletingAccount && setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: 'linear-gradient(180deg, rgba(16,6,36,0.95), rgba(7,2,18,0.98))',
+            border: '1px solid rgba(255, 107, 107, 0.3)',
+            borderRadius: 4,
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: '#FF6B6B', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Warning sx={{ fontSize: 28 }} />
+          Delete Account
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.9)', mb: 2 }}>
+            This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+          </DialogContentText>
+          
+          <Alert severity="error" sx={{ mb: 2, backgroundColor: 'rgba(255, 107, 107, 0.1)' }}>
+            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+              <strong>Warning:</strong> If you have active orders (pending, processing, or shipped), you must complete or cancel them before deleting your account.
+            </Typography>
+          </Alert>
+
+          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 2 }}>
+            To confirm, please type <strong style={{ color: '#FF6B6B' }}>DELETE</strong> in the box below:
+          </Typography>
+
+          <TextField
+            fullWidth
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="Type DELETE to confirm"
+            disabled={deletingAccount}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                color: 'white',
+                '& fieldset': {
+                  borderColor: 'rgba(255, 107, 107, 0.5)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(255, 107, 107, 0.7)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#FF6B6B',
+                },
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setDeleteConfirmText('');
+            }}
+            disabled={deletingAccount}
+            sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteAccount}
+            disabled={deletingAccount || deleteConfirmText !== 'DELETE'}
+            variant="contained"
+            startIcon={deletingAccount ? null : <Delete />}
+            sx={{
+              backgroundColor: '#FF6B6B',
+              color: 'white',
+              fontWeight: 600,
+              '&:hover': {
+                backgroundColor: '#FF5252',
+              },
+              '&:disabled': {
+                backgroundColor: 'rgba(255, 107, 107, 0.3)',
+                color: 'rgba(255, 255, 255, 0.5)',
+              },
+            }}
+          >
+            {deletingAccount ? 'Deleting Account...' : 'Delete Account Permanently'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

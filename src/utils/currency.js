@@ -1,9 +1,9 @@
 export const formatLKR = (amount) => {
   try {
-    const formatter = new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 });
-    return formatter.format(Math.max(0, Math.round(amount || 0)));
+    const formatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return formatter.format(Math.max(0, amount || 0));
   } catch {
-    return `LKR ${Math.max(0, Math.round(amount || 0)).toLocaleString('en-LK')}`;
+    return `€${Math.max(0, amount || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 };
 

@@ -33,6 +33,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { formatLKR } from '../utils/currency';
 import { getProducts } from '../services/products';
 import { productCardStyles } from '../utils/productCardStyles';
@@ -41,6 +42,7 @@ import { getCategories } from '../api/categories';
 const ShopPage = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isAuthenticated, openSignInModal } = useAuth();
 
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -59,7 +61,7 @@ const ShopPage = () => {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [snackbar, setSnackbar] = useState({ open: false, message: '' });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const itemsPerPage = 12;
 
@@ -374,7 +376,7 @@ const ShopPage = () => {
                     value={priceRange}
                     onChange={(_, v) => setPriceRange(v)}
                     valueLabelDisplay="auto"
-                    valueLabelFormat={(value) => `LKR ${value}`}
+                    valueLabelFormat={(value) => `€${value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     sx={{
                       color: 'white',
                       height: 6,
@@ -404,10 +406,10 @@ const ShopPage = () => {
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, px: 1 }}>
                   <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.7rem' }}>
-                    LKR {priceRange[0]}
+                    €{priceRange[0].toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.7rem' }}>
-                    LKR {priceRange[1]}
+                    €{priceRange[1].toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Typography>
                 </Box>
               </Box>
@@ -714,14 +716,36 @@ const ShopPage = () => {
                                 variant="outlined"
                                 fullWidth
                                 startIcon={<ShoppingCartIcon />}
-                                onClick={() => {
-                                  if (product?.id) {
-                                    addToCart(product.id, {
+                                onClick={async () => {
+                                  if (!product?.id) return;
+                                  
+                                  if (!isAuthenticated) {
+                                    setSnackbar({ 
+                                      open: true, 
+                                      message: 'Please sign in to add items to your cart', 
+                                      severity: 'info' 
+                                    });
+                                    openSignInModal();
+                                    return;
+                                  }
+                                  
+                                  try {
+                                    await addToCart(product.id, {
                                       title: product?.title || 'Product',
                                       image: product?.image || '',
                                       price: product?.price || 0,
                                     });
-                                    setSnackbar({ open: true, message: `${product?.title || 'Product'} added to cart!` });
+                                    setSnackbar({ 
+                                      open: true, 
+                                      message: `${product?.title || 'Product'} added to cart!`,
+                                      severity: 'success'
+                                    });
+                                  } catch (error) {
+                                    setSnackbar({ 
+                                      open: true, 
+                                      message: error.message || 'Failed to add item to cart', 
+                                      severity: 'error' 
+                                    });
                                   }
                                 }}
                                 sx={{
@@ -886,12 +910,12 @@ const ShopPage = () => {
         <Snackbar
           open={snackbar.open}
           autoHideDuration={3000}
-          onClose={() => setSnackbar({ open: false, message: '' })}
+          onClose={() => setSnackbar({ open: false, message: '', severity: 'success' })}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
-            onClose={() => setSnackbar({ open: false, message: '' })}
-            severity="success"
+            onClose={() => setSnackbar({ open: false, message: '', severity: 'success' })}
+            severity={snackbar.severity || 'success'}
             sx={{
               width: '100%',
               backgroundColor: 'rgba(76, 175, 80, 0.95)',

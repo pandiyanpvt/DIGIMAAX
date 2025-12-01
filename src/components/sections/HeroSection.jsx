@@ -363,16 +363,21 @@ const HeroSection = () => {
                           rel="noopener noreferrer"
                           sx={{
                             color: 'white',
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                            backdropFilter: 'blur(15px) saturate(180%)',
+                            WebkitBackdropFilter: 'blur(15px) saturate(180%)',
+                            border: '1px solid rgba(255, 255, 255, 0.25)',
+                            borderRadius: '12px',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
                             '&:hover': {
                               backgroundColor: social.color,
                               borderColor: social.color,
-                              boxShadow: `0 4px 15px ${social.color}40`,
-                              transform: 'translateY(-2px)',
+                              boxShadow: `0 12px 40px ${social.color}50`,
+                              transform: 'translateY(-3px) scale(1.05)',
+                              backdropFilter: 'blur(20px) saturate(200%)',
+                              WebkitBackdropFilter: 'blur(20px) saturate(200%)',
                             },
-                            transition: 'all 0.3s ease',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                           }}
                         >
                           <social.Icon />
