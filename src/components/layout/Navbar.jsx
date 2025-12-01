@@ -194,8 +194,7 @@ const Navbar = () => {
         ) : (
           <Button
             onClick={openSignInModal}
-            variant="contained"
-            color="primary"
+            variant="outlined"
             size="large"
             fullWidth
             sx={{
@@ -203,11 +202,21 @@ const Navbar = () => {
               fontSize: '1rem',
               fontWeight: 600,
               py: 1.5,
-              borderRadius: 2,
-              boxShadow: 2,
+              borderRadius: '25px',
+              color: 'white',
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
               '&:hover': {
-                boxShadow: 4,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderColor: 'rgba(255, 255, 255, 0.4)',
+                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.2)',
+                transform: 'translateY(-2px)',
               },
+              transition: 'all 0.3s ease',
             }}
           >
             Sign In
@@ -400,8 +409,7 @@ const Navbar = () => {
                 >
                   <Button
                     onClick={openSignInModal}
-                    variant="contained"
-                    color="primary"
+                    variant="outlined"
                     size="large"
                     sx={{
                       textTransform: 'none',
@@ -409,11 +417,21 @@ const Navbar = () => {
                       fontWeight: 600,
                       px: 4,
                       py: 1,
-                      borderRadius: 2,
-                      boxShadow: 2,
+                      borderRadius: '25px',
+                      color: 'white',
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                       '&:hover': {
-                        boxShadow: 4,
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.2)',
+                        transform: 'translateY(-2px)',
                       },
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     Sign In

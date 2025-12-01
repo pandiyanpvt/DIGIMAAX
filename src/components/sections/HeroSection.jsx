@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -14,42 +14,119 @@ import { useNavigate } from 'react-router-dom';
 import {
   Telegram,
   Instagram,
-  Apple,
   WhatsApp,
+  Facebook,
+  Twitter,
+  LinkedIn,
+  YouTube,
+  Public,
 } from '@mui/icons-material';
-import rectangle94 from '../../assets/hero/header-slider/Rectangle 94.png';
-import rectangle95 from '../../assets/hero/header-slider/Rectangle 95.png';
-import rectangle96 from '../../assets/hero/header-slider/Rectangle 96.png';
-import rectangle97 from '../../assets/hero/header-slider/Rectangle 97.png';
-import rectangle98 from '../../assets/hero/header-slider/Rectangle 98.png';
-import rectangle99 from '../../assets/hero/header-slider/Rectangle 99.png';
+import { getHeaderImagesByOrderRange } from '../../api/headerImages';
+import { getSocialMediaLinks } from '../../api/socialMedia';
 
 const HeroSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
 
-  const socialIcons = [
-    { icon: <Telegram />, color: '#0088cc' },
-    { icon: <Instagram />, color: '#E4405F' },
-    { icon: <Apple />, color: '#000000' },
-    { icon: <WhatsApp />, color: '#25D366' },
-  ];
+  // Social media icon mapping
+  const SOCIAL_ICON_META = useMemo(
+    () => ({
+      facebook: { Icon: Facebook, color: '#1877F2' },
+      instagram: { Icon: Instagram, color: '#E4405F' },
+      twitter: { Icon: Twitter, color: '#1DA1F2' },
+      linkedin: { Icon: LinkedIn, color: '#0077B5' },
+      youtube: { Icon: YouTube, color: '#FF0000' },
+      whatsapp: { Icon: WhatsApp, color: '#25D366' },
+      telegram: { Icon: Telegram, color: '#0088cc' },
+      default: { Icon: Public, color: '#FFD700' },
+    }),
+    []
+  );
 
-  const sliderImages = [
-    rectangle94,
-    rectangle95,
-    rectangle96,
-    rectangle97,
-    rectangle98,
-    rectangle99,
-  ];
+  const buildSocialLinks = useCallback(
+    (items = []) =>
+      items
+        .slice()
+        .reverse()
+        .map((item, index) => {
+          const key = (item.social_media || '').toLowerCase().trim();
+          const meta = SOCIAL_ICON_META[key] || SOCIAL_ICON_META.default;
+          return {
+            id: item.id || `social-${index}`,
+            label: item.social_media || 'Social',
+            href: item.link || '#',
+            color: meta.color,
+            Icon: meta.Icon,
+          };
+        }),
+    [SOCIAL_ICON_META]
+  );
 
+  const [sliderImages, setSliderImages] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [socialMedia, setSocialMedia] = useState([]);
   const slideInOffset = isMobile ? -60 : -120;
+  const hasSlides = sliderImages.length > 0;
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchHeaderImages = async () => {
+      try {
+        const { images } = await getHeaderImagesByOrderRange({ min: 1, max: 6 });
+        const ordered = images
+          .filter((img) => img?.img_url)
+          .filter((img) => Number(img?.is_active) === 1)
+          .sort((a, b) => (a.order_no || 0) - (b.order_no || 0))
+          .map((img) => img.img_url);
+
+        if (isMounted) {
+          setSliderImages(ordered);
+        }
+      } catch (error) {
+        console.error('Failed to load header images', error);
+      }
+    };
+
+    fetchHeaderImages();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Fetch social media links from backend
+  useEffect(() => {
+    let isMounted = true;
+    const fetchSocialLinks = async () => {
+      try {
+        const { links } = await getSocialMediaLinks();
+        const activeLinks = (links || []).filter(
+          (link) => Number(link?.is_active) === 1 && link?.link
+        );
+        if (isMounted && activeLinks.length) {
+          setSocialMedia(buildSocialLinks(activeLinks));
+        }
+      } catch (error) {
+        console.error('Failed to load social media links', error);
+      }
+    };
+
+    fetchSocialLinks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [buildSocialLinks]);
+
+  useEffect(() => {
+    if (!sliderImages.length) {
+      setImagesLoaded(true);
+      return;
+    }
+
     const preloadImages = () => {
       const imagePromises = sliderImages.map((src) => {
         return new Promise((resolve, reject) => {
@@ -71,10 +148,14 @@ const HeroSection = () => {
     };
 
     preloadImages();
-  }, []);
+  }, [sliderImages]);
 
   useEffect(() => {
-    if (!imagesLoaded) return;
+    setCurrentSlide(0);
+  }, [sliderImages.length]);
+
+  useEffect(() => {
+    if (!imagesLoaded || sliderImages.length === 0) return;
 
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
@@ -110,30 +191,56 @@ const HeroSection = () => {
           zIndex: 0,
         }}
       >
-        {sliderImages.map((src, index) => (
-          <Box
-            key={`preload-${index}`}
-            component="img"
-            src={src}
-            alt=""
-            sx={{
-              position: 'absolute',
-              width: 0,
-              height: 0,
-              opacity: 0,
-              pointerEvents: 'none',
-            }}
-          />
-        ))}
+        {hasSlides &&
+          sliderImages.map((src, index) => (
+            <Box
+              key={`preload-${index}`}
+              component="img"
+              src={src}
+              alt=""
+              sx={{
+                position: 'absolute',
+                width: 0,
+                height: 0,
+                opacity: 0,
+                pointerEvents: 'none',
+              }}
+            />
+          ))}
         
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide}
-            initial={{ opacity: 0, y: slideInOffset }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 60 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            style={{
+        {hasSlides ? (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0, y: slideInOffset }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 60 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              <Box
+                component="img"
+                src={sliderImages[currentSlide]}
+                alt={`Hero background ${currentSlide + 1}`}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <Box
+            sx={{
               position: 'absolute',
               top: 0,
               left: 0,
@@ -141,20 +248,10 @@ const HeroSection = () => {
               bottom: 0,
               width: '100%',
               height: '100%',
+              background: 'linear-gradient(135deg, #2a0a5f 0%, #150532 100%)',
             }}
-          >
-            <Box
-              component="img"
-              src={sliderImages[currentSlide]}
-              alt={`Hero background ${currentSlide + 1}`}
-              sx={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-          </motion.div>
-        </AnimatePresence>
+          />
+        )}
         
         <Box
           sx={{
@@ -250,31 +347,45 @@ const HeroSection = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.6 }}
               >
-                <Box sx={{ display: 'flex', gap: 1, mt: 3 }}>
-                  {socialIcons.map((social, index) => (
-                    <motion.div
-                      key={index}
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <IconButton
-                        sx={{
-                          color: 'white',
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          '&:hover': {
-                            backgroundColor: social.color,
-                            transform: 'translateY(-2px)',
-                          },
-                          transition: 'all 0.3s ease',
-                        }}
+                {socialMedia.length > 0 && (
+                  <Box sx={{ display: 'flex', gap: 1, mt: 3 }}>
+                    {socialMedia.map((social, index) => (
+                      <motion.div
+                        key={social.id || index}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        {social.icon}
-                      </IconButton>
-                    </motion.div>
-                  ))}
-                </Box>
+                        <IconButton
+                          aria-label={social.label}
+                          component="a"
+                          href={social.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          sx={{
+                            color: 'white',
+                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                            backdropFilter: 'blur(15px) saturate(180%)',
+                            WebkitBackdropFilter: 'blur(15px) saturate(180%)',
+                            border: '1px solid rgba(255, 255, 255, 0.25)',
+                            borderRadius: '12px',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+                            '&:hover': {
+                              backgroundColor: social.color,
+                              borderColor: social.color,
+                              boxShadow: `0 12px 40px ${social.color}50`,
+                              transform: 'translateY(-3px) scale(1.05)',
+                              backdropFilter: 'blur(20px) saturate(200%)',
+                              WebkitBackdropFilter: 'blur(20px) saturate(200%)',
+                            },
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          }}
+                        >
+                          <social.Icon />
+                        </IconButton>
+                      </motion.div>
+                    ))}
+                  </Box>
+                )}
               </motion.div>
             </motion.div>
           </Grid>
@@ -282,39 +393,42 @@ const HeroSection = () => {
       </Container>
 
       {/* Slider indicators */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: { xs: 10, sm: 20, md: 30 },
-          transform: 'translateY(-50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: { xs: 0.8, sm: 1, lg: 1.2 },
-          zIndex: 3,
-        }}
-      >
-        {sliderImages.map((_, index) => (
-          <Box
-            key={index}
-            onClick={() => goToSlide(index)}
-            sx={{
-              width: { xs: 8, sm: 10, lg: 12 },
-              height: { xs: 8, sm: 10, lg: 12 },
-              borderRadius: '50%',
-              backgroundColor: currentSlide === index 
-                ? 'white' 
-                : 'rgba(255, 255, 255, 0.4)',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                transform: 'scale(1.2)',
-              },
-            }}
-          />
-        ))}
-      </Box>
+      {hasSlides && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: { xs: 10, sm: 20, md: 30 },
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: { xs: 0.8, sm: 1, lg: 1.2 },
+            zIndex: 3,
+          }}
+        >
+          {sliderImages.map((_, index) => (
+            <Box
+              key={index}
+              onClick={() => goToSlide(index)}
+              sx={{
+                width: { xs: 8, sm: 10, lg: 12 },
+                height: { xs: 8, sm: 10, lg: 12 },
+                borderRadius: '50%',
+                backgroundColor:
+                  currentSlide === index
+                    ? 'white'
+                    : 'rgba(255, 255, 255, 0.4)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                  transform: 'scale(1.2)',
+                },
+              }}
+            />
+          ))}
+        </Box>
+      )}
     </Box>
   );
 };
