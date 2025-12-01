@@ -23,6 +23,7 @@ import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '../context/AuthContext';
+import { resetPassword, verifyEmail } from '../api/auth';
 
 const DEFAULT_USER_ROLE_ID = Number(
 	import.meta.env?.VITE_DEFAULT_USER_ROLE_ID ?? 2
@@ -48,15 +49,19 @@ const SignInModal = () => {
 	} = useAuth();
 
 	const [activeTab, setActiveTab] = useState(0);
-	const [mode, setMode] = useState('default'); // 'default' | 'forgot'
+	const [mode, setMode] = useState('default'); // 'default' | 'forgot' | 'verify-otp' | 'verify-email'
 	const [signInData, setSignInData] = useState(INITIAL_SIGN_IN);
 	const [signUpData, setSignUpData] = useState(INITIAL_SIGN_UP);
 	const [forgotEmail, setForgotEmail] = useState('');
+	const [otpData, setOtpData] = useState({ otp: '', newPassword: '', confirmPassword: '' });
+	const [verifyEmailOtp, setVerifyEmailOtp] = useState('');
+	const [registerEmail, setRegisterEmail] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [status, setStatus] = useState({ error: '', success: '' });
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [showSignInPassword, setShowSignInPassword] = useState(false);
+	const [showNewPassword, setShowNewPassword] = useState(false);
 
 	const validators = useMemo(
 		() => ({
@@ -108,9 +113,13 @@ const SignInModal = () => {
 		setSignInData(INITIAL_SIGN_IN);
 		setSignUpData(INITIAL_SIGN_UP);
 		setForgotEmail('');
+		setOtpData({ otp: '', newPassword: '', confirmPassword: '' });
+		setVerifyEmailOtp('');
+		setRegisterEmail('');
 		setShowPassword(false);
 		setShowConfirmPassword(false);
 		setShowSignInPassword(false);
+		setShowNewPassword(false);
 		closeSignInModal();
 	};
 
@@ -179,21 +188,58 @@ const SignInModal = () => {
 				userRoleId: DEFAULT_USER_ROLE_ID,
 			});
 
-			await loginUser({
-				email: signUpData.email.trim(),
-				password: signUpData.password,
-			});
-
-			setSignUpData(INITIAL_SIGN_UP);
+			// Store email and password for later login after verification
+			setRegisterEmail(signUpData.email.trim());
+			// Switch to email verification mode instead of trying to log in
+			setMode('verify-email');
 			setStatus({
 				error: '',
-				success: 'Account created successfully!',
+				success: 'Registration successful! Please check your email for the verification code.',
 			});
 		} catch (error) {
 			const message =
 				error?.response?.data?.message ||
 				error?.message ||
 				'Unable to register. Please try again.';
+			setStatus({ error: message, success: '' });
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleVerifyEmail = async () => {
+		if (!verifyEmailOtp) {
+			setStatus({ error: 'Please enter the verification code', success: '' });
+			return;
+		}
+
+		setLoading(true);
+		setStatus({ error: '', success: '' });
+		try {
+			await verifyEmail({
+				email: registerEmail,
+				otp: verifyEmailOtp,
+			});
+
+			// After email verification, log the user in
+			await loginUser({
+				email: registerEmail,
+				password: signUpData.password,
+			});
+
+			setSignUpData(INITIAL_SIGN_UP);
+			setVerifyEmailOtp('');
+			setRegisterEmail('');
+			setMode('default');
+			setStatus({
+				error: '',
+				success: 'Email verified successfully! You are now logged in.',
+			});
+		} catch (error) {
+			const message =
+				error?.response?.data?.message ||
+				error?.message ||
+				'Failed to verify email. Please check your OTP and try again.';
 			setStatus({ error: message, success: '' });
 		} finally {
 			setLoading(false);
@@ -213,17 +259,66 @@ const SignInModal = () => {
 			const response = await requestPasswordReset({
 				email: forgotEmail.trim(),
 			});
+			// Switch to OTP verification mode after successful OTP send
+			setMode('verify-otp');
 			setStatus({
 				error: '',
 				success:
 					response?.message ||
-					'If the email exists, a reset link was sent.',
+					'Password reset OTP sent to your email. Please check your inbox.',
 			});
 		} catch (error) {
 			const message =
 				error?.response?.data?.message ||
 				error?.message ||
 				'Sorry, we could not process your request.';
+			setStatus({ error: message, success: '' });
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleResetPassword = async () => {
+		if (!otpData.otp || !otpData.newPassword || !otpData.confirmPassword) {
+			setStatus({ error: 'Please fill in all fields', success: '' });
+			return;
+		}
+
+		const passwordError = validators.password(otpData.newPassword);
+		if (passwordError) {
+			setStatus({ error: passwordError, success: '' });
+			return;
+		}
+
+		if (otpData.newPassword !== otpData.confirmPassword) {
+			setStatus({ error: 'Passwords do not match', success: '' });
+			return;
+		}
+
+		setLoading(true);
+		setStatus({ error: '', success: '' });
+		try {
+			await resetPassword({
+				email: forgotEmail.trim(),
+				otp: otpData.otp,
+				newPassword: otpData.newPassword,
+			});
+			setStatus({
+				error: '',
+				success: 'Password reset successfully! You can now sign in with your new password.',
+			});
+			// Reset form and go back to sign in
+			setTimeout(() => {
+				setMode('default');
+				setOtpData({ otp: '', newPassword: '', confirmPassword: '' });
+				setForgotEmail('');
+				setStatus({ error: '', success: '' });
+			}, 2000);
+		} catch (error) {
+			const message =
+				error?.response?.data?.message ||
+				error?.message ||
+				'Failed to reset password. Please check your OTP and try again.';
 			setStatus({ error: message, success: '' });
 		} finally {
 			setLoading(false);
@@ -444,7 +539,7 @@ const SignInModal = () => {
 				variant="body1"
 				sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}
 			>
-				Enter your email address and we will send you a reset link.
+				Enter your email address and we will send you a verification code.
 			</Typography>
 			<TextField
 				fullWidth
@@ -485,7 +580,184 @@ const SignInModal = () => {
 					disabled={loading}
 					sx={primaryButtonSx}
 				>
-					{loading ? 'Sending...' : 'Send Reset Link'}
+					{loading ? 'Sending OTP...' : 'Send Verification Code'}
+				</Button>
+			</Box>
+		</Box>
+	);
+
+	const renderVerifyOtp = () => (
+		<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 1 }}>
+			<Typography
+				variant="body1"
+				sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}
+			>
+				Enter the verification code sent to <strong>{forgotEmail}</strong> and your new password.
+			</Typography>
+			<TextField
+				fullWidth
+				label="Verification Code (OTP)"
+				value={otpData.otp}
+				onChange={(event) =>
+					setOtpData((prev) => ({ ...prev, otp: event.target.value }))
+				}
+				placeholder="Enter 6-digit code"
+				InputProps={{
+					startAdornment: (
+						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<TextField
+				fullWidth
+				label="New Password"
+				type={showNewPassword ? 'text' : 'password'}
+				value={otpData.newPassword}
+				onChange={(event) =>
+					setOtpData((prev) => ({ ...prev, newPassword: event.target.value }))
+				}
+				InputProps={{
+					startAdornment: (
+						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+					endAdornment: (
+						<InputAdornment position="end">
+							<IconButton
+								onClick={() => setShowNewPassword(!showNewPassword)}
+								edge="end"
+								sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+							>
+								{showNewPassword ? <VisibilityOff /> : <Visibility />}
+							</IconButton>
+						</InputAdornment>
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<TextField
+				fullWidth
+				label="Confirm New Password"
+				type={showConfirmPassword ? 'text' : 'password'}
+				value={otpData.confirmPassword}
+				onChange={(event) =>
+					setOtpData((prev) => ({ ...prev, confirmPassword: event.target.value }))
+				}
+				InputProps={{
+					startAdornment: (
+						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+					endAdornment: (
+						<InputAdornment position="end">
+							<IconButton
+								onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+								edge="end"
+								sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+							>
+								{showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+							</IconButton>
+						</InputAdornment>
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<Box sx={{ display: 'flex', gap: 2 }}>
+				<Button
+					onClick={() => {
+						setMode('forgot');
+						setOtpData({ otp: '', newPassword: '', confirmPassword: '' });
+						setStatus({ error: '', success: '' });
+					}}
+					variant="outlined"
+					fullWidth
+					sx={{
+						color: 'white',
+						borderColor: 'rgba(255, 255, 255, 0.3)',
+						'&:hover': {
+							borderColor: 'rgba(255, 255, 255, 0.5)',
+							backgroundColor: 'rgba(255, 255, 255, 0.05)',
+						},
+					}}
+				>
+					Back
+				</Button>
+				<Button
+					onClick={handleResetPassword}
+					variant="contained"
+					fullWidth
+					disabled={loading}
+					sx={primaryButtonSx}
+				>
+					{loading ? 'Resetting Password...' : 'Reset Password'}
+				</Button>
+			</Box>
+			<Button
+				onClick={handleForgotPassword}
+				variant="text"
+				size="small"
+				disabled={loading}
+				sx={{
+					color: '#64B5F6',
+					'&:hover': {
+						backgroundColor: 'rgba(100, 181, 246, 0.1)',
+					},
+				}}
+			>
+				Resend OTP
+			</Button>
+		</Box>
+	);
+
+	const renderVerifyEmail = () => (
+		<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 1 }}>
+			<Typography
+				variant="body1"
+				sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}
+			>
+				We've sent a verification code to <strong>{registerEmail}</strong>. Please check your email and enter the code below.
+			</Typography>
+			<TextField
+				fullWidth
+				label="Verification Code (OTP)"
+				value={verifyEmailOtp}
+				onChange={(event) => setVerifyEmailOtp(event.target.value)}
+				placeholder="Enter 6-digit code"
+				InputProps={{
+					startAdornment: (
+						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+					),
+				}}
+				sx={textFieldSx}
+			/>
+			<Box sx={{ display: 'flex', gap: 2 }}>
+				<Button
+					onClick={() => {
+						setMode('default');
+						setVerifyEmailOtp('');
+						setRegisterEmail('');
+						setStatus({ error: '', success: '' });
+					}}
+					variant="outlined"
+					fullWidth
+					sx={{
+						color: 'white',
+						borderColor: 'rgba(255, 255, 255, 0.3)',
+						'&:hover': {
+							borderColor: 'rgba(255, 255, 255, 0.5)',
+							backgroundColor: 'rgba(255, 255, 255, 0.05)',
+						},
+					}}
+				>
+					Back to Sign Up
+				</Button>
+				<Button
+					onClick={handleVerifyEmail}
+					variant="contained"
+					fullWidth
+					disabled={loading}
+					sx={primaryButtonSx}
+				>
+					{loading ? 'Verifying...' : 'Verify Email'}
 				</Button>
 			</Box>
 		</Box>
@@ -494,6 +766,8 @@ const SignInModal = () => {
 	const dialogTitle =
 		mode === 'forgot'
 			? 'Forgot Password'
+			: mode === 'verify-otp'
+			? 'Reset Password'
 			: activeTab === 0
 			? 'Welcome Back'
 			: 'Create Your Account';
@@ -611,6 +885,10 @@ const SignInModal = () => {
 
 				{mode === 'forgot'
 					? renderForgotPassword()
+					: mode === 'verify-otp'
+					? renderVerifyOtp()
+					: mode === 'verify-email'
+					? renderVerifyEmail()
 					: activeTab === 0
 					? renderSignIn()
 					: renderSignUp()}

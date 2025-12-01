@@ -3,7 +3,7 @@ import axios from 'axios';
 const baseURL =
   import.meta.env?.VITE_API_BASE_URL?.trim() ||
   (typeof window !== 'undefined' && window.__API_BASE_URL__) ||
-  'http://localhost:3000';
+  'https://digimaax-backend-production.up.railway.app';
 
 export const apiClient = axios.create({
   baseURL,

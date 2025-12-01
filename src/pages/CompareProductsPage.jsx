@@ -24,6 +24,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { formatLKR } from '../utils/currency';
 
 import mugImg from '../assets/products/shop/Customized Mug.jpg';
 import clockImg from '../assets/products/shop/Customized Wall Clock.jpg';
@@ -295,7 +296,7 @@ const CompareProductsPage = () => {
                       )}
                       {row.type === 'price' && (
                         <Typography variant="h6" sx={{ color: '#FFD700', fontWeight: 700 }}>
-                          ${product[row.key].toFixed(2)}
+                          {formatLKR(product[row.key])}
                         </Typography>
                       )}
                       {row.type === 'rating' && (

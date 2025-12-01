@@ -12,8 +12,8 @@ export async function forgotPassword({ email }) {
 		throw new Error('email is required');
 	}
 
-	// Update the path below once the backend route exists
-	const endpoint = '/api/user/forgotPassword';
+	// Backend route: /api/user/forgot-password
+	const endpoint = '/api/user/forgot-password';
 
 	try {
 		const { data } = await apiClient.post(endpoint, { email });
@@ -21,11 +21,11 @@ export async function forgotPassword({ email }) {
 			message: data?.message || 'If the email exists, a reset link was sent.',
 		};
 	} catch (err) {
-		// Surface a friendly message even if backend missing
-		const message =
-			err?.response?.data?.message ||
-			'Forgot password is not available yet. Please contact support.';
-		throw new Error(message);
+		// Preserve the original error with status code and message
+		const errorMessage = err?.response?.data?.message || err?.message || 'Failed to send OTP. Please try again.';
+		const error = new Error(errorMessage);
+		error.response = err?.response; // Preserve response for status code checking
+		throw error;
 	}
 }
 

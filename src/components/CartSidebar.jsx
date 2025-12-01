@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  CardMedia,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CloseIcon from '@mui/icons-material/Close';
@@ -277,8 +278,8 @@ const CartSidebar = () => {
                             </Box>
 
                             {/* Variants */}
-                            {(item.color || item.size || item.customText) && (
-                              <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap' }}>
+                            {(item.color || item.size || item.customText || item.customImageUrl) && (
+                              <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
                                 {item.color && (
                                   <Chip
                                     label={item.color}
@@ -305,7 +306,7 @@ const CartSidebar = () => {
                                 )}
                                 {item.customText && (
                                   <Chip
-                                    label={`Text: ${item.customText}`}
+                                    label={`Text: ${item.customText.length > 10 ? item.customText.substring(0, 10) + '...' : item.customText}`}
                                     size="small"
                                     sx={{
                                       background: 'rgba(255, 215, 0, 0.2)',
@@ -314,6 +315,41 @@ const CartSidebar = () => {
                                       height: 20,
                                     }}
                                   />
+                                )}
+                                {item.customImageUrl && (
+                                  <Tooltip title="Custom Image">
+                                    <Box
+                                      sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: 1,
+                                        overflow: 'hidden',
+                                        border: '2px solid rgba(255, 215, 0, 0.5)',
+                                        cursor: 'pointer',
+                                        flexShrink: 0,
+                                        '&:hover': {
+                                          borderColor: '#FFD700',
+                                          transform: 'scale(1.15)',
+                                        },
+                                        transition: 'all 0.3s ease',
+                                      }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(item.customImageUrl, '_blank');
+                                      }}
+                                    >
+                                      <CardMedia
+                                        component="img"
+                                        image={item.customImageUrl}
+                                        alt="Custom Image"
+                                        sx={{
+                                          width: '100%',
+                                          height: '100%',
+                                          objectFit: 'cover',
+                                        }}
+                                      />
+                                    </Box>
+                                  </Tooltip>
                                 )}
                               </Box>
                             )}
