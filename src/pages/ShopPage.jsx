@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Container,
-  Grid,
   Typography,
   TextField,
   InputAdornment,
@@ -34,6 +33,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { formatLKR } from '../utils/currency';
 import { getProducts } from '../services/products';
 import { productCardStyles } from '../utils/productCardStyles';
@@ -43,6 +44,8 @@ const ShopPage = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { isAuthenticated, openSignInModal } = useAuth();
+  const { language } = useLanguage();
+  const { t } = useTranslation();
 
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -74,16 +77,16 @@ const ShopPage = () => {
     const abortController = new AbortController();
     setCategoriesLoading(true);
     getCategories()
-      .then((result) => {
+      .then((categoriesData) => {
         if (!abortController.signal.aborted) {
-          // Reverse the categories array to show from ID 1
-          const categoriesData = result.data || [];
-          setCategories([...categoriesData].reverse());
+          // getCategories now returns array directly
+          const categories = Array.isArray(categoriesData) ? categoriesData : [];
+          setCategories([...categories].reverse());
         }
       })
-      .catch(() => {
+      .catch((err) => {
         if (!abortController.signal.aborted) {
-          console.error('Failed to load categories');
+          console.error('Failed to load categories:', err);
         }
       })
       .finally(() => {
@@ -94,7 +97,7 @@ const ShopPage = () => {
     return () => {
       abortController.abort();
     };
-  }, []);
+  }, [language]); // Refetch when language changes (though data already has both languages)
 
   // Debounce search query
   useEffect(() => {
@@ -203,7 +206,7 @@ const ShopPage = () => {
               fontSize: { xs: '2rem', md: '2.5rem' },
             }}
           >
-            Our Products
+            {t('shop.ourProducts')}
           </Typography>
         </motion.div>
 
@@ -241,7 +244,7 @@ const ShopPage = () => {
                   fontSize: '1rem',
                 }}
               >
-                Categories
+                {t('shop.categories')}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {categoriesLoading ? (
@@ -260,6 +263,10 @@ const ShopPage = () => {
                         borderRadius: 2,
                         py: 1.5,
                         px: 2,
+                        width: '100%',
+                        textAlign: 'left',
+                        wordBreak: 'break-word',
+                        whiteSpace: 'normal',
                         transition: 'all 0.2s ease',
                         '&:hover': {
                           background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
@@ -268,7 +275,7 @@ const ShopPage = () => {
                         },
                       }}
                     >
-                      All Categories
+                      {t('shop.allCategories')}
                     </Button>
                     {categories
                       .filter((cat) => cat.is_active === 1)
@@ -287,6 +294,10 @@ const ShopPage = () => {
                             py: 1.5,
                             px: 2,
                             fontSize: '0.875rem',
+                            width: '100%',
+                            textAlign: 'left',
+                            wordBreak: 'break-word',
+                            whiteSpace: 'normal',
                             transition: 'all 0.2s ease',
                             '&:hover': {
                               background: selectedCategory === String(cat.id) ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
@@ -295,7 +306,9 @@ const ShopPage = () => {
                             },
                           }}
                         >
-                          {cat.name}
+                          {language === 'fr' && cat.name_french
+                            ? cat.name_french
+                            : cat.name}
                         </Button>
                       ))}
                   </>
@@ -319,7 +332,7 @@ const ShopPage = () => {
             >
               <TextField
                 size="small"
-                placeholder="Search products..."
+                placeholder={t('shop.searchProducts')}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 InputProps={{
@@ -418,7 +431,16 @@ const ShopPage = () => {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 size="small"
-                displayEmpty
+                renderValue={(value) => {
+                  const sortLabels = {
+                    trending: t('shop.trending'),
+                    popular: t('shop.popular'),
+                    newest: t('shop.newest'),
+                    priceAsc: t('shop.priceLowHigh'),
+                    priceDesc: t('shop.priceHighLow'),
+                  };
+                  return sortLabels[value] || t('shop.trending');
+                }}
                 MenuProps={{
                   PaperProps: {
                     sx: {
@@ -429,6 +451,8 @@ const ShopPage = () => {
                       mt: 1,
                       '& .MuiMenuItem-root': {
                         color: 'white',
+                        whiteSpace: 'normal',
+                        wordBreak: 'break-word',
                         '&:hover': {
                           background: 'rgba(255, 255, 255, 0.1)',
                         },
@@ -446,6 +470,7 @@ const ShopPage = () => {
                 sx={{
                   flex: { xs: '1 1 100%', sm: '0 0 auto' },
                   minWidth: { xs: '100%', sm: 180 },
+                  maxWidth: { xs: '100%', sm: 220 },
                   height: '40px',
                   color: 'white',
                   background: 'rgba(255, 255, 255, 0.08)',
@@ -459,13 +484,20 @@ const ShopPage = () => {
                   '& .MuiSvgIcon-root': {
                     color: 'rgba(255, 255, 255, 0.7)',
                   },
+                  '& .MuiSelect-select': {
+                    color: 'white',
+                    padding: '8px 14px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  },
                 }}
               >
-                <MenuItem value="trending">Trending</MenuItem>
-                <MenuItem value="popular">Popular</MenuItem>
-                <MenuItem value="newest">Newest</MenuItem>
-                <MenuItem value="priceAsc">Price: Low to High</MenuItem>
-                <MenuItem value="priceDesc">Price: High to Low</MenuItem>
+                <MenuItem value="trending">{t('shop.trending')}</MenuItem>
+                <MenuItem value="popular">{t('shop.popular')}</MenuItem>
+                <MenuItem value="newest">{t('shop.newest')}</MenuItem>
+                <MenuItem value="priceAsc">{t('shop.priceLowHigh')}</MenuItem>
+                <MenuItem value="priceDesc">{t('shop.priceHighLow')}</MenuItem>
               </Select>
 
               <Button
@@ -481,6 +513,7 @@ const ShopPage = () => {
                   px: 2,
                   borderRadius: 2,
                   whiteSpace: 'nowrap',
+                  minWidth: 'fit-content',
                   flex: { xs: '1 1 100%', sm: '0 0 auto' },
                   '&:hover': {
                     borderColor: 'white',
@@ -488,7 +521,7 @@ const ShopPage = () => {
                   },
                 }}
               >
-                Reset
+                {t('shop.reset')}
               </Button>
 
               <Button
@@ -503,23 +536,37 @@ const ShopPage = () => {
                   textTransform: 'none',
                   fontWeight: 600,
                   display: { xs: 'flex', md: 'none' },
+                  minWidth: 'fit-content',
+                  px: 2,
+                  whiteSpace: 'nowrap',
                   '&:hover': {
                     borderColor: '#FFD700',
                     backgroundColor: 'rgba(255, 215, 0, 0.1)',
                   },
                 }}
               >
-                Categories
+                {t('shop.categories')}
               </Button>
             </Box>
 
-            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  wordBreak: 'break-word',
+                  minWidth: 0,
+                }}
+              >
                 {loading
-                  ? 'Loading...'
+                  ? t('shop.loading')
                   : products.length === 0
-                  ? 'No products found'
-                  : `Showing ${(pagination.current_page - 1) * pagination.items_per_page + 1}-${Math.min(pagination.current_page * pagination.items_per_page, pagination.total_items)} of ${pagination.total_items} products`}
+                  ? t('shop.noProductsFound')
+                  : t('shop.showingProducts', {
+                      start: (pagination.current_page - 1) * pagination.items_per_page + 1,
+                      end: Math.min(pagination.current_page * pagination.items_per_page, pagination.total_items),
+                      total: pagination.total_items,
+                    })}
               </Typography>
             </Box>
 
@@ -547,15 +594,18 @@ const ShopPage = () => {
                     // Trigger re-fetch by updating a dependency
                   }}
                   sx={{
-                  background: '#2196F3',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  '&:hover': {
-                    background: '#1976D2',
-                  },
+                    background: '#2196F3',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    minWidth: 'fit-content',
+                    px: 3,
+                    whiteSpace: 'nowrap',
+                    '&:hover': {
+                      background: '#1976D2',
+                    },
                   }}
                 >
-                  Retry
+                  {t('shop.retry')}
                 </Button>
               </Box>
             )}
@@ -571,10 +621,10 @@ const ShopPage = () => {
                 }}
               >
                 <Typography variant="h6" sx={{ color: 'white', mb: 1 }}>
-                  No products found
+                  {t('shop.noProductsFound')}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 3 }}>
-                  Try adjusting your filters or search terms
+                  {t('shop.tryDifferentFilters')}
                 </Typography>
                 <Button
                   variant="outlined"
@@ -584,24 +634,38 @@ const ShopPage = () => {
                     borderColor: 'rgba(255, 215, 0, 0.5)',
                     textTransform: 'none',
                     fontWeight: 700,
+                    minWidth: 'fit-content',
+                    px: 3,
+                    whiteSpace: 'nowrap',
                     '&:hover': {
                       borderColor: '#FFD700',
                       backgroundColor: 'rgba(255, 215, 0, 0.1)',
                     },
                   }}
                 >
-                  Clear Filters
+                  {t('shop.clearFilters')}
                 </Button>
               </Box>
             )}
 
             {!loading && !error && products.length > 0 && (
-              <Grid container spacing={2}>
-                <AnimatePresence mode="wait">
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)',
+                    md: 'repeat(3, 1fr)',
+                    lg: 'repeat(4, 1fr)',
+                  },
+                  gap: 2,
+                }}
+              >
+                <AnimatePresence>
                   {paged.map((product, index) => {
                     if (!product || !product.id) return null;
                     return (
-                    <Grid item xs={12} sm={6} md={3} lg={3} key={product.id}>
+                    <Box key={product.id}>
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -630,7 +694,9 @@ const ShopPage = () => {
                             <CardMedia
                               component="img"
                               image={product?.image || ''}
-                              alt={product?.title || 'Product'}
+                              alt={language === 'fr' && product?.title_french
+                                ? product.title_french
+                                : product?.title || t('shop.product')}
                               sx={productCardStyles.image}
                             />
                             {product?.badge && (
@@ -650,7 +716,7 @@ const ShopPage = () => {
                               />
                             )}
                             <Chip
-                              label={product?.category_name || product?.category || 'Product'}
+                              label={product?.category_name || product?.category || t('shop.product')}
                               size="small"
                               sx={{
                                 position: 'absolute',
@@ -661,17 +727,38 @@ const ShopPage = () => {
                                 color: 'white',
                                 fontSize: '0.7rem',
                                 zIndex: 1,
+                                maxWidth: '120px',
+                                '& .MuiChip-label': {
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                },
                               }}
                             />
                           </Box>
 
                           <CardContent sx={productCardStyles.cardContent}>
-                            <Typography variant="h6" sx={productCardStyles.title}>
-                              {product?.title || 'Product'}
+                            <Typography 
+                              variant="h6" 
+                              sx={{
+                                ...productCardStyles.title,
+                                wordBreak: 'break-word',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                              }}
+                            >
+                              {language === 'fr' && product?.title_french
+                                ? product.title_french
+                                : product?.title || t('shop.product')}
                             </Typography>
 
                             <Typography variant="body2" sx={productCardStyles.description}>
-                              {product?.desc || ''}
+                              {language === 'fr' && product?.desc_french
+                                ? product.desc_french
+                                : product?.desc || ''}
                             </Typography>
 
                             <Box
@@ -722,7 +809,7 @@ const ShopPage = () => {
                                   if (!isAuthenticated) {
                                     setSnackbar({ 
                                       open: true, 
-                                      message: 'Please sign in to add items to your cart', 
+                                      message: t('product.pleaseSignIn'), 
                                       severity: 'info' 
                                     });
                                     openSignInModal();
@@ -730,20 +817,23 @@ const ShopPage = () => {
                                   }
                                   
                                   try {
+                                    const productName = language === 'fr' && product?.title_french
+                                      ? product.title_french
+                                      : product?.title || t('shop.product');
                                     await addToCart(product.id, {
-                                      title: product?.title || 'Product',
+                                      title: productName,
                                       image: product?.image || '',
                                       price: product?.price || 0,
                                     });
                                     setSnackbar({ 
                                       open: true, 
-                                      message: `${product?.title || 'Product'} added to cart!`,
+                                      message: t('shop.addedToCart', { name: productName }),
                                       severity: 'success'
                                     });
                                   } catch (error) {
                                     setSnackbar({ 
                                       open: true, 
-                                      message: error.message || 'Failed to add item to cart', 
+                                      message: error.message || t('product.failedToAdd'), 
                                       severity: 'error' 
                                     });
                                   }
@@ -761,7 +851,7 @@ const ShopPage = () => {
                                   },
                                 }}
                               >
-                                Add to Cart
+                                {t('product.addToCart')}
                               </Button>
                               <Button
                                 variant="contained"
@@ -783,17 +873,17 @@ const ShopPage = () => {
                                   },
                                 }}
                               >
-                                View
+                                {t('shop.view')}
                               </Button>
                             </Stack>
                           </CardActions>
                         </Card>
                       </motion.div>
-                    </Grid>
+                    </Box>
                     );
                   })}
                 </AnimatePresence>
-              </Grid>
+              </Box>
             )}
 
             {!loading && !error && totalPages > 1 && (
@@ -839,7 +929,7 @@ const ShopPage = () => {
         >
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
-              Categories
+              {t('shop.categories')}
             </Typography>
             <IconButton onClick={() => setFilterDrawerOpen(false)} sx={{ color: 'white' }}>
               <CloseIcon />
@@ -865,13 +955,17 @@ const ShopPage = () => {
                     borderRadius: 2,
                     py: 1.5,
                     px: 2,
+                    width: '100%',
+                    textAlign: 'left',
+                    wordBreak: 'break-word',
+                    whiteSpace: 'normal',
                     '&:hover': {
                       background: selectedCategory === '' ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
                       borderColor: '#FFD700',
                     },
                   }}
                 >
-                  All Categories
+                  {t('shop.allCategories')}
                 </Button>
                 {categories
                   .filter((cat) => cat.is_active === 1)
@@ -893,13 +987,19 @@ const ShopPage = () => {
                         py: 1.5,
                         px: 2,
                         fontSize: '0.875rem',
+                        width: '100%',
+                        textAlign: 'left',
+                        wordBreak: 'break-word',
+                        whiteSpace: 'normal',
                         '&:hover': {
                           background: selectedCategory === String(cat.id) ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
                           borderColor: '#FFD700',
                         },
                       }}
                     >
-                      {cat.name} {cat.product_count > 0 && `(${cat.product_count})`}
+                      {language === 'fr' && cat.name_french
+                        ? cat.name_french
+                        : cat.name} {cat.product_count > 0 && `(${cat.product_count})`}
                     </Button>
                   ))}
               </>

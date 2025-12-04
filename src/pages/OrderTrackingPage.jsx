@@ -27,6 +27,7 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import DoneIcon from '@mui/icons-material/Done';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const mockOrder = {
   id: 'ORD-2024-001',
@@ -59,6 +60,7 @@ const OrderTrackingPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { isAuthenticated, openSignInModal } = useAuth();
+  const { t } = useTranslation();
   const [order, setOrder] = useState(mockOrder);
 
   useEffect(() => {
@@ -66,10 +68,10 @@ const OrderTrackingPage = () => {
 
   const getStatusSteps = () => {
     return [
-      { label: 'Ordered', icon: <InventoryIcon />, status: 'ordered' },
-      { label: 'Processing', icon: <InventoryIcon />, status: 'processing' },
-      { label: 'Shipped', icon: <LocalShippingIcon />, status: 'shipped' },
-      { label: 'Delivered', icon: <DoneIcon />, status: 'delivered' },
+      { label: t('orders.ordered'), icon: <InventoryIcon />, status: 'ordered' },
+      { label: t('orders.processing'), icon: <InventoryIcon />, status: 'processing' },
+      { label: t('orders.shipped'), icon: <LocalShippingIcon />, status: 'shipped' },
+      { label: t('orders.delivered'), icon: <DoneIcon />, status: 'delivered' },
     ];
   };
 
@@ -81,6 +83,16 @@ const OrderTrackingPage = () => {
 
   const isStepCompleted = (stepIndex) => {
     return stepIndex <= getCurrentStep();
+  };
+
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      processing: t('orders.processing'),
+      shipped: t('orders.shipped'),
+      delivered: t('orders.delivered'),
+      cancelled: t('orders.cancelled'),
+    };
+    return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   if (!isAuthenticated) {
@@ -103,7 +115,7 @@ const OrderTrackingPage = () => {
             }}
           >
             <Typography variant="h4" sx={{ mb: 2, color: 'white', fontWeight: 600 }}>
-              Please sign in to track your order
+              {t('orders.pleaseSignInToTrack')}
             </Typography>
             <Button
               variant="contained"
@@ -119,7 +131,7 @@ const OrderTrackingPage = () => {
                 py: 1.5,
               }}
             >
-              Sign In
+              {t('nav.signIn')}
             </Button>
           </Box>
         </Container>
@@ -148,7 +160,7 @@ const OrderTrackingPage = () => {
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>
-              Order Tracking
+              {t('orders.orderTracking')}
             </Typography>
           </Box>
 
@@ -168,14 +180,14 @@ const OrderTrackingPage = () => {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Box>
                       <Typography variant="h5" sx={{ color: 'white', fontWeight: 700, mb: 0.5 }}>
-                        Order {order.id}
+                        {t('orders.order')} {order.id}
                       </Typography>
                       <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                        Tracking Number: {order.trackingNumber}
+                        {t('orders.trackingNumber')}: {order.trackingNumber}
                       </Typography>
                     </Box>
                     <Chip
-                      label={order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      label={getStatusLabel(order.status)}
                       sx={{
                         background: 
                           order.status === 'delivered' ? '#4caf50' :
@@ -249,7 +261,7 @@ const OrderTrackingPage = () => {
                   {order.estimatedDelivery && (
                     <Box sx={{ mt: 3, p: 2, background: 'rgba(255, 215, 0, 0.1)', borderRadius: 2 }}>
                       <Typography variant="body2" sx={{ color: '#FFD700', fontWeight: 600 }}>
-                        Estimated Delivery: {new Date(order.estimatedDelivery).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        {t('orders.estimatedDelivery')}: {new Date(order.estimatedDelivery).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                       </Typography>
                     </Box>
                   )}
@@ -270,7 +282,7 @@ const OrderTrackingPage = () => {
               >
                 <CardContent>
                   <Typography variant="h6" sx={{ color: 'white', fontWeight: 700, mb: 2 }}>
-                    Order Summary
+                    {t('orders.orderSummary')}
                   </Typography>
                   <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 2 }} />
 
@@ -296,7 +308,7 @@ const OrderTrackingPage = () => {
                           {item.name}
                         </Typography>
                         <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                          Qty: {item.quantity} × ${item.price.toFixed(2)}
+                          {t('orders.qty')}: {item.quantity} × ${item.price.toFixed(2)}
                         </Typography>
                       </Box>
                     </Box>
@@ -306,7 +318,7 @@ const OrderTrackingPage = () => {
 
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                      Subtotal
+                      {t('checkout.subtotal')}
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
                       ${(order.total - 10).toFixed(2)}
@@ -314,7 +326,7 @@ const OrderTrackingPage = () => {
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                      Shipping
+                      {t('checkout.delivery')}
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
                       $10.00
@@ -323,7 +335,7 @@ const OrderTrackingPage = () => {
                   <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', my: 2 }} />
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
-                      Total
+                      {t('checkout.total')}
                     </Typography>
                     <Typography variant="h6" sx={{ color: '#FFD700', fontWeight: 700 }}>
                       ${order.total.toFixed(2)}
@@ -342,7 +354,7 @@ const OrderTrackingPage = () => {
               >
                 <CardContent>
                   <Typography variant="h6" sx={{ color: 'white', fontWeight: 700, mb: 2 }}>
-                    Shipping Address
+                    {t('orders.shippingAddress')}
                   </Typography>
                   <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 2 }} />
                   <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, mb: 0.5 }}>

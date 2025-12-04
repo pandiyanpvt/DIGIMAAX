@@ -1,17 +1,25 @@
 import apiClient from './client';
 
-const normalizeGalleryResponse = (data = {}, fallbackMessage = 'Gallery items retrieved successfully') => {
-  const items = Array.isArray(data.galleryItems) ? data.galleryItems : [];
-  return {
-    message: data?.message || fallbackMessage,
-    count: data?.count ?? items.length,
-    items,
-  };
-};
-
+/**
+ * Get all gallery items
+ * Backend endpoint: GET /api/gallery/getAll
+ * Backend returns: { message, count, galleryItems: [...] }
+ * @returns {Promise<{items: Array, count: number, message: string}>}
+ */
 export async function getGalleryItems() {
-  const { data } = await apiClient.get('/api/gallery/getAll');
-  return normalizeGalleryResponse(data);
+  try {
+    const { data } = await apiClient.get('/api/gallery/getAll');
+    // Backend returns { message, count, galleryItems: [...] }
+    const items = Array.isArray(data?.galleryItems) ? data.galleryItems : [];
+    return {
+      items,
+      count: data?.count ?? items.length,
+      message: data?.message || 'Gallery items retrieved successfully',
+    };
+  } catch (error) {
+    console.error('Error fetching gallery items:', error);
+    throw error;
+  }
 }
 
 export async function getGalleryItemById(id) {

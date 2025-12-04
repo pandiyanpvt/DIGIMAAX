@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowBackIos, ArrowForwardIos, FormatQuote } from '@mui/icons-material';
 import ourStoryImage from '../../assets/hero/our-story.png';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const testimonials = [
   {
@@ -58,6 +59,7 @@ const testimonials = [
 ];
 
 const AboutSection = () => {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
@@ -123,7 +125,7 @@ const AboutSection = () => {
                 fontSize: { xs: '2.5rem', md: '3.5rem' },
               }}
             >
-              Our Story
+              {t('about.ourStory')}
             </Typography>
             
             <Box
@@ -143,7 +145,7 @@ const AboutSection = () => {
                 <Box
                   component="img"
                   src={ourStoryImage}
-                  alt="Our Story"
+                  alt={t('about.ourStoryAlt')}
                   sx={{
                     width: '100%',
                     height: 'auto',
@@ -169,7 +171,7 @@ const AboutSection = () => {
                     mb: 3,
                   }}
                 >
-                  Founded with a vision to revolutionize the creative and technology landscape, Digimaax began its journey in France with a simple mission: to blend artistry with innovation. What started as a small team of passionate designers and engineers has grown into a leading company that serves clients across various industries.
+                  {t('about.storyParagraph1')}
                 </Typography>
                 <Typography
                   variant="body1"
@@ -181,7 +183,7 @@ const AboutSection = () => {
                     mb: 3,
                   }}
                 >
-                  Our story is built on dedication, creativity, and a commitment to excellence. Every project we undertake is a testament to our belief that great design can transform spaces, elevate brands, and create lasting impressions. From our first interior design project to our cutting-edge CNC solutions, we've consistently pushed boundaries and exceeded expectations.
+                  {t('about.storyParagraph2')}
                 </Typography>
               </Box>
             </Box>
@@ -206,7 +208,7 @@ const AboutSection = () => {
                 fontSize: { xs: '2rem', md: '2.5rem' },
               }}
             >
-              What Our Clients Say
+              {t('about.whatClientsSay')}
             </Typography>
             
             <Typography
@@ -218,7 +220,7 @@ const AboutSection = () => {
                 fontSize: { xs: '0.9rem', md: '1rem' },
               }}
             >
-              Don't just take our word for it - hear from our satisfied clients
+              {t('about.clientsSayDesc')}
             </Typography>
 
             <Box

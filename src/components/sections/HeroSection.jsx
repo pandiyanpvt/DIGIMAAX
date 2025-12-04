@@ -23,11 +23,14 @@ import {
 } from '@mui/icons-material';
 import { getHeaderImagesByOrderRange } from '../../api/headerImages';
 import { getSocialMediaLinks } from '../../api/socialMedia';
+import franceFlagImage from '../../assets/hero/header-slider/France.png';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const HeroSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Social media icon mapping
   const SOCIAL_ICON_META = useMemo(
@@ -275,28 +278,49 @@ const HeroSection = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <Typography
-                variant="h1"
+              <Box
                 sx={{
-                  fontWeight: 'bold',
-                  color: 'white',
-                  mb: 2,
                   position: 'relative',
-                  fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem', lg: '5.5rem' },
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: '-8px',
-                    left: 0,
-                    width: '60px',
-                    height: '3px',
-                    background: 'linear-gradient(45deg, #2196F3, #FF4081)',
-                    borderRadius: '2px',
-                  },
+                  display: 'inline-block',
+                  mb: 2,
                 }}
               >
-                DIGIMAAX
-              </Typography>
+                <Typography
+                  variant="h1"
+                  sx={{
+                    fontWeight: 'bold',
+                    color: 'white',
+                    position: 'relative',
+                    fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem', lg: '5.5rem' },
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: '-20px',
+                      left: 0,
+                      width: '60px',
+                      height: '3px',
+                      background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                      borderRadius: '2px',
+                    },
+                  }}
+                >
+                  DIGIMAAX
+                </Typography>
+                <Box
+                  component="img"
+                  src={franceFlagImage}
+                  alt="France Flag"
+                  sx={{
+                    position: 'absolute',
+                    top: { xs: '16px', sm: '16px', md: '16px' },
+                    right: { xs: '-18px', sm: '-24px', md: '-30px', lg: '-36px' },
+                    width: { xs: '15px', sm: '20px', md: '25px', lg: '30px' },
+                    height: { xs: '11px', sm: '15px', md: '19px', lg: '22px' },
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                  }}
+                />
+              </Box>
 
               <Typography
                 variant="h5"
@@ -307,7 +331,7 @@ const HeroSection = () => {
                   fontSize: { xs: '1.2rem', md: '1.5rem' },
                 }}
               >
-                Where Ideas Become Environments
+                {t('hero.tagline')}
               </Typography>
 
               <motion.div
@@ -338,7 +362,7 @@ const HeroSection = () => {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  Order Now
+                  {t('hero.orderNow')}
                 </Button>
               </motion.div>
 

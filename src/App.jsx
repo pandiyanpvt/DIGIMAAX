@@ -8,6 +8,7 @@ import Layout from './components/layout/Layout';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { preloadAllImages } from './utils/imagePreloader';
 import ScrollToTop from './components/ScrollToTop';
 import HomePage from './pages/HomePage';
@@ -39,10 +40,11 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <Router>
+      <LanguageProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <Router>
               <ScrollToTop />
               <Layout>
                 <Suspense fallback={null}>
@@ -67,10 +69,11 @@ function App() {
                 </Routes>
                 </Suspense>
               </Layout>
-            </Router>
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
+              </Router>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

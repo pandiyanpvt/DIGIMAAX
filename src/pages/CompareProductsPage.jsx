@@ -24,6 +24,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { formatLKR } from '../utils/currency';
 
 import mugImg from '../assets/products/shop/Customized Mug.jpg';
@@ -51,6 +53,8 @@ const CompareProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart } = useCart();
   const { isAuthenticated, openSignInModal } = useAuth();
+  const { language } = useLanguage();
+  const { t } = useTranslation();
 
   const productIds = useMemo(() => {
     const idsParam = searchParams.get('ids');
@@ -102,7 +106,7 @@ const CompareProductsPage = () => {
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>
-              Compare Products
+              {t('compare.title')}
             </Typography>
           </Box>
           <Box
@@ -116,10 +120,10 @@ const CompareProductsPage = () => {
             }}
           >
             <Typography variant="h5" sx={{ mb: 2, color: 'white', fontWeight: 600 }}>
-              No products to compare
+              {t('compare.noProducts')}
             </Typography>
             <Typography variant="body1" sx={{ mb: 3, color: 'rgba(255, 255, 255, 0.7)' }}>
-              Add products from the shop to compare them side by side
+              {t('compare.noProductsDesc')}
             </Typography>
             <Button
               variant="contained"
@@ -135,7 +139,7 @@ const CompareProductsPage = () => {
                 py: 1.5,
               }}
             >
-              Browse Products
+              {t('compare.browseProducts')}
             </Button>
           </Box>
         </Container>
@@ -144,15 +148,15 @@ const CompareProductsPage = () => {
   }
 
   const comparisonRows = [
-    { label: 'Image', key: 'image', type: 'image' },
-    { label: 'Name', key: 'name', type: 'text' },
-    { label: 'Price', key: 'price', type: 'price' },
-    { label: 'Rating', key: 'rating', type: 'rating' },
-    { label: 'Reviews', key: 'reviews', type: 'number' },
-    { label: 'Category', key: 'category', type: 'text' },
-    { label: 'Description', key: 'description', type: 'text' },
-    { label: 'In Stock', key: 'inStock', type: 'boolean' },
-    { label: 'Badge', key: 'badge', type: 'badge' },
+    { label: t('compare.image'), key: 'image', type: 'image' },
+    { label: t('compare.name'), key: 'name', type: 'text' },
+    { label: t('compare.price'), key: 'price', type: 'price' },
+    { label: t('compare.rating'), key: 'rating', type: 'rating' },
+    { label: t('compare.reviews'), key: 'reviews', type: 'number' },
+    { label: t('compare.category'), key: 'category', type: 'text' },
+    { label: t('compare.description'), key: 'description', type: 'text' },
+    { label: t('compare.inStock'), key: 'inStock', type: 'boolean' },
+    { label: t('compare.badge'), key: 'badge', type: 'badge' },
   ];
 
   return (
@@ -177,11 +181,11 @@ const CompareProductsPage = () => {
                 <ArrowBackIcon />
               </IconButton>
               <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>
-                Compare Products
+                {t('compare.title')}
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              {compareProducts.length} products
+              {compareProducts.length} {t('compare.products')}
             </Typography>
           </Box>
         </motion.div>
@@ -200,7 +204,7 @@ const CompareProductsPage = () => {
             <TableHead>
               <TableRow>
                 <TableCell sx={{ color: '#FFD700', fontWeight: 700, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  Features
+                  {t('compare.features')}
                 </TableCell>
                 {compareProducts.map((product) => (
                   <TableCell
@@ -317,7 +321,7 @@ const CompareProductsPage = () => {
                       )}
                       {row.type === 'boolean' && (
                         <Chip
-                          label={product[row.key] ? 'In Stock' : 'Out of Stock'}
+                          label={product[row.key] ? t('compare.inStock') : t('compare.outOfStock')}
                           size="small"
                           sx={{
                             background: product[row.key] ? '#4caf50' : '#DC143C',
@@ -355,7 +359,7 @@ const CompareProductsPage = () => {
               ))}
               <TableRow>
                 <TableCell sx={{ color: '#FFD700', fontWeight: 600, borderBottom: 'none' }}>
-                  Actions
+                  {t('compare.actions')}
                 </TableCell>
                 {compareProducts.map((product) => (
                   <TableCell key={product.id} align="center" sx={{ borderBottom: 'none' }}>
@@ -374,7 +378,7 @@ const CompareProductsPage = () => {
                           fontWeight: 600,
                         }}
                       >
-                        Add to Cart
+                        {t('product.addToCart')}
                       </Button>
                       <Button
                         variant="outlined"
@@ -391,7 +395,7 @@ const CompareProductsPage = () => {
                           fontWeight: 600,
                         }}
                       >
-                        View Details
+                        {t('compare.viewDetails')}
                       </Button>
                     </Box>
                   </TableCell>

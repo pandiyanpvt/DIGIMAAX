@@ -19,23 +19,28 @@ import {
   Divider,
   Badge,
 } from '@mui/material';
-import { Menu as MenuIcon, AccountCircle, Logout, Person, ShoppingCart } from '@mui/icons-material';
+import { Menu as MenuIcon, AccountCircle, Logout, Person, ShoppingCart, Language } from '@mui/icons-material';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import logoImage from '../../assets/hero/DIGIMAAX_LOGO-01 1.png';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
+  const [languageMenuAnchor, setLanguageMenuAnchor] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
   const navigate = useNavigate();
   const { openSignInModal, user, signOut, isAuthenticated } = useAuth();
   const { getCartTotalItems, setCartDrawerOpen } = useCart();
+  const { language, changeLanguage, languages, currentLanguage } = useLanguage();
+  const { t } = useTranslation();
   const cartItemCount = getCartTotalItems();
 
   useEffect(() => {
@@ -55,6 +60,21 @@ const Navbar = () => {
     setProfileMenuAnchor(null);
   };
 
+  const handleLanguageMenuOpen = (event) => {
+    setLanguageMenuAnchor(event.currentTarget);
+  };
+
+  const handleLanguageMenuClose = () => {
+    setLanguageMenuAnchor(null);
+  };
+
+  const handleLanguageChange = (langCode) => {
+    if (language !== langCode) {
+      changeLanguage(langCode);
+    }
+    handleLanguageMenuClose();
+  };
+
   const handleSignOut = () => {
     signOut();
     handleProfileMenuClose();
@@ -65,12 +85,12 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { name: 'Home', to: '/' },
-    { name: 'About Us', to: '/about' },
-    { name: 'Services', to: '/services' },
-    { name: 'Gallery', to: '/gallery' },
-    { name: 'Shop', to: '/shop' },
-    { name: 'Contact Us', to: '/contact' },
+    { name: t('nav.home'), to: '/' },
+    { name: t('nav.about'), to: '/about' },
+    { name: t('nav.services'), to: '/services' },
+    { name: t('nav.gallery'), to: '/gallery' },
+    { name: t('nav.shop'), to: '/shop' },
+    { name: t('nav.contact'), to: '/contact' },
   ];
 
   const drawer = (
@@ -140,14 +160,51 @@ const Navbar = () => {
               <ShoppingCart sx={{ fontSize: '28px', color: 'white' }} />
             </Badge>
             <ListItemText 
-              primary="Shopping Cart" 
-              secondary={`${cartItemCount} item${cartItemCount !== 1 ? 's' : ''}`}
+              primary={t('nav.shoppingCart')} 
+              secondary={`${cartItemCount} ${cartItemCount !== 1 ? t('nav.itemsPlural') : t('nav.items')}`}
               primaryTypographyProps={{ color: 'white', fontWeight: 600, fontSize: '1rem' }}
               secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}
             />
           </ListItemButton>
         </Box>
       )}
+
+      {/* Language Selector for Mobile */}
+      <Box sx={{ px: 3, py: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1, fontSize: '0.875rem' }}>
+          {t('nav.language')}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {languages.map((lang) => (
+            <Button
+              key={lang.code}
+              onClick={() => {
+                changeLanguage(lang.code);
+              }}
+              variant={language === lang.code ? 'contained' : 'outlined'}
+              size="small"
+              sx={{
+                flex: 1,
+                textTransform: 'none',
+                borderRadius: '8px',
+                backgroundColor: language === lang.code ? 'rgba(255, 215, 0, 0.2)' : 'transparent',
+                borderColor: language === lang.code ? '#FFD700' : 'rgba(255, 255, 255, 0.3)',
+                color: language === lang.code ? '#FFD700' : 'white',
+                fontWeight: language === lang.code ? 600 : 400,
+                '&:hover': {
+                  backgroundColor: language === lang.code ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                  borderColor: language === lang.code ? '#FFD700' : 'rgba(255, 255, 255, 0.5)',
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography sx={{ fontSize: '1rem' }}>{lang.flag}</Typography>
+                <Typography variant="body2">{lang.name}</Typography>
+              </Box>
+            </Button>
+          ))}
+        </Box>
+      </Box>
 
       {/* Sign In Button or User Profile for Mobile */}
       <Box sx={{ px: 3, pb: 2 }}>
@@ -188,7 +245,7 @@ const Navbar = () => {
                 },
               }}
             >
-              Sign Out
+              {t('nav.signOut')}
             </Button>
           </Box>
         ) : (
@@ -219,7 +276,7 @@ const Navbar = () => {
               transition: 'all 0.3s ease',
             }}
           >
-            Sign In
+            {t('nav.signIn')}
           </Button>
         )}
       </Box>
@@ -313,6 +370,46 @@ const Navbar = () => {
                   </Button>
                 </motion.div>
               ))}
+              
+              {/* Language Dropdown */}
+              <Button
+                onClick={handleLanguageMenuOpen}
+                sx={{
+                  color: 'white',
+                  fontWeight: 'medium',
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    transform: 'scale(1.05)',
+                  },
+                  '&:active': {
+                    transform: 'scale(0.95)',
+                  },
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: '50%',
+                    width: Boolean(languageMenuAnchor) ? '100%' : 0,
+                    height: '2px',
+                    backgroundColor: '#FFD700',
+                    transition: 'all 0.3s ease',
+                    transform: 'translateX(-50%)',
+                  },
+                  '&:hover::after': {
+                    width: '100%',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <Language sx={{ fontSize: '18px', mr: 0.5 }} />
+                {currentLanguage.name}
+              </Button>
               
               {/* Sign In Button or User Profile */}
               {isAuthenticated && user ? (
@@ -434,7 +531,7 @@ const Navbar = () => {
                       transition: 'all 0.3s ease',
                     }}
                   >
-                    Sign In
+                    {t('nav.signIn')}
                   </Button>
                 </motion.div>
               )}
@@ -537,7 +634,7 @@ const Navbar = () => {
           }}
         >
           <Person sx={{ mr: 2, fontSize: 20 }} />
-          My Profile
+          {t('nav.myProfile')}
         </MenuItem>
 
         <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
@@ -553,8 +650,65 @@ const Navbar = () => {
           }}
         >
           <Logout sx={{ mr: 2, fontSize: 20 }} />
-          Sign Out
+          {t('nav.signOut')}
         </MenuItem>
+      </Menu>
+
+      {/* Language Menu Dropdown */}
+      <Menu
+        anchorEl={languageMenuAnchor}
+        open={Boolean(languageMenuAnchor)}
+        onClose={handleLanguageMenuClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        disableScrollLock={true}
+        MenuListProps={{
+          disablePadding: true,
+        }}
+        PaperProps={{
+          sx: {
+            mt: 1.5,
+            minWidth: 180,
+            borderRadius: 2,
+            backgroundColor: 'rgba(15, 15, 25, 0.28)',
+            backdropFilter: 'blur(12px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(140%)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            transition: 'all 0.3s ease-in-out',
+          },
+        }}
+      >
+        {languages.map((lang) => (
+          <MenuItem
+            key={lang.code}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLanguageChange(lang.code);
+            }}
+            selected={language === lang.code}
+            sx={{
+              color: language === lang.code ? '#FFD700' : 'white',
+              py: 1.5,
+              fontWeight: language === lang.code ? 600 : 400,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+              },
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                },
+              },
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+              <Typography sx={{ fontSize: '1.2rem' }}>{lang.flag}</Typography>
+              <Typography variant="body2">{lang.name}</Typography>
+            </Box>
+          </MenuItem>
+        ))}
       </Menu>
     </motion.div>
   );

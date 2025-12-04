@@ -36,12 +36,16 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { updateUser as updateUserRequest, deleteUser as deleteUserRequest } from '../api/user';
 import { forgotPassword, resetPassword } from '../api/auth';
 import { useNavigate } from 'react-router-dom';
 
 const ProfilePage = () => {
-  const { user, updateUserSession, signOut } = useAuth();
+  const { user, updateUserSession, signOut, isAuthenticated } = useAuth();
+  const { language } = useLanguage();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [editPasswordMode, setEditPasswordMode] = useState(false);
@@ -57,6 +61,13 @@ const ProfilePage = () => {
     email: '',
     phoneNumber: '',
   });
+
+  // Redirect to home if user is not authenticated (e.g., after sign out)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -110,7 +121,7 @@ const ProfilePage = () => {
     }
 
     if (Object.keys(payload).length === 0) {
-      setSuccessMessage('No changes to update.');
+      setSuccessMessage(t('profile.noChanges'));
       setTimeout(() => setSuccessMessage(''), 3000);
       setEditMode(false);
       return;
@@ -135,11 +146,11 @@ const ProfilePage = () => {
       });
 
       setEditMode(false);
-      setSuccessMessage(response.message || 'Profile updated successfully!');
+      setSuccessMessage(response.message || t('profile.profileUpdated'));
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       const message =
-        err?.response?.data?.message || err?.message || 'Failed to update profile';
+        err?.response?.data?.message || err?.message || t('profile.failedToUpdate');
       setErrorMessage(message);
       setTimeout(() => setErrorMessage(''), 3000);
     }
@@ -159,7 +170,7 @@ const ProfilePage = () => {
 
   const handleRequestOtp = async () => {
     if (!user?.email) {
-      setErrorMessage('Email not found. Please contact support.');
+      setErrorMessage(language === 'fr' ? 'E-mail introuvable. Veuillez contacter le support.' : 'Email not found. Please contact support.');
       setTimeout(() => setErrorMessage(''), 5000);
       return;
     }
@@ -170,15 +181,17 @@ const ProfilePage = () => {
       setSuccessMessage('');
       await forgotPassword({ email: user.email });
       setOtpSent(true);
-      setSuccessMessage('Password reset OTP sent to your email. Please check your inbox.');
+      setSuccessMessage(t('auth.otpSent'));
       setTimeout(() => setSuccessMessage(''), 8000);
     } catch (err) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to send OTP. Please try again.';
+      const errorMessage = err?.response?.data?.message || err?.message || (language === 'fr' ? 'Échec de l\'envoi du code. Veuillez réessayer.' : 'Failed to send OTP. Please try again.');
       
       // Check if error is due to unverified email
       if (err?.response?.status === 403 || errorMessage.includes('not verified') || errorMessage.includes('verify')) {
         setErrorMessage(
-          'Your email address is not verified. Please verify your email first before resetting your password. Check your inbox for the verification email or contact support.'
+          language === 'fr' 
+            ? 'Votre adresse e-mail n\'est pas vérifiée. Veuillez d\'abord vérifier votre e-mail avant de réinitialiser votre mot de passe. Vérifiez votre boîte de réception pour l\'e-mail de vérification ou contactez le support.'
+            : 'Your email address is not verified. Please verify your email first before resetting your password. Check your inbox for the verification email or contact support.'
         );
       } else {
         setErrorMessage(errorMessage);
@@ -193,25 +206,25 @@ const ProfilePage = () => {
 
   const handleSavePassword = async () => {
     if (!passwordData.newPassword || !passwordData.confirmPassword) {
-      setErrorMessage('Please fill in all password fields');
+      setErrorMessage(language === 'fr' ? 'Veuillez remplir tous les champs de mot de passe' : 'Please fill in all password fields');
       setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
 
     if (!otpSent || !passwordData.otp) {
-      setErrorMessage('Please request and enter the OTP first');
+      setErrorMessage(t('profile.enterOtpFirst'));
       setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setErrorMessage('New passwords do not match');
+      setErrorMessage(t('profile.passwordsDoNotMatch'));
       setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      setErrorMessage('Password must be at least 6 characters');
+      setErrorMessage(t('profile.passwordMinLength'));
       setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
@@ -234,11 +247,11 @@ const ProfilePage = () => {
       });
       setShowNewPassword(false);
       setShowConfirmPassword(false);
-      setSuccessMessage('Password changed successfully! You can now log in with your new password.');
+      setSuccessMessage(t('profile.passwordChanged'));
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (err) {
       const message =
-        err?.response?.data?.message || err?.message || 'Failed to reset password. Please check your OTP and try again.';
+        err?.response?.data?.message || err?.message || t('profile.failedToChangePassword');
       setErrorMessage(message);
       setTimeout(() => setErrorMessage(''), 5000);
     } finally {
@@ -260,7 +273,7 @@ const ProfilePage = () => {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== 'DELETE') {
-      setErrorMessage('Please type "DELETE" to confirm account deletion');
+      setErrorMessage(t('profile.deleteConfirm'));
       setTimeout(() => setErrorMessage(''), 5000);
       return;
     }
@@ -271,14 +284,14 @@ const ProfilePage = () => {
       await deleteUserRequest(user.id);
       
       setDeleteDialogOpen(false);
-      setSuccessMessage('Your account has been deleted successfully. You will be signed out.');
+      setSuccessMessage(t('profile.accountDeleted'));
       setTimeout(() => {
         signOut();
         navigate('/');
       }, 2000);
     } catch (err) {
       const message =
-        err?.response?.data?.message || err?.message || 'Failed to delete account. Please try again.';
+        err?.response?.data?.message || err?.message || t('profile.failedToDelete');
       setErrorMessage(message);
       setTimeout(() => setErrorMessage(''), 8000);
     } finally {
@@ -307,6 +320,11 @@ const ProfilePage = () => {
       },
     },
   });
+
+  // Hide page content if user is not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <Box
@@ -382,7 +400,7 @@ const ProfilePage = () => {
                     }}
                   >
                     <Typography variant="caption" sx={{ color: '#64B5F6', fontWeight: 600 }}>
-                      Active Member
+                      {t('profile.activeMember')}
                     </Typography>
                   </Box>
                   <Box
@@ -395,7 +413,7 @@ const ProfilePage = () => {
                     }}
                   >
                     <Typography variant="caption" sx={{ color: '#81C784', fontWeight: 600 }}>
-                      Email Verified
+                      {t('profile.emailVerified')}
                     </Typography>
                   </Box>
                 </Box>
@@ -424,7 +442,7 @@ const ProfilePage = () => {
                   },
                 }}
               >
-                Edit Profile
+                {t('profile.edit')} {t('profile.title')}
               </Button>
             </Box>
           ) : (
@@ -447,7 +465,7 @@ const ProfilePage = () => {
                   },
                 }}
               >
-                Save All Changes
+                {language === 'fr' ? 'Enregistrer Tous les Changements' : 'Save All Changes'}
               </Button>
               <Button
                 onClick={handleCancelEdit}
@@ -466,7 +484,7 @@ const ProfilePage = () => {
                   },
                 }}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
             </Box>
           )}
@@ -485,18 +503,18 @@ const ProfilePage = () => {
               >
                 <CardContent sx={{ p: 3 }}>
                   <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold', mb: 1 }}>
-                    Basic Information
+                    {t('profile.personalInformation')}
                   </Typography>
                   <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 3 }} />
 
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                     <TextField
                       fullWidth
-                      label="First Name"
+                      label={t('auth.firstName')}
                       value={profileData.firstName}
                       onChange={handleProfileChange('firstName')}
                       disabled={!editMode}
-                      placeholder={editMode ? "Enter your first name" : ""}
+                      placeholder={editMode ? (language === 'fr' ? 'Entrez votre prénom' : 'Enter your first name') : ''}
                       InputProps={{
                         startAdornment: <Person sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
                       }}
@@ -505,11 +523,11 @@ const ProfilePage = () => {
 
                     <TextField
                       fullWidth
-                      label="Last Name"
+                      label={t('auth.lastName')}
                       value={profileData.lastName}
                       onChange={handleProfileChange('lastName')}
                       disabled={!editMode}
-                      placeholder={editMode ? "Enter your last name" : ""}
+                      placeholder={editMode ? (language === 'fr' ? 'Entrez votre nom' : 'Enter your last name') : ''}
                       InputProps={{
                         startAdornment: <Person sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
                       }}
@@ -518,12 +536,12 @@ const ProfilePage = () => {
 
                     <TextField
                       fullWidth
-                      label="Email"
+                      label={t('auth.email')}
                       value={profileData.email}
                       onChange={handleProfileChange('email')}
                       disabled={!editMode}
                       type="email"
-                      placeholder={editMode ? "your.email@example.com" : ""}
+                      placeholder={editMode ? (language === 'fr' ? 'votre.email@exemple.com' : 'your.email@example.com') : ''}
                       InputProps={{
                         startAdornment: <Email sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
                       }}
@@ -532,11 +550,11 @@ const ProfilePage = () => {
 
                     <TextField
                       fullWidth
-                      label="Phone Number"
+                      label={t('auth.phoneNumber')}
                       value={profileData.phoneNumber}
                       onChange={handleProfileChange('phoneNumber')}
                       disabled={!editMode}
-                      placeholder={editMode ? "+1 (555) 000-0000" : "Not provided"}
+                      placeholder={editMode ? (language === 'fr' ? '+33 6 12 34 56 78' : '+1 (555) 000-0000') : (language === 'fr' ? 'Non fourni' : 'Not provided')}
                       InputProps={{
                         startAdornment: <Phone sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
                       }}
@@ -560,7 +578,7 @@ const ProfilePage = () => {
               >
                 <CardContent sx={{ p: 3 }}>
                   <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold', mb: 1 }}>
-                    Change Password
+                    {t('profile.changePassword')}
                   </Typography>
                   <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 3 }} />
 
@@ -569,12 +587,16 @@ const ProfilePage = () => {
                       {!otpSent ? (
                         <>
                           <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1 }}>
-                            To change your password, we'll send a verification code to your email: <strong>{user?.email}</strong>
+                            {language === 'fr' 
+                              ? `Pour changer votre mot de passe, nous enverrons un code de vérification à votre e-mail :` 
+                              : `To change your password, we'll send a verification code to your email:`} <strong>{user?.email}</strong>
                           </Typography>
                           {errorMessage && (errorMessage.includes('not verified') || errorMessage.includes('verify')) && (
                             <Alert severity="warning" sx={{ mb: 2, backgroundColor: 'rgba(255, 152, 0, 0.1)', border: '1px solid rgba(255, 152, 0, 0.3)' }}>
                               <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                                Your email address needs to be verified first. Please check your inbox for the verification email, or contact support if you need help.
+                                {language === 'fr' 
+                                  ? 'Votre adresse e-mail doit d\'abord être vérifiée. Veuillez vérifier votre boîte de réception pour l\'e-mail de vérification, ou contactez le support si vous avez besoin d\'aide.'
+                                  : 'Your email address needs to be verified first. Please check your inbox for the verification email, or contact support if you need help.'}
                               </Typography>
                             </Alert>
                           )}
@@ -594,17 +616,17 @@ const ProfilePage = () => {
                               },
                             }}
                           >
-                            {sendingOtp ? 'Sending OTP...' : 'Send Verification Code'}
+                            {sendingOtp ? t('auth.sendingOtp') : t('auth.sendVerificationCode')}
                           </Button>
                         </>
                       ) : (
                         <>
                           <TextField
                             fullWidth
-                            label="Verification Code (OTP)"
+                            label={t('auth.verificationCode')}
                             value={passwordData.otp}
                             onChange={handlePasswordChange('otp')}
-                            placeholder="Enter the 6-digit code sent to your email"
+                            placeholder={t('auth.enterOtp')}
                             InputProps={{
                               startAdornment: <Email sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.5)' }} />,
                             }}
@@ -613,7 +635,7 @@ const ProfilePage = () => {
 
                           <TextField
                             fullWidth
-                            label="New Password"
+                            label={t('auth.newPassword')}
                             type={showNewPassword ? 'text' : 'password'}
                             value={passwordData.newPassword}
                             onChange={handlePasswordChange('newPassword')}
@@ -636,7 +658,7 @@ const ProfilePage = () => {
 
                           <TextField
                             fullWidth
-                            label="Confirm New Password"
+                            label={t('auth.confirmNewPassword')}
                             type={showConfirmPassword ? 'text' : 'password'}
                             value={passwordData.confirmPassword}
                             onChange={handlePasswordChange('confirmPassword')}
@@ -670,7 +692,7 @@ const ProfilePage = () => {
                               },
                             }}
                           >
-                            Resend OTP
+                            {t('auth.resendOtp')}
                           </Button>
                         </>
                       )}
@@ -693,7 +715,7 @@ const ProfilePage = () => {
                               },
                             }}
                           >
-                            {resettingPassword ? 'Resetting Password...' : 'Reset Password'}
+                            {resettingPassword ? t('auth.resettingPassword') : t('auth.resetPassword')}
                           </Button>
                         )}
                         <Button
@@ -712,7 +734,7 @@ const ProfilePage = () => {
                             },
                           }}
                         >
-                          Cancel
+                          {t('common.cancel')}
                         </Button>
                       </Box>
                     </Box>
@@ -720,7 +742,7 @@ const ProfilePage = () => {
                     <Box sx={{ textAlign: 'center', py: 4 }}>
                       <Lock sx={{ fontSize: 64, color: 'rgba(255, 255, 255, 0.2)', mb: 2 }} />
                       <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 3 }}>
-                        Keep your account secure
+                        {language === 'fr' ? 'Gardez votre compte sécurisé' : 'Keep your account secure'}
                       </Typography>
                       <Button
                         onClick={() => setEditPasswordMode(true)}
@@ -737,7 +759,7 @@ const ProfilePage = () => {
                           },
                         }}
                       >
-                        Change Password
+                        {t('profile.changePassword')}
                       </Button>
                     </Box>
                   )}
@@ -745,72 +767,6 @@ const ProfilePage = () => {
               </Card>
             </Grid>
 
-            {/* Delete Account Section */}
-            <Grid size={{ xs: 12 }}>
-              <Card
-                elevation={0}
-                sx={{
-                  background: 'rgba(255, 107, 107, 0.05)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 107, 107, 0.2)',
-                  borderRadius: 4,
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <Warning sx={{ color: '#FF6B6B', fontSize: 28 }} />
-                    <Typography variant="h6" sx={{ color: '#FF6B6B', fontWeight: 'bold' }}>
-                      Danger Zone
-                    </Typography>
-                  </Box>
-                  <Divider sx={{ borderColor: 'rgba(255, 107, 107, 0.2)', mb: 3 }} />
-                  
-                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 2 }}>
-                    Once you delete your account, there is no going back. Please be certain.
-                  </Typography>
-                  
-                  <Box sx={{ mb: 2 }}>
-                    <Alert severity="warning" sx={{ mb: 2, backgroundColor: 'rgba(255, 152, 0, 0.1)', border: '1px solid rgba(255, 152, 0, 0.3)' }}>
-                      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, mb: 0.5 }}>
-                        What will be deleted:
-                      </Typography>
-                      <Typography variant="body2" component="ul" sx={{ color: 'rgba(255, 255, 255, 0.8)', pl: 2, mb: 0 }}>
-                        <li>Your profile information</li>
-                        <li>Your shopping cart items</li>
-                        <li>Your account access</li>
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, mt: 1, mb: 0.5 }}>
-                        What will be preserved:
-                      </Typography>
-                      <Typography variant="body2" component="ul" sx={{ color: 'rgba(255, 255, 255, 0.8)', pl: 2, mb: 0 }}>
-                        <li>Your order history (for business records)</li>
-                        <li>Your payment records (for accounting)</li>
-                      </Typography>
-                    </Alert>
-                  </Box>
-
-                  <Button
-                    onClick={() => setDeleteDialogOpen(true)}
-                    variant="outlined"
-                    startIcon={<Delete />}
-                    sx={{
-                      color: '#FF6B6B',
-                      borderColor: '#FF6B6B',
-                      fontWeight: 'bold',
-                      py: 1.2,
-                      px: 3,
-                      borderRadius: 2,
-                      '&:hover': {
-                        borderColor: '#FF8888',
-                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
-                      },
-                    }}
-                  >
-                    Delete My Account
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
           </Grid>
         </motion.div>
       </Container>
@@ -831,28 +787,32 @@ const ProfilePage = () => {
       >
         <DialogTitle sx={{ color: '#FF6B6B', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
           <Warning sx={{ fontSize: 28 }} />
-          Delete Account
+          {t('profile.deleteAccount')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.9)', mb: 2 }}>
-            This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+            {t('profile.deleteAccountWarning')}
           </DialogContentText>
           
           <Alert severity="error" sx={{ mb: 2, backgroundColor: 'rgba(255, 107, 107, 0.1)' }}>
             <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-              <strong>Warning:</strong> If you have active orders (pending, processing, or shipped), you must complete or cancel them before deleting your account.
+              <strong>{language === 'fr' ? 'Avertissement :' : 'Warning:'}</strong> {language === 'fr' 
+                ? 'Si vous avez des commandes actives (en attente, en traitement ou expédiées), vous devez les terminer ou les annuler avant de supprimer votre compte.'
+                : 'If you have active orders (pending, processing, or shipped), you must complete or cancel them before deleting your account.'}
             </Typography>
           </Alert>
 
           <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 2 }}>
-            To confirm, please type <strong style={{ color: '#FF6B6B' }}>DELETE</strong> in the box below:
+            {language === 'fr' 
+              ? `Pour confirmer, veuillez taper` 
+              : `To confirm, please type`} <strong style={{ color: '#FF6B6B' }}>DELETE</strong> {language === 'fr' ? 'dans la case ci-dessous :' : 'in the box below:'}
           </Typography>
 
           <TextField
             fullWidth
             value={deleteConfirmText}
             onChange={(e) => setDeleteConfirmText(e.target.value)}
-            placeholder="Type DELETE to confirm"
+            placeholder={t('profile.deleteConfirmPlaceholder')}
             disabled={deletingAccount}
             sx={{
               '& .MuiOutlinedInput-root': {
@@ -880,7 +840,7 @@ const ProfilePage = () => {
             disabled={deletingAccount}
             sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleDeleteAccount}
@@ -900,7 +860,7 @@ const ProfilePage = () => {
               },
             }}
           >
-            {deletingAccount ? 'Deleting Account...' : 'Delete Account Permanently'}
+            {deletingAccount ? t('profile.deletingAccount') : t('profile.deleteAccountPermanently')}
           </Button>
         </DialogActions>
       </Dialog>

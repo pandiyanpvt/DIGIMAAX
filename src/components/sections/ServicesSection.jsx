@@ -1,129 +1,120 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
   Typography,
   Grid,
-  useTheme,
-  useMediaQuery,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
+import {
+  CheckCircle as CheckCircleIcon,
+} from '@mui/icons-material';
 import { motion } from 'framer-motion';
-
-import interiorDesignImage from '../../assets/hero/Rectangle 94.png';
-import advertisingImage from '../../assets/hero/Rectangle 95.png';
-import printingImage from '../../assets/hero/Rectangle 96.png';
-import securityImage from '../../assets/hero/Rectangle 97.png';
-import nameBoardsImage from '../../assets/hero/Rectangle 98.png';
-import cncImage from '../../assets/hero/Rectangle 99.png';
+// API function that fetches services from backend
+// Source: src/api/services.js → calls GET /api/services/getAll
+import { getServices } from '../../api/services';
+import { useLanguage } from '../../context/LanguageContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ServicesSection = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { language } = useLanguage();
+  const { t } = useTranslation();
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const services = [
-    {
-      id: 1,
-      title: 'Interior Design',
-      description: `Creates Emotional Impact:
-Well-Designed Spaces Influence Mood, Productivity, And Customer Experience.
+  useEffect(() => {
+    /**
+     * Fetch services from backend API
+     * API Endpoint: GET /api/services/getAll
+     * Full URL: https://digimaax-backend-production.up.railway.app/api/services/getAll
+     * 
+     * This function:
+     * 1. Calls getServices() from src/api/services.js
+     * 2. getServices() uses apiClient from src/api/client.js
+     * 3. apiClient makes HTTP GET request to backend
+     * 4. Backend returns services data with points array
+     * 5. Data is transformed and stored in component state
+     */
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // API call to backend - fetches services data (returns array directly)
+        const backendServices = await getServices();
+        
+        // Transform backend data to component format
+        const transformedServices = backendServices
+          .filter((service) => service && service.id) // Filter out invalid services
+          .map((service) => {
+            // Keep full point objects for language support
+            const points = service.points && Array.isArray(service.points) && service.points.length > 0
+              ? service.points.filter((point) => point && point.point) // Filter out invalid points
+              : [];
+            
+            // Use only backend image URL - no fallback mock data
+            const imageUrl = service.img_url || '';
+            
+            return {
+              id: service.id,
+              name: service.name || 'Untitled Service',
+              name_french: service.name_french || '',
+              points: points, // Keep full point objects with both languages
+              image: imageUrl,
+              layout: 'left'
+            };
+          });
+        
+        setServices(transformedServices);
+        
+        if (transformedServices.length === 0) {
+          setError('No services found');
+        }
+      } catch (err) {
+        console.error('Error fetching services:', err);
+        const errorMessage = err?.response?.data?.error?.message 
+          || err?.response?.data?.message 
+          || err?.message 
+          || 'Failed to load services';
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-Supports Branding:
-Interior Aesthetics Reflect A Company's Identity And Professionalism.
+    fetchServices();
+  }, [language]); // Refetch when language changes
 
-Boosts Property Value:
-Especially Relevant In Hospitality And Commercial Sectors, Where Design Affects ROI.`,
-      image: interiorDesignImage,
-      layout: 'left' // Text Left, Image Right
-    },
-    {
-      id: 2,
-      title: 'Advertising',
-      description: `Drives Visibility:
-Strategic Advertising Campaigns Increase Brand Awareness And Market Presence.
-
-Builds Trust:
-Professional Marketing Materials Establish Credibility And Customer Confidence.
-
-Supports Growth:
-Customer Acquisition And Retention Through Targeted Advertising Solutions.`,
-      image: advertisingImage,
-      layout: 'left' // Text Left, Image Right
-    },
-    {
-      id: 3,
-      title: 'Customized Printing',
-      description: `From Business Cards To Banners, T-Shirts To Textiles:
-We Print On Various Materials Including Paper, Vinyl, Metal, And Cloth.
-
-Vibrant Colors, Durable Finishes, And Fast Turnaround:
-Quality Printing Services That Meet Your Business Needs.`,
-      image: printingImage,
-      layout: 'left' // Text Left, Image Right
-    },
-    {
-      id: 4,
-      title: 'CCTV & Security Systems',
-      description: `Protect Your Premises With Professionally Installed Surveillance Systems, Tailored To Your Layout And Security Needs.
-
-Advanced Technology:
-High-Quality Cameras And Monitoring Systems For Complete Security Coverage.`,
-      image: securityImage,
-      layout: 'left' // Text Left, Image Right
-    },
-    {
-      id: 5,
-      title: 'Name Boards',
-      description: `First Impression Matters:
-Professional Name Boards Create Lasting Impact On Customers.
-
-Brand Recognition:
-Custom Designs That Reflect Your Business Identity And Values.
-
-Durability And Style:
-Using Materials Like Stainless Steel And Fiber For Long-Lasting Quality.`,
-      image: nameBoardsImage,
-      layout: 'left' // Text Left, Image Right
-    },
-    {
-      id: 6,
-      title: 'CNC Design',
-      description: `Precision And Customization:
-Computer-Controlled Manufacturing For Accurate And Detailed Results.
-
-Efficiency:
-Streamlined Production Process With Consistent Quality Output.
-
-Versatility:
-From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
-      image: cncImage,
-      layout: 'left' // Text Left, Image Right
-    }
-  ];
-
+  // Footer services with translations
   const footerServices = [
     { 
       icon: '🌍', 
-      title: 'International Shipping',
-      description: 'Global delivery services'
+      title: t('services.internationalShipping'),
+      description: t('services.internationalShippingDesc')
     },
     { 
       icon: '🚚', 
-      title: 'Door-To-Door Transport Services',
-      description: 'Convenient delivery options'
+      title: t('services.doorToDoorTransport'),
+      description: t('services.doorToDoorTransportDesc')
     },
     { 
       icon: '☀️', 
-      title: 'Climate Controlled Travel Environments',
-      description: 'Protected shipping conditions'
+      title: t('services.climateControlled'),
+      description: t('services.climateControlledDesc')
     },
     { 
       icon: '📞', 
-      title: '24/7 Customer Support',
-      description: 'Round-the-clock assistance'
+      title: t('services.customerSupport247'),
+      description: t('services.customerSupport247Desc')
     }
   ];
 
-  const renderService = (service, index) => {
+  const renderService = (service, index, totalServices) => {
+    if (!service || !service.id) {
+      return null;
+    }
+
     return (
       <motion.div
         key={service.id}
@@ -173,7 +164,7 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
                       boxShadow: '0 4px 12px rgba(220, 20, 60, 0.3)',
                     }}
                   >
-                    {service.id}
+                    {index + 1}
                   </Box>
                   <Typography
                     variant="h3"
@@ -187,26 +178,101 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
                       minWidth: 0
                     }}
                   >
-                    {service.title}
+                    {language === 'fr' && service.name_french 
+                      ? service.name_french 
+                      : service.name}
                   </Typography>
                 </Box>
 
-                {/* Description */}
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'white',
-                    fontSize: { xs: '0.95rem', md: '1.1rem' },
-                    lineHeight: 1.7,
-                    fontFamily: 'sans-serif',
-                    whiteSpace: 'pre-line',
-                    maxWidth: { xs: '100%', md: '450px' },
-                    textAlign: { xs: 'center', md: 'left' },
-                    opacity: 0.95
-                  }}
-                >
-                  {service.description}
-                </Typography>
+                {/* Service Points with Design */}
+                {service.points && service.points.length > 0 ? (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: { xs: 1.5, md: 2 },
+                      maxWidth: { xs: '100%', md: '450px' },
+                    }}
+                  >
+                    {service.points.map((pointObj, pointIndex) => {
+                      // Get the correct language text for the point
+                      const pointText = language === 'fr' && pointObj.point_french
+                        ? pointObj.point_french
+                        : pointObj.point;
+                      
+                      return (
+                        <Box
+                          key={pointObj.id || pointIndex}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 1.5,
+                            p: { xs: 1.5, md: 2 },
+                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                            borderRadius: 2,
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            backdropFilter: 'blur(10px)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                              borderColor: 'rgba(255, 215, 0, 0.3)',
+                              transform: 'translateX(4px)',
+                              boxShadow: '0 4px 12px rgba(255, 215, 0, 0.2)',
+                            },
+                          }}
+                        >
+                          {/* Check Icon */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              minWidth: 32,
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              backgroundColor: '#FFD700',
+                              color: '#4B11A9',
+                              flexShrink: 0,
+                              mt: 0.25,
+                            }}
+                          >
+                            <CheckCircleIcon sx={{ fontSize: 20 }} />
+                          </Box>
+                          
+                          {/* Point Text */}
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              color: 'white',
+                              fontSize: { xs: '0.9rem', md: '1rem' },
+                              lineHeight: 1.6,
+                              fontFamily: 'sans-serif',
+                              flex: 1,
+                              opacity: 0.95,
+                            }}
+                          >
+                            {pointText}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                ) : (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      fontSize: { xs: '0.9rem', md: '1rem' },
+                      fontStyle: 'italic',
+                      textAlign: { xs: 'center', md: 'left' },
+                    }}
+                  >
+                    {language === 'fr' 
+                      ? 'Aucun point de service disponible.' 
+                      : 'No service points available.'}
+                  </Typography>
+                )}
               </Box>
             </Grid>
 
@@ -225,24 +291,48 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
                   mx: { xs: 2, md: 0 }
                 }}
               >
-                <Box
-                  component="img"
-                  src={service.image}
-                  alt={service.title}
-                  sx={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    borderRadius: 3,
-                  }}
-                />
+                {service.image ? (
+                  <Box
+                    component="img"
+                    src={service.image}
+                    alt={service.title}
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: 3,
+                    }}
+                    onError={(e) => {
+                      // Hide broken image if URL fails to load
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 3,
+                      color: 'white',
+                      fontSize: '0.9rem',
+                      textAlign: 'center',
+                      px: 2,
+                    }}
+                  >
+                    No Image Available
+                  </Box>
+                )}
               </Box>
             </Grid>
           </Grid>
         </Box>
 
         {/* Connecting Arrow */}
-        {index < services.length - 1 && (
+        {index < totalServices - 1 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -315,7 +405,7 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
                 lineHeight: 1.2
               }}
             >
-              Why Choose US
+              {language === 'fr' ? 'Pourquoi Nous Choisir' : 'Why Choose US'}
             </Typography>
             <Box
               sx={{
@@ -330,9 +420,31 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
           </Box>
           
           {/* Services */}
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            {services.map((service, index) => renderService(service, index))}
-          </Box>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+              <CircularProgress sx={{ color: '#FFD700' }} />
+            </Box>
+          ) : error ? (
+            <Box sx={{ mb: 4 }}>
+              <Alert severity="error" sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'white' }}>
+                {error}
+              </Alert>
+            </Box>
+          ) : services.length > 0 ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              {services.map((service, index) => 
+                renderService(service, index, services.length)
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Typography variant="h6" sx={{ color: 'white', opacity: 0.7 }}>
+                {language === 'fr' 
+                  ? 'Aucun service disponible pour le moment.' 
+                  : 'No services available at the moment.'}
+              </Typography>
+            </Box>
+          )}
 
           {/* Footer Services */}
           <motion.div
@@ -352,7 +464,7 @@ From Architecture To Electronics, CNC Design Serves Multiple Industries.`,
                   mb: 2
                 }}
               >
-                Our Services
+                {language === 'fr' ? 'Nos Services' : 'Our Services'}
               </Typography>
               <Box
                 sx={{

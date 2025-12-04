@@ -21,6 +21,8 @@ import {
   WhatsApp,
   Facebook,
   Twitter,
+  LinkedIn,
+  YouTube,
   Phone,
   Email,
   LocationOn,
@@ -28,26 +30,28 @@ import {
 } from '@mui/icons-material';
 import logoImage from '../../assets/hero/DIGIMAAX_LOGO-01 1.png';
 import { getSocialMediaLinks } from '../../api/socialMedia';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const Footer = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const quickLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
-    { name: 'Services', path: '/services' },
-    { name: 'Shop', path: '/shop' },
-    { name: 'Gallery', path: '/gallery' },
-    { name: 'Contact', path: '/contact' },
+    { name: t('nav.home'), path: '/' },
+    { name: t('nav.about'), path: '/about' },
+    { name: t('nav.services'), path: '/services' },
+    { name: t('nav.shop'), path: '/shop' },
+    { name: t('nav.gallery'), path: '/gallery' },
+    { name: t('nav.contact'), path: '/contact' },
   ];
 
   const services = [
-    'Interior Design',
-    'CCTV & Security',
-    '3D Printing',
-    'Advertising',
-    'Name Boards',
-    'CNC Design',
+    t('services.interiorDesign'),
+    t('services.cctvSecurity'),
+    t('services.printing3d'),
+    t('services.advertising'),
+    t('services.nameBoards'),
+    t('services.cncDesign'),
   ];
 
   const SOCIAL_ICON_META = useMemo(
@@ -55,6 +59,8 @@ const Footer = () => {
       facebook: { Icon: Facebook, color: '#1877F2' },
       instagram: { Icon: Instagram, color: '#E4405F' },
       twitter: { Icon: Twitter, color: '#1DA1F2' },
+      linkedin: { Icon: LinkedIn, color: '#0077B5' },
+      youtube: { Icon: YouTube, color: '#FF0000' },
       whatsapp: { Icon: WhatsApp, color: '#25D366' },
       telegram: { Icon: Telegram, color: '#0088cc' },
       default: { Icon: Public, color: '#FFD700' },
@@ -96,32 +102,32 @@ const Footer = () => {
   const [socialMedia, setSocialMedia] = useState(fallbackSocialMedia);
   const [policyDialog, setPolicyDialog] = useState({ open: false, type: null });
 
-  const policyCopy = {
+  const getPolicyCopy = () => ({
     privacy: {
-      title: 'Privacy Policy',
+      title: t('policies.privacyTitle'),
       body: [
-        'We collect only the data required to process your orders, provide customer support, and improve our services. This includes contact information, order history, and browsing activity on our website.',
-        'Your personal information is never sold. We share data only with trusted service providers (such as payment gateways or logistics partners) strictly for fulfilling your requests.',
-        'You can request data export or deletion at any time by contacting support@digimaax.com. We respond within 48 hours.',
+        t('policies.privacy1'),
+        t('policies.privacy2'),
+        t('policies.privacy3'),
       ],
     },
     terms: {
-      title: 'Terms of Service',
+      title: t('policies.termsTitle'),
       body: [
-        'By using DIGIMAAX digital experiences, you agree to use our products and content responsibly and to comply with all applicable laws.',
-        'All creative assets, graphics, and copy produced by DIGIMAAX remain our intellectual property unless otherwise stated in a signed agreement.',
-        'Project timelines are estimates; final delivery dates are confirmed in the project statement of work.',
+        t('policies.terms1'),
+        t('policies.terms2'),
+        t('policies.terms3'),
       ],
     },
     cookies: {
-      title: 'Cookie Policy',
+      title: t('policies.cookiesTitle'),
       body: [
-        'DIGIMAAX uses first-party cookies for session management and analytics cookies to understand feature adoption.',
-        'You can disable cookies from your browser settings at any time. Some experience elements — such as cart syncing — may not function without cookies.',
-        'We never use cookies to capture sensitive data such as payment information.',
+        t('policies.cookies1'),
+        t('policies.cookies2'),
+        t('policies.cookies3'),
       ],
     },
-  };
+  });
 
   const openPolicyDialog = (type) => {
     setPolicyDialog({ open: true, type });
@@ -155,9 +161,10 @@ const Footer = () => {
   }, [buildSocialLinks]);
 
   const contactInfo = [
-    { icon: <Phone />, text: '+33 1 23 45 67 89', link: 'tel:+33123456789' },
-    { icon: <Email />, text: 'info@digimaax.com', link: 'mailto:info@digimaax.com' },
-    { icon: <LocationOn />, text: 'Paris, France', link: null },
+    { icon: <Phone />, text: '09 73 22 12 64', link: 'tel:+33973221264' },
+    { icon: <Phone />, text: '06 52 87 35 70', link: 'tel:+33652873570' },
+    { icon: <Email />, text: 'digimaaxfr@gmail.com', link: 'mailto:digimaaxfr@gmail.com' },
+    { icon: <LocationOn />, text: '74 Route de Villemomble, 93140 Bondy', link: null },
   ];
 
   return (
@@ -229,7 +236,7 @@ const Footer = () => {
                     fontSize: '0.85rem',
                   }}
                 >
-                  Where Ideas Become Environments. Creating innovative solutions
+                  {t('footer.tagline')}
                 </Typography>
                 <Typography
                   variant="body2"
@@ -239,7 +246,7 @@ const Footer = () => {
                     fontSize: '0.85rem',
                   }}
                 >
-                  for interior design, advertising, and technology.
+                  {t('footer.tagline2')}
                 </Typography>
               </Box>
             </motion.div>
@@ -261,7 +268,7 @@ const Footer = () => {
                   fontSize: '1rem',
                 }}
               >
-                Quick Links
+                {t('footer.quickLinks')}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8 }}>
                 {quickLinks.map((link, index) => (
@@ -304,7 +311,7 @@ const Footer = () => {
                   fontSize: '1rem',
                 }}
               >
-                Our Services
+                {t('footer.ourServices')}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8 }}>
                 {services.map((service, index) => (
@@ -345,7 +352,7 @@ const Footer = () => {
                   fontSize: '1rem',
                 }}
               >
-                Get In Touch
+                {t('footer.getInTouch')}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
                 {contactInfo.map((contact, index) => (
@@ -405,13 +412,13 @@ const Footer = () => {
                   fontSize: '0.95rem',
                 }}
               >
-                Follow Us
+                {t('footer.followUs')}
               </Typography>
-              <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 {socialMedia.map((social, index) => (
                   <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.1, y: -3 }}
+                    key={social.id || index}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <IconButton
@@ -422,17 +429,21 @@ const Footer = () => {
                       rel="noopener noreferrer"
                       sx={{
                         color: 'white',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        width: 36,
-                        height: 36,
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        backdropFilter: 'blur(15px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(15px) saturate(180%)',
+                        border: '1px solid rgba(255, 255, 255, 0.25)',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
                         '&:hover': {
                           backgroundColor: social.color,
                           borderColor: social.color,
-                          boxShadow: `0 4px 15px ${social.color}40`,
+                          boxShadow: `0 12px 40px ${social.color}50`,
+                          transform: 'translateY(-3px) scale(1.05)',
+                          backdropFilter: 'blur(20px) saturate(200%)',
+                          WebkitBackdropFilter: 'blur(20px) saturate(200%)',
                         },
-                        transition: 'all 0.3s ease',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       }}
                     >
                       <social.Icon />
@@ -471,7 +482,7 @@ const Footer = () => {
               textAlign: { xs: 'center', md: 'left' },
             }}
           >
-            © {new Date().getFullYear()} DIGIMAAX. All rights reserved.
+            © {new Date().getFullYear()} DIGIMAAX. {t('footer.copyright')}
           </Typography>
           
           <Box
@@ -495,7 +506,7 @@ const Footer = () => {
               }}
               onClick={() => openPolicyDialog('privacy')}
             >
-              Privacy Policy
+              {t('footer.privacyPolicy')}
             </Link>
             <Link
               sx={{
@@ -510,7 +521,7 @@ const Footer = () => {
               }}
               onClick={() => openPolicyDialog('terms')}
             >
-              Terms of Service
+              {t('footer.termsOfService')}
             </Link>
             <Link
               sx={{
@@ -525,7 +536,7 @@ const Footer = () => {
               }}
               onClick={() => openPolicyDialog('cookies')}
             >
-              Cookie Policy
+              {t('footer.cookiePolicy')}
             </Link>
           </Box>
         </Box>
@@ -553,7 +564,7 @@ const Footer = () => {
             textTransform: 'uppercase',
           }}
         >
-          {policyDialog.type ? policyCopy[policyDialog.type]?.title : ''}
+          {policyDialog.type ? getPolicyCopy()[policyDialog.type]?.title : ''}
         </DialogTitle>
         <DialogContent
           dividers
@@ -567,7 +578,7 @@ const Footer = () => {
           }}
         >
           {policyDialog.type &&
-            policyCopy[policyDialog.type]?.body.map((paragraph, idx) => (
+            getPolicyCopy()[policyDialog.type]?.body.map((paragraph, idx) => (
               <Typography key={idx} component="p">
                 {paragraph}
               </Typography>
@@ -596,7 +607,7 @@ const Footer = () => {
               },
             }}
           >
-            Close
+            {t('policies.close')}
           </Button>
         </DialogActions>
       </Dialog>
