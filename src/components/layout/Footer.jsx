@@ -474,16 +474,52 @@ const Footer = () => {
             gap: 1.5,
           }}
         >
-          <Typography
-            variant="body2"
+          <Box
             sx={{
-              color: 'rgba(255, 255, 255, 0.6)',
-              fontSize: '0.8rem',
-              textAlign: { xs: 'center', md: 'left' },
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 0.5,
+              alignItems: { xs: 'center', md: 'flex-start' },
             }}
           >
-            © {new Date().getFullYear()} DIGIMAAX. {t('footer.copyright')}
-          </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '0.8rem',
+                textAlign: { xs: 'center', md: 'left' },
+              }}
+            >
+              © {new Date().getFullYear()} DIGIMAAX. {t('footer.copyright')}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '0.8rem',
+                textAlign: { xs: 'center', md: 'left' },
+              }}
+            >
+              Developed by{' '}
+              <Link
+                href="https://thepandiyan.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  textDecoration: 'none',
+                  fontSize: '0.8rem',
+                  transition: 'color 0.3s ease',
+                  '&:hover': {
+                    color: '#FFD700',
+                    cursor: 'pointer',
+                  },
+                }}
+              >
+                The Pandiyan
+              </Link>
+            </Typography>
+          </Box>
           
           <Box
             sx={{
