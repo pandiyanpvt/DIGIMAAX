@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
 	Alert,
 	Box,
@@ -14,6 +14,9 @@ import {
 	Tabs,
 	TextField,
 	Typography,
+	Select,
+	MenuItem,
+	FormControl,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonIcon from '@mui/icons-material/Person';
@@ -24,6 +27,8 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '../context/AuthContext';
 import { resetPassword, verifyEmail } from '../api/auth';
+import { useTranslation } from '../hooks/useTranslation';
+import { countryCodes } from '../utils/countryCodes';
 
 const DEFAULT_USER_ROLE_ID = Number(
 	import.meta.env?.VITE_DEFAULT_USER_ROLE_ID ?? 2
@@ -62,39 +67,50 @@ const SignInModal = () => {
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [showSignInPassword, setShowSignInPassword] = useState(false);
 	const [showNewPassword, setShowNewPassword] = useState(false);
+	const [selectedCountryCode, setSelectedCountryCode] = useState('+33'); // Default to France
+	const { t } = useTranslation();
+
+	// Clear status when modal opens to prevent showing old messages
+	useEffect(() => {
+		if (signInModalOpen) {
+			setStatus({ error: '', success: '' });
+			setMode('default');
+			setActiveTab(0);
+		}
+	}, [signInModalOpen]);
 
 	const validators = useMemo(
 		() => ({
 			email(value) {
 				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-				if (!value) return 'Email is required';
-				if (!emailRegex.test(value)) return 'Please enter a valid email address';
+				if (!value) return t('validation.emailRequired');
+				if (!emailRegex.test(value)) return t('validation.emailInvalid');
 				return '';
 			},
 			password(value) {
-				if (!value) return 'Password is required';
-				if (value.length < 6) return 'Password must be at least 6 characters';
-				if (value.length > 50) return 'Password must be less than 50 characters';
+				if (!value) return t('validation.passwordRequired');
+				if (value.length < 6) return t('validation.passwordMinLength');
+				if (value.length > 50) return t('validation.passwordMaxLength');
 				return '';
 			},
 			name(value, label) {
-				if (!value?.trim()) return `${label} is required`;
-				if (value.length < 2) return `${label} must be at least 2 characters`;
-				if (value.length > 40) return `${label} must be less than 40 characters`;
+				if (!value?.trim()) return `${label} ${t('validation.nameRequired')}`;
+				if (value.length < 2) return `${label} ${t('validation.nameMinLength')}`;
+				if (value.length > 40) return `${label} ${t('validation.nameMaxLength')}`;
 				if (!/^[a-zA-Z\s'-]+$/.test(value)) {
-					return `${label} contains invalid characters`;
+					return `${label} ${t('validation.nameInvalidChars')}`;
 				}
 				return '';
 			},
 			phone(value) {
-				if (!value) return 'Phone number is required';
+				if (!value) return t('validation.phoneRequired');
 				if (!/^[+\d][\d\s\-()]{6,20}$/.test(value)) {
-					return 'Please enter a valid phone number';
+					return t('validation.phoneInvalid');
 				}
 				return '';
 			},
 		}),
-		[]
+		[t]
 	);
 
 	const handleTabChange = (_, newValue) => {
@@ -120,6 +136,7 @@ const SignInModal = () => {
 		setShowConfirmPassword(false);
 		setShowSignInPassword(false);
 		setShowNewPassword(false);
+		setSelectedCountryCode('+33');
 		closeSignInModal();
 	};
 
@@ -147,7 +164,7 @@ const SignInModal = () => {
 			const message =
 				error?.response?.data?.message ||
 				error?.message ||
-				'Unable to sign in. Please try again.';
+				t('errors.signInFailed');
 			setStatus({ error: message, success: '' });
 		} finally {
 			setLoading(false);
@@ -156,8 +173,8 @@ const SignInModal = () => {
 
 	const handleSignUp = async () => {
 		const errors = {
-			firstName: validators.name(signUpData.firstName, 'First name'),
-			lastName: validators.name(signUpData.lastName, 'Last name'),
+			firstName: validators.name(signUpData.firstName, t('auth.firstName')),
+			lastName: validators.name(signUpData.lastName, t('auth.lastName')),
 			email: validators.email(signUpData.email),
 			phoneNumber: validators.phone(signUpData.phoneNumber),
 			password: validators.password(signUpData.password),
@@ -165,9 +182,9 @@ const SignInModal = () => {
 		};
 
 		if (!signUpData.confirmPassword) {
-			errors.confirmPassword = 'Please confirm your password';
+			errors.confirmPassword = t('validation.confirmPasswordRequired');
 		} else if (signUpData.password !== signUpData.confirmPassword) {
-			errors.confirmPassword = 'Passwords do not match';
+			errors.confirmPassword = t('validation.passwordsDoNotMatch');
 		}
 
 		const firstError = Object.values(errors).find(Boolean);
@@ -179,12 +196,15 @@ const SignInModal = () => {
 		setLoading(true);
 		setStatus({ error: '', success: '' });
 		try {
+			// Combine country code with phone number
+			const fullPhoneNumber = selectedCountryCode + signUpData.phoneNumber.trim().replace(/^\+/, '');
+			
 			await registerUser({
 				firstName: signUpData.firstName.trim(),
 				lastName: signUpData.lastName.trim(),
 				email: signUpData.email.trim(),
 				password: signUpData.password,
-				phoneNumber: signUpData.phoneNumber.trim(),
+				phoneNumber: fullPhoneNumber,
 				userRoleId: DEFAULT_USER_ROLE_ID,
 			});
 
@@ -194,13 +214,13 @@ const SignInModal = () => {
 			setMode('verify-email');
 			setStatus({
 				error: '',
-				success: 'Registration successful! Please check your email for the verification code.',
+				success: t('auth.registrationSuccess'),
 			});
 		} catch (error) {
 			const message =
 				error?.response?.data?.message ||
 				error?.message ||
-				'Unable to register. Please try again.';
+				t('errors.signUpFailed');
 			setStatus({ error: message, success: '' });
 		} finally {
 			setLoading(false);
@@ -209,7 +229,7 @@ const SignInModal = () => {
 
 	const handleVerifyEmail = async () => {
 		if (!verifyEmailOtp) {
-			setStatus({ error: 'Please enter the verification code', success: '' });
+			setStatus({ error: t('validation.enterOtp'), success: '' });
 			return;
 		}
 
@@ -227,19 +247,17 @@ const SignInModal = () => {
 				password: signUpData.password,
 			});
 
+			// Clear all state - modal will be closed by loginUser
 			setSignUpData(INITIAL_SIGN_UP);
 			setVerifyEmailOtp('');
 			setRegisterEmail('');
 			setMode('default');
-			setStatus({
-				error: '',
-				success: 'Email verified successfully! You are now logged in.',
-			});
+			setStatus({ error: '', success: '' });
 		} catch (error) {
 			const message =
 				error?.response?.data?.message ||
 				error?.message ||
-				'Failed to verify email. Please check your OTP and try again.';
+				t('errors.emailVerificationFailed');
 			setStatus({ error: message, success: '' });
 		} finally {
 			setLoading(false);
@@ -265,13 +283,13 @@ const SignInModal = () => {
 				error: '',
 				success:
 					response?.message ||
-					'Password reset OTP sent to your email. Please check your inbox.',
+					t('auth.otpSent'),
 			});
 		} catch (error) {
 			const message =
 				error?.response?.data?.message ||
 				error?.message ||
-				'Sorry, we could not process your request.';
+				t('errors.requestFailed');
 			setStatus({ error: message, success: '' });
 		} finally {
 			setLoading(false);
@@ -280,7 +298,7 @@ const SignInModal = () => {
 
 	const handleResetPassword = async () => {
 		if (!otpData.otp || !otpData.newPassword || !otpData.confirmPassword) {
-			setStatus({ error: 'Please fill in all fields', success: '' });
+			setStatus({ error: t('validation.fillAllFields'), success: '' });
 			return;
 		}
 
@@ -291,7 +309,7 @@ const SignInModal = () => {
 		}
 
 		if (otpData.newPassword !== otpData.confirmPassword) {
-			setStatus({ error: 'Passwords do not match', success: '' });
+			setStatus({ error: t('validation.passwordsDoNotMatch'), success: '' });
 			return;
 		}
 
@@ -305,7 +323,7 @@ const SignInModal = () => {
 			});
 			setStatus({
 				error: '',
-				success: 'Password reset successfully! You can now sign in with your new password.',
+				success: t('auth.passwordResetSuccess'),
 			});
 			// Reset form and go back to sign in
 			setTimeout(() => {
@@ -318,7 +336,7 @@ const SignInModal = () => {
 			const message =
 				error?.response?.data?.message ||
 				error?.message ||
-				'Failed to reset password. Please check your OTP and try again.';
+				t('errors.passwordResetFailed');
 			setStatus({ error: message, success: '' });
 		} finally {
 			setLoading(false);
@@ -329,7 +347,7 @@ const SignInModal = () => {
 		<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 			<TextField
 				fullWidth
-				label="Email"
+				label={t('auth.email')}
 				type="email"
 				value={signInData.email}
 				onChange={(event) =>
@@ -338,6 +356,7 @@ const SignInModal = () => {
 						email: event.target.value,
 					}))
 				}
+				autoComplete="off"
 				InputProps={{
 					startAdornment: (
 						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -347,7 +366,7 @@ const SignInModal = () => {
 			/>
 			<TextField
 				fullWidth
-				label="Password"
+				label={t('auth.password')}
 				type={showSignInPassword ? 'text' : 'password'}
 				value={signInData.password}
 				onChange={(event) =>
@@ -356,6 +375,7 @@ const SignInModal = () => {
 						password: event.target.value,
 					}))
 				}
+				autoComplete="new-password"
 				InputProps={{
 					startAdornment: (
 						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -388,7 +408,7 @@ const SignInModal = () => {
 					},
 				}}
 			>
-				Forgot Password?
+				{t('auth.forgotPassword')}
 			</Button>
 		</Box>
 	);
@@ -398,7 +418,7 @@ const SignInModal = () => {
 			<Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
 				<TextField
 					fullWidth
-					label="First Name"
+					label={t('auth.firstName')}
 					value={signUpData.firstName}
 					onChange={(event) =>
 						setSignUpData((prev) => ({
@@ -406,6 +426,7 @@ const SignInModal = () => {
 							firstName: event.target.value,
 						}))
 					}
+					autoComplete="off"
 					InputProps={{
 						startAdornment: (
 							<PersonIcon
@@ -417,7 +438,7 @@ const SignInModal = () => {
 				/>
 				<TextField
 					fullWidth
-					label="Last Name"
+					label={t('auth.lastName')}
 					value={signUpData.lastName}
 					onChange={(event) =>
 						setSignUpData((prev) => ({
@@ -425,6 +446,7 @@ const SignInModal = () => {
 							lastName: event.target.value,
 						}))
 					}
+					autoComplete="off"
 					InputProps={{
 						startAdornment: (
 							<PersonIcon
@@ -437,7 +459,7 @@ const SignInModal = () => {
 			</Box>
 			<TextField
 				fullWidth
-				label="Email"
+				label={t('auth.email')}
 				type="email"
 				value={signUpData.email}
 				onChange={(event) =>
@@ -446,6 +468,7 @@ const SignInModal = () => {
 						email: event.target.value,
 					}))
 				}
+				autoComplete="off"
 				InputProps={{
 					startAdornment: (
 						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -453,28 +476,110 @@ const SignInModal = () => {
 				}}
 				sx={textFieldSx}
 			/>
+			<Box sx={{ display: 'flex', gap: 1 }}>
+				<FormControl sx={{ minWidth: 140, flexShrink: 0 }}>
+					<Select
+						value={selectedCountryCode}
+						onChange={(e) => setSelectedCountryCode(e.target.value)}
+						renderValue={(value) => {
+							const country = countryCodes.find(c => c.dial_code === value);
+							return country ? (
+								<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+									<span style={{ fontSize: '1.1rem' }}>{country.emoji}</span>
+									<Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+										{country.dial_code}
+									</Typography>
+								</Box>
+							) : value;
+						}}
+						sx={{
+							backgroundColor: 'rgba(255, 255, 255, 0.1)',
+							color: 'white',
+							'& .MuiOutlinedInput-notchedOutline': {
+								borderColor: 'rgba(255, 255, 255, 0.3)',
+							},
+							'&:hover .MuiOutlinedInput-notchedOutline': {
+								borderColor: 'rgba(255, 255, 255, 0.5)',
+							},
+							'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+								borderColor: '#2196F3',
+							},
+							'& .MuiSvgIcon-root': {
+								color: 'rgba(255, 255, 255, 0.7)',
+							},
+							'& .MuiSelect-select': {
+								display: 'flex',
+								alignItems: 'center',
+								gap: 0.5,
+								py: 1.5,
+								minHeight: 'auto',
+							},
+						}}
+						MenuProps={{
+							PaperProps: {
+								sx: {
+									backgroundColor: 'rgba(26, 26, 46, 0.95)',
+									backdropFilter: 'blur(20px)',
+									border: '1px solid rgba(255, 255, 255, 0.1)',
+									maxHeight: 400,
+									'& .MuiMenuItem-root': {
+										color: 'white',
+										'&:hover': {
+											backgroundColor: 'rgba(255, 255, 255, 0.1)',
+										},
+										'&.Mui-selected': {
+											backgroundColor: 'rgba(33, 150, 243, 0.3)',
+											'&:hover': {
+												backgroundColor: 'rgba(33, 150, 243, 0.4)',
+											},
+										},
+									},
+								},
+							},
+						}}
+					>
+						{countryCodes.map((country) => (
+							<MenuItem key={country.code} value={country.dial_code}>
+								<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+									<span style={{ fontSize: '1.2rem' }}>{country.emoji}</span>
+									<Box sx={{ flex: 1, minWidth: 0 }}>
+										<Typography variant="body2" sx={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+											{country.name}
+										</Typography>
+									</Box>
+									<Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}>
+										{country.dial_code}
+									</Typography>
+								</Box>
+							</MenuItem>
+						))}
+					</Select>
+				</FormControl>
+				<TextField
+					fullWidth
+					label={t('auth.phoneNumber')}
+					value={signUpData.phoneNumber}
+					onChange={(event) =>
+						setSignUpData((prev) => ({
+							...prev,
+							phoneNumber: event.target.value.replace(/^\+/, ''), // Remove leading + if user types it
+						}))
+					}
+					autoComplete="off"
+					InputProps={{
+						startAdornment: (
+							<PhoneAndroidIcon
+								sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }}
+							/>
+						),
+					}}
+					placeholder="123456789"
+					sx={textFieldSx}
+				/>
+			</Box>
 			<TextField
 				fullWidth
-				label="Phone Number"
-				value={signUpData.phoneNumber}
-				onChange={(event) =>
-					setSignUpData((prev) => ({
-						...prev,
-						phoneNumber: event.target.value,
-					}))
-				}
-				InputProps={{
-					startAdornment: (
-						<PhoneAndroidIcon
-							sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }}
-						/>
-					),
-				}}
-				sx={textFieldSx}
-			/>
-			<TextField
-				fullWidth
-				label="Password"
+				label={t('auth.password')}
 				type={showPassword ? 'text' : 'password'}
 				value={signUpData.password}
 				onChange={(event) =>
@@ -483,6 +588,7 @@ const SignInModal = () => {
 						password: event.target.value,
 					}))
 				}
+				autoComplete="new-password"
 				InputProps={{
 					startAdornment: (
 						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -503,7 +609,7 @@ const SignInModal = () => {
 			/>
 			<TextField
 				fullWidth
-				label="Confirm Password"
+				label={t('auth.confirmPassword')}
 				type={showConfirmPassword ? 'text' : 'password'}
 				value={signUpData.confirmPassword}
 				onChange={(event) =>
@@ -512,6 +618,7 @@ const SignInModal = () => {
 						confirmPassword: event.target.value,
 					}))
 				}
+				autoComplete="new-password"
 				InputProps={{
 					startAdornment: (
 						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -539,14 +646,15 @@ const SignInModal = () => {
 				variant="body1"
 				sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}
 			>
-				Enter your email address and we will send you a verification code.
+				{t('auth.enterEmailForReset')}
 			</Typography>
 			<TextField
 				fullWidth
-				label="Email"
+				label={t('auth.email')}
 				type="email"
 				value={forgotEmail}
 				onChange={(event) => setForgotEmail(event.target.value)}
+				autoComplete="off"
 				InputProps={{
 					startAdornment: (
 						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -571,7 +679,7 @@ const SignInModal = () => {
 						},
 					}}
 				>
-					Back
+					{t('auth.back')}
 				</Button>
 				<Button
 					onClick={handleForgotPassword}
@@ -580,7 +688,7 @@ const SignInModal = () => {
 					disabled={loading}
 					sx={primaryButtonSx}
 				>
-					{loading ? 'Sending OTP...' : 'Send Verification Code'}
+					{loading ? t('auth.sendingOtp') : t('auth.sendVerificationCode')}
 				</Button>
 			</Box>
 		</Box>
@@ -592,16 +700,17 @@ const SignInModal = () => {
 				variant="body1"
 				sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}
 			>
-				Enter the verification code sent to <strong>{forgotEmail}</strong> and your new password.
+				{t('auth.otpSentTo')} <strong>{forgotEmail}</strong> {t('auth.andNewPassword')}
 			</Typography>
 			<TextField
 				fullWidth
-				label="Verification Code (OTP)"
+				label={t('auth.verificationCode')}
 				value={otpData.otp}
 				onChange={(event) =>
 					setOtpData((prev) => ({ ...prev, otp: event.target.value }))
 				}
-				placeholder="Enter 6-digit code"
+				placeholder={t('auth.enterOtp')}
+				autoComplete="off"
 				InputProps={{
 					startAdornment: (
 						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -611,12 +720,13 @@ const SignInModal = () => {
 			/>
 			<TextField
 				fullWidth
-				label="New Password"
+				label={t('auth.newPassword')}
 				type={showNewPassword ? 'text' : 'password'}
 				value={otpData.newPassword}
 				onChange={(event) =>
 					setOtpData((prev) => ({ ...prev, newPassword: event.target.value }))
 				}
+				autoComplete="new-password"
 				InputProps={{
 					startAdornment: (
 						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -637,12 +747,13 @@ const SignInModal = () => {
 			/>
 			<TextField
 				fullWidth
-				label="Confirm New Password"
+				label={t('auth.confirmNewPassword')}
 				type={showConfirmPassword ? 'text' : 'password'}
 				value={otpData.confirmPassword}
 				onChange={(event) =>
 					setOtpData((prev) => ({ ...prev, confirmPassword: event.target.value }))
 				}
+				autoComplete="new-password"
 				InputProps={{
 					startAdornment: (
 						<LockIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -679,7 +790,7 @@ const SignInModal = () => {
 						},
 					}}
 				>
-					Back
+					{t('auth.back')}
 				</Button>
 				<Button
 					onClick={handleResetPassword}
@@ -688,7 +799,7 @@ const SignInModal = () => {
 					disabled={loading}
 					sx={primaryButtonSx}
 				>
-					{loading ? 'Resetting Password...' : 'Reset Password'}
+					{loading ? t('auth.resettingPassword') : t('auth.resetPassword')}
 				</Button>
 			</Box>
 			<Button
@@ -703,7 +814,7 @@ const SignInModal = () => {
 					},
 				}}
 			>
-				Resend OTP
+				{t('auth.resendOtp')}
 			</Button>
 		</Box>
 	);
@@ -714,14 +825,15 @@ const SignInModal = () => {
 				variant="body1"
 				sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.9)' }}
 			>
-				We've sent a verification code to <strong>{registerEmail}</strong>. Please check your email and enter the code below.
+				{t('auth.verificationCodeSent')} <strong>{registerEmail}</strong>. {t('auth.checkEmail')}
 			</Typography>
 			<TextField
 				fullWidth
-				label="Verification Code (OTP)"
+				label={t('auth.verificationCode')}
 				value={verifyEmailOtp}
 				onChange={(event) => setVerifyEmailOtp(event.target.value)}
-				placeholder="Enter 6-digit code"
+				placeholder={t('auth.enterOtp')}
+				autoComplete="off"
 				InputProps={{
 					startAdornment: (
 						<EmailIcon sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
@@ -748,7 +860,7 @@ const SignInModal = () => {
 						},
 					}}
 				>
-					Back to Sign Up
+					{t('auth.backToSignUp')}
 				</Button>
 				<Button
 					onClick={handleVerifyEmail}
@@ -757,7 +869,7 @@ const SignInModal = () => {
 					disabled={loading}
 					sx={primaryButtonSx}
 				>
-					{loading ? 'Verifying...' : 'Verify Email'}
+					{loading ? t('auth.verifying') : t('auth.verifyEmail')}
 				</Button>
 			</Box>
 		</Box>
@@ -765,17 +877,18 @@ const SignInModal = () => {
 
 	const dialogTitle =
 		mode === 'forgot'
-			? 'Forgot Password'
+			? t('auth.forgotPassword').replace('?', '')
 			: mode === 'verify-otp'
-			? 'Reset Password'
+			? t('auth.resetPassword')
 			: activeTab === 0
-			? 'Welcome Back'
-			: 'Create Your Account';
+			? t('auth.welcomeBack')
+			: t('auth.createAccount');
 
 	return (
 		<Dialog
 			open={signInModalOpen}
-			onClose={handleClose}
+			onClose={() => {}} // Disable backdrop click to close
+			disableEscapeKeyDown={true} // Disable Escape key to close
 			maxWidth="sm"
 			fullWidth
 			sx={{
@@ -841,8 +954,8 @@ const SignInModal = () => {
 								},
 							}}
 						>
-							<Tab label="Sign In" />
-							<Tab label="Sign Up" />
+							<Tab label={t('auth.signIn')} />
+							<Tab label={t('auth.signUp')} />
 						</Tabs>
 					</Box>
 				)}
@@ -904,10 +1017,10 @@ const SignInModal = () => {
 						sx={primaryButtonSx}
 					>
 						{loading
-							? 'Please wait...'
+							? t('auth.pleaseWait')
 							: activeTab === 0
-							? 'Sign In'
-							: 'Create Account'}
+							? t('auth.signIn')
+							: t('auth.createAccountButton')}
 					</Button>
 				</DialogActions>
 			)}
@@ -918,7 +1031,7 @@ const SignInModal = () => {
 					variant="body2"
 					sx={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)' }}
 				>
-					By continuing, you agree to our Terms of Service and Privacy Policy.
+					{t('auth.termsAgreement')}
 				</Typography>
 			</Box>
 		</Dialog>

@@ -20,6 +20,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const mockOrders = [
   {
@@ -64,6 +65,7 @@ const mockOrders = [
 const OrderHistoryPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, openSignInModal } = useAuth();
+  const { t } = useTranslation();
   const [filterTab, setFilterTab] = useState(0);
 
   const statusFilters = ['all', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -90,7 +92,14 @@ const OrderHistoryPage = () => {
   };
 
   const getStatusLabel = (status) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
+    const statusMap = {
+      all: t('orders.allOrders'),
+      processing: t('orders.processing'),
+      shipped: t('orders.shipped'),
+      delivered: t('orders.delivered'),
+      cancelled: t('orders.cancelled'),
+    };
+    return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   if (!isAuthenticated) {
@@ -113,7 +122,7 @@ const OrderHistoryPage = () => {
             }}
           >
             <Typography variant="h4" sx={{ mb: 2, color: 'white', fontWeight: 600 }}>
-              Please sign in to view your orders
+              {t('orders.pleaseSignInToView')}
             </Typography>
             <Button
               variant="contained"
@@ -129,7 +138,7 @@ const OrderHistoryPage = () => {
                 py: 1.5,
               }}
             >
-              Sign In
+              {t('nav.signIn')}
             </Button>
           </Box>
         </Container>
@@ -158,7 +167,7 @@ const OrderHistoryPage = () => {
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>
-              Order History
+              {t('orders.orderHistory')}
             </Typography>
           </Box>
 
@@ -191,11 +200,11 @@ const OrderHistoryPage = () => {
                 },
               }}
             >
-              <Tab label="All Orders" />
-              <Tab label="Processing" />
-              <Tab label="Shipped" />
-              <Tab label="Delivered" />
-              <Tab label="Cancelled" />
+              <Tab label={t('orders.allOrders')} />
+              <Tab label={t('orders.processing')} />
+              <Tab label={t('orders.shipped')} />
+              <Tab label={t('orders.delivered')} />
+              <Tab label={t('orders.cancelled')} />
             </Tabs>
           </Paper>
 
@@ -213,10 +222,10 @@ const OrderHistoryPage = () => {
             >
               <ShoppingBagIcon sx={{ fontSize: 80, color: 'rgba(255, 255, 255, 0.3)', mb: 2 }} />
               <Typography variant="h5" sx={{ mb: 2, color: 'white', fontWeight: 600 }}>
-                No orders found
+                {t('orders.noOrdersFound')}
               </Typography>
               <Typography variant="body1" sx={{ mb: 3, color: 'rgba(255, 255, 255, 0.7)' }}>
-                You haven't placed any orders yet
+                {t('orders.noOrdersDesc')}
               </Typography>
               <Button
                 variant="contained"
@@ -232,7 +241,7 @@ const OrderHistoryPage = () => {
                   py: 1.5,
                 }}
               >
-                Start Shopping
+                {t('orders.startShopping')}
               </Button>
             </Box>
           ) : (
@@ -261,10 +270,10 @@ const OrderHistoryPage = () => {
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                         <Box>
                           <Typography variant="h6" sx={{ color: 'white', fontWeight: 700, mb: 0.5 }}>
-                            Order {order.id}
+                            {t('orders.order')} {order.id}
                           </Typography>
                           <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                            Placed on {new Date(order.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            {t('orders.orderDate')}: {new Date(order.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                           </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
@@ -309,7 +318,7 @@ const OrderHistoryPage = () => {
                                   {item.name}
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                                  Qty: {item.quantity} × ${item.price.toFixed(2)}
+                                  {t('orders.qty')}: {item.quantity} × ${item.price.toFixed(2)}
                                 </Typography>
                               </Box>
                             </Box>
@@ -333,7 +342,7 @@ const OrderHistoryPage = () => {
                             },
                           }}
                         >
-                          Track Order
+                          {t('orders.trackOrder')}
                         </Button>
                       </Box>
                     </CardContent>

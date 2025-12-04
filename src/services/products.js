@@ -53,8 +53,11 @@ const normalizeProduct = (product) => {
   return {
     id: product.id,
     title: product.title || '',
+    title_french: product.title_french || '',
     description: product.description || product.short_desc || '',
+    description_french: product.description_french || product.short_desc_french || '',
     desc: product.short_desc || product.description || '',
+    desc_french: product.short_desc_french || product.description_french || '',
     price: parseFloat(product.price) || 0,
     rating: parseFloat(product.rating || product.public_rating) || 0,
     image: primaryImageUrl,
