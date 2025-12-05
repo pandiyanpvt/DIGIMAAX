@@ -38,6 +38,8 @@ import { useTranslation } from '../../hooks/useTranslation';
 const ContactSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isLargeDisplay = useMediaQuery(theme.breakpoints.up('xl'));
+  const isExtraLargeDisplay = useMediaQuery('(min-width: 1920px)');
   const { user, isAuthenticated } = useAuth();
   const { t } = useTranslation();
   
@@ -297,14 +299,17 @@ const ContactSection = () => {
         background: 'linear-gradient(270deg, #4B11A9 0%, #29085D 100%)',
       }}
     >
-      <Container maxWidth="lg">
+      <Container 
+        maxWidth={isExtraLargeDisplay ? 'xl' : isLargeDisplay ? 'lg' : 'lg'}
+        sx={{ px: isExtraLargeDisplay ? 6 : isLargeDisplay ? 4 : 3 }}
+      >
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Box sx={{ textAlign: 'center', mb: isLargeDisplay ? 8 : 6 }}>
             <Typography
               variant="h2"
               sx={{
@@ -313,9 +318,15 @@ const ContactSection = () => {
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                mb: 2,
+                mb: isLargeDisplay ? 3 : 2,
                 fontFamily: 'sans-serif',
-                pt: 8,
+                pt: isLargeDisplay ? 10 : 8,
+                fontSize: {
+                  xs: '2rem',
+                  md: '2.5rem',
+                  lg: '3rem',
+                  xl: isExtraLargeDisplay ? '4rem' : '3.5rem',
+                },
               }}
             >
               {t('contact.getInTouch')}
@@ -324,9 +335,12 @@ const ContactSection = () => {
               variant="h6"
               sx={{
                 color: 'text.secondary',
-                maxWidth: '600px',
+                maxWidth: isLargeDisplay ? '800px' : '600px',
                 mx: 'auto',
                 lineHeight: 1.6,
+                fontSize: isLargeDisplay 
+                  ? (isExtraLargeDisplay ? '1.4rem' : '1.25rem')
+                  : '1rem',
               }}
             >
               {t('contact.getInTouchDesc')}
@@ -641,12 +655,15 @@ const ContactSection = () => {
                           sx={{
                             background: 'linear-gradient(45deg, #2196F3, #FF4081)',
                             borderRadius: '25px',
-                            py: 1.5,
-                            px: 4,
-                            fontSize: '1.1rem',
+                            py: isLargeDisplay ? 2 : 1.5,
+                            px: isLargeDisplay ? (isExtraLargeDisplay ? 7 : 6) : 4,
+                            fontSize: isLargeDisplay 
+                              ? (isExtraLargeDisplay ? '1.4rem' : '1.25rem')
+                              : '1.1rem',
                             fontWeight: 'bold',
                             textTransform: 'none',
                             boxShadow: '0 8px 32px rgba(33, 150, 243, 0.3)',
+                            minHeight: isLargeDisplay ? '56px' : 'auto',
                             '&:hover': {
                               background: 'linear-gradient(45deg, #1976D2, #C2185B)',
                               boxShadow: '0 12px 40px rgba(33, 150, 243, 0.4)',

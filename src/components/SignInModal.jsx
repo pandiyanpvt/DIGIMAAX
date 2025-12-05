@@ -25,6 +25,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import SearchIcon from '@mui/icons-material/Search';
 import { useAuth } from '../context/AuthContext';
 import { resetPassword, verifyEmail } from '../api/auth';
 import { useTranslation } from '../hooks/useTranslation';
@@ -68,6 +69,7 @@ const SignInModal = () => {
 	const [showSignInPassword, setShowSignInPassword] = useState(false);
 	const [showNewPassword, setShowNewPassword] = useState(false);
 	const [selectedCountryCode, setSelectedCountryCode] = useState('+33'); // Default to France
+	const [countrySearchTerm, setCountrySearchTerm] = useState('');
 	const { t } = useTranslation();
 
 	// Clear status when modal opens to prevent showing old messages
@@ -137,6 +139,7 @@ const SignInModal = () => {
 		setShowSignInPassword(false);
 		setShowNewPassword(false);
 		setSelectedCountryCode('+33');
+		setCountrySearchTerm('');
 		closeSignInModal();
 	};
 
@@ -480,7 +483,10 @@ const SignInModal = () => {
 				<FormControl sx={{ minWidth: 140, flexShrink: 0 }}>
 					<Select
 						value={selectedCountryCode}
-						onChange={(e) => setSelectedCountryCode(e.target.value)}
+						onChange={(e) => {
+							setSelectedCountryCode(e.target.value);
+							setCountrySearchTerm('');
+						}}
 						renderValue={(value) => {
 							const country = countryCodes.find(c => c.dial_code === value);
 							return country ? (
@@ -518,19 +524,26 @@ const SignInModal = () => {
 						MenuProps={{
 							PaperProps: {
 								sx: {
-									backgroundColor: 'rgba(26, 26, 46, 0.95)',
-									backdropFilter: 'blur(20px)',
-									border: '1px solid rgba(255, 255, 255, 0.1)',
+									background: 'linear-gradient(135deg, rgba(26, 26, 46, 0.7) 0%, rgba(30, 30, 50, 0.75) 100%)',
+									backdropFilter: 'blur(30px) saturate(180%)',
+									WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+									border: '1px solid rgba(255, 255, 255, 0.18)',
+									borderRadius: '12px',
+									boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
 									maxHeight: 400,
+									overflow: 'hidden',
 									'& .MuiMenuItem-root': {
 										color: 'white',
+										transition: 'all 0.2s ease',
 										'&:hover': {
-											backgroundColor: 'rgba(255, 255, 255, 0.1)',
+											backgroundColor: 'rgba(255, 255, 255, 0.15)',
+											backdropFilter: 'blur(10px)',
 										},
 										'&.Mui-selected': {
-											backgroundColor: 'rgba(33, 150, 243, 0.3)',
+											backgroundColor: 'rgba(33, 150, 243, 0.25)',
+											backdropFilter: 'blur(10px)',
 											'&:hover': {
-												backgroundColor: 'rgba(33, 150, 243, 0.4)',
+												backgroundColor: 'rgba(33, 150, 243, 0.35)',
 											},
 										},
 									},
@@ -538,44 +551,139 @@ const SignInModal = () => {
 							},
 						}}
 					>
-						{countryCodes.map((country) => (
-							<MenuItem key={country.code} value={country.dial_code}>
-								<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-									<span style={{ fontSize: '1.2rem' }}>{country.emoji}</span>
-									<Box sx={{ flex: 1, minWidth: 0 }}>
-										<Typography variant="body2" sx={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-											{country.name}
+						{/* Search Field */}
+						<Box sx={{ 
+							p: 1.5, 
+							borderBottom: '1px solid rgba(255, 255, 255, 0.15)', 
+							position: 'sticky', 
+							top: 0, 
+							background: 'linear-gradient(135deg, rgba(26, 26, 46, 0.85) 0%, rgba(30, 30, 50, 0.9) 100%)',
+							backdropFilter: 'blur(20px) saturate(180%)',
+							WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+							zIndex: 1,
+							boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.2)',
+						}}>
+							<TextField
+								fullWidth
+								size="small"
+								placeholder="Search by country name or code (e.g., France, FR, +33)..."
+								value={countrySearchTerm}
+								onChange={(e) => setCountrySearchTerm(e.target.value)}
+								autoComplete="off"
+								autoFocus
+								InputProps={{
+									startAdornment: (
+										<InputAdornment position="start">
+											<SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '1.2rem' }} />
+										</InputAdornment>
+									),
+								}}
+								sx={{
+									'& .MuiOutlinedInput-root': {
+										background: 'rgba(255, 255, 255, 0.12)',
+										backdropFilter: 'blur(10px)',
+										WebkitBackdropFilter: 'blur(10px)',
+										color: 'white',
+										borderRadius: '8px',
+										transition: 'all 0.2s ease',
+										'& fieldset': {
+											borderColor: 'rgba(255, 255, 255, 0.25)',
+										},
+										'&:hover': {
+											background: 'rgba(255, 255, 255, 0.18)',
+											'& fieldset': {
+												borderColor: 'rgba(255, 255, 255, 0.4)',
+											},
+										},
+										'&.Mui-focused': {
+											background: 'rgba(255, 255, 255, 0.2)',
+											boxShadow: '0 0 0 3px rgba(33, 150, 243, 0.2)',
+											'& fieldset': {
+												borderColor: '#2196F3',
+												borderWidth: '2px',
+											},
+										},
+									},
+									'& .MuiInputBase-input': {
+										color: 'white',
+										fontSize: '0.875rem',
+										'&::placeholder': {
+											color: 'rgba(255, 255, 255, 0.6)',
+											opacity: 1,
+										},
+									},
+								}}
+								onClick={(e) => e.stopPropagation()}
+								onKeyDown={(e) => {
+									e.stopPropagation();
+									// Allow Enter key to select first filtered result
+									if (e.key === 'Enter' && countrySearchTerm) {
+										const filtered = countryCodes.filter((country) => {
+											const searchLower = countrySearchTerm.toLowerCase();
+											return (
+												country.name.toLowerCase().includes(searchLower) ||
+												country.dial_code.includes(countrySearchTerm) ||
+												country.code.toLowerCase().includes(searchLower)
+											);
+										});
+										if (filtered.length > 0) {
+											setSelectedCountryCode(filtered[0].dial_code);
+											setCountrySearchTerm('');
+											// Close the menu by triggering blur
+											e.target.blur();
+										}
+									}
+								}}
+							/>
+						</Box>
+						{countryCodes
+							.filter((country) => {
+								if (!countrySearchTerm) return true;
+								const searchLower = countrySearchTerm.toLowerCase();
+								return (
+									country.name.toLowerCase().includes(searchLower) ||
+									country.dial_code.includes(searchLower) ||
+									country.code.toLowerCase().includes(searchLower)
+								);
+							})
+							.map((country) => (
+								<MenuItem key={country.code} value={country.dial_code}>
+									<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+										<span style={{ fontSize: '1.2rem' }}>{country.emoji}</span>
+										<Box sx={{ flex: 1, minWidth: 0 }}>
+											<Typography variant="body2" sx={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+												{country.name}
+											</Typography>
+										</Box>
+										<Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}>
+											{country.dial_code}
 										</Typography>
 									</Box>
-									<Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}>
-										{country.dial_code}
-									</Typography>
-								</Box>
-							</MenuItem>
-						))}
+								</MenuItem>
+							))}
 					</Select>
 				</FormControl>
-				<TextField
-					fullWidth
-					label={t('auth.phoneNumber')}
-					value={signUpData.phoneNumber}
-					onChange={(event) =>
-						setSignUpData((prev) => ({
-							...prev,
+			<TextField
+				fullWidth
+				label={t('auth.phoneNumber')}
+				value={signUpData.phoneNumber}
+				onChange={(event) =>
+					setSignUpData((prev) => ({
+						...prev,
 							phoneNumber: event.target.value.replace(/^\+/, ''), // Remove leading + if user types it
-						}))
-					}
+					}))
+				}
 					autoComplete="off"
-					InputProps={{
-						startAdornment: (
-							<PhoneAndroidIcon
-								sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }}
-							/>
-						),
-					}}
+				InputProps={{
+					startAdornment: (
+						<PhoneAndroidIcon
+							sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }}
+						/>
+					),
+				}}
 					placeholder="123456789"
-					sx={textFieldSx}
-				/>
+				sx={textFieldSx}
+			/>
 			</Box>
 			<TextField
 				fullWidth

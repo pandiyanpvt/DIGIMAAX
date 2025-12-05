@@ -1,10 +1,4 @@
-/**
- * Shared product card styling constants
- * Reusable across ShopPage, ProductDetailPage, and other components
- */
-
 export const productCardStyles = {
-  // CardContent spacing
   cardContent: {
     flexGrow: 1,
     p: 1.5,
@@ -12,7 +6,6 @@ export const productCardStyles = {
     flexDirection: 'column',
   },
 
-  // Title typography
   title: {
     color: 'white',
     fontWeight: 700,
@@ -24,7 +17,6 @@ export const productCardStyles = {
     lineHeight: 1,
   },
 
-  // Description typography
   description: {
     color: 'rgba(255, 255, 255, 0.8)',
     mb: 1,
@@ -38,27 +30,23 @@ export const productCardStyles = {
     fontSize: '0.75rem',
   },
 
-  // Description spacer (when no description)
   descriptionSpacer: {
     flexGrow: 1,
     minHeight: '32px',
   },
 
-  // Price typography
   price: {
     color: '#FFD700',
     fontWeight: 900,
     fontSize: '1rem',
   },
 
-  // CardActions spacing
   cardActions: {
     p: 1.5,
     pt: 0,
     gap: 1,
   },
 
-  // Image container aspect ratio
   imageContainer: {
     position: 'relative',
     width: '100%',
@@ -67,7 +55,6 @@ export const productCardStyles = {
     overflow: 'hidden',
   },
 
-  // Image styling
   image: {
     position: 'absolute',
     top: 0,

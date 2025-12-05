@@ -68,7 +68,6 @@ const ShopPage = () => {
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const itemsPerPage = 12;
 
-  // Products are already filtered and paginated by the API
   const paged = products;
   const totalPages = pagination.total_pages || 1;
 
@@ -594,15 +593,15 @@ const ShopPage = () => {
                     // Trigger re-fetch by updating a dependency
                   }}
                   sx={{
-                    background: '#2196F3',
-                    textTransform: 'none',
-                    fontWeight: 700,
+                  background: '#2196F3',
+                  textTransform: 'none',
+                  fontWeight: 700,
                     minWidth: 'fit-content',
                     px: 3,
                     whiteSpace: 'nowrap',
-                    '&:hover': {
-                      background: '#1976D2',
-                    },
+                  '&:hover': {
+                    background: '#1976D2',
+                  },
                   }}
                 >
                   {t('shop.retry')}
