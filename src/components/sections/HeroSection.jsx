@@ -23,11 +23,16 @@ import {
 } from '@mui/icons-material';
 import { getHeaderImagesByOrderRange } from '../../api/headerImages';
 import { getSocialMediaLinks } from '../../api/socialMedia';
+import franceFlagImage from '../../assets/hero/header-slider/France.png';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const HeroSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isLargeDisplay = useMediaQuery(theme.breakpoints.up('xl'));
+  const isExtraLargeDisplay = useMediaQuery('(min-width: 1920px)');
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Social media icon mapping
   const SOCIAL_ICON_META = useMemo(
@@ -67,7 +72,11 @@ const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [socialMedia, setSocialMedia] = useState([]);
-  const slideInOffset = isMobile ? -60 : -120;
+  const slideInOffset = isMobile 
+    ? -60 
+    : isLargeDisplay 
+      ? (isExtraLargeDisplay ? -180 : -150)
+      : -120;
   const hasSlides = sliderImages.length > 0;
 
   useEffect(() => {
@@ -267,47 +276,105 @@ const HeroSection = () => {
       </Box>
 
       {/* Content overlay */}
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
-        <Grid container spacing={4} alignItems="center">
+      <Container 
+        maxWidth={isExtraLargeDisplay ? 'xl' : isLargeDisplay ? 'lg' : 'lg'} 
+        sx={{ 
+          position: 'relative', 
+          zIndex: 2,
+          px: isExtraLargeDisplay ? 6 : isLargeDisplay ? 4 : 3,
+        }}
+      >
+        <Grid container spacing={isLargeDisplay ? 6 : 4} alignItems="center">
           <Grid size={{ xs: 12, md: 8 }}>
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <Typography
-                variant="h1"
+              <Box
                 sx={{
-                  fontWeight: 'bold',
-                  color: 'white',
-                  mb: 2,
                   position: 'relative',
-                  fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem', lg: '5.5rem' },
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: '-8px',
-                    left: 0,
-                    width: '60px',
-                    height: '3px',
-                    background: 'linear-gradient(45deg, #2196F3, #FF4081)',
-                    borderRadius: '2px',
-                  },
+                  display: 'inline-block',
+                  mb: isLargeDisplay ? 3 : 2,
                 }}
               >
-                DIGIMAAX
-              </Typography>
+                <Typography
+                  variant="h1"
+                  sx={{
+                    fontWeight: 'bold',
+                    color: 'white',
+                    position: 'relative',
+                    fontSize: { 
+                      xs: '2.5rem', 
+                      sm: '3.5rem', 
+                      md: '4.5rem', 
+                      lg: '5.5rem',
+                      xl: isExtraLargeDisplay ? '7rem' : '6.5rem',
+                    },
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: isLargeDisplay ? '-30px' : '-20px',
+                      left: 0,
+                      width: isLargeDisplay ? '80px' : '60px',
+                      height: isLargeDisplay ? '4px' : '3px',
+                      background: 'linear-gradient(45deg, #2196F3, #FF4081)',
+                      borderRadius: '2px',
+                    },
+                  }}
+                >
+                  DIGIMAAX
+                </Typography>
+                <Box
+                  component="img"
+                  src={franceFlagImage}
+                  alt="France Flag"
+                  sx={{
+                    position: 'absolute',
+                    top: { xs: '16px', sm: '16px', md: '16px', xl: '20px' },
+                    right: { 
+                      xs: '-18px', 
+                      sm: '-24px', 
+                      md: '-30px', 
+                      lg: '-36px',
+                      xl: isExtraLargeDisplay ? '-48px' : '-42px',
+                    },
+                    width: { 
+                      xs: '15px', 
+                      sm: '20px', 
+                      md: '25px', 
+                      lg: '30px',
+                      xl: isExtraLargeDisplay ? '40px' : '35px',
+                    },
+                    height: { 
+                      xs: '11px', 
+                      sm: '15px', 
+                      md: '19px', 
+                      lg: '22px',
+                      xl: isExtraLargeDisplay ? '30px' : '26px',
+                    },
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                  }}
+                />
+              </Box>
 
               <Typography
                 variant="h5"
                 sx={{
                   color: 'rgba(255, 255, 255, 0.9)',
-                  mb: 4,
+                  mb: isLargeDisplay ? 5 : 4,
                   fontWeight: 300,
-                  fontSize: { xs: '1.2rem', md: '1.5rem' },
+                  fontSize: { 
+                    xs: '1.2rem', 
+                    md: '1.5rem',
+                    lg: '1.75rem',
+                    xl: isExtraLargeDisplay ? '2.25rem' : '2rem',
+                  },
+                  lineHeight: isLargeDisplay ? 1.6 : 1.5,
                 }}
               >
-                Where Ideas Become Environments
+                {t('hero.tagline')}
               </Typography>
 
               <motion.div
@@ -324,12 +391,15 @@ const HeroSection = () => {
                     mb: 2,
                     background: 'linear-gradient(45deg, #2196F3, #FF4081)',
                     borderRadius: '25px',
-                    px: 4,
-                    py: 1.5,
-                    fontSize: '1.1rem',
+                    px: isLargeDisplay ? 6 : 4,
+                    py: isLargeDisplay ? 2 : 1.5,
+                    fontSize: isLargeDisplay 
+                      ? (isExtraLargeDisplay ? '1.4rem' : '1.25rem')
+                      : '1.1rem',
                     fontWeight: 600,
                     textTransform: 'none',
                     boxShadow: '0 8px 32px rgba(33, 150, 243, 0.3)',
+                    minHeight: isLargeDisplay ? '56px' : 'auto',
                     '&:hover': {
                       background: 'linear-gradient(45deg, #1976D2, #C2185B)',
                       boxShadow: '0 12px 40px rgba(33, 150, 243, 0.4)',
@@ -338,7 +408,7 @@ const HeroSection = () => {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  Order Now
+                  {t('hero.orderNow')}
                 </Button>
               </motion.div>
 
@@ -348,7 +418,11 @@ const HeroSection = () => {
                 transition={{ duration: 0.8, delay: 0.6 }}
               >
                 {socialMedia.length > 0 && (
-                  <Box sx={{ display: 'flex', gap: 1, mt: 3 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: isLargeDisplay ? 1.5 : 1, 
+                    mt: isLargeDisplay ? 4 : 3,
+                  }}>
                     {socialMedia.map((social, index) => (
                       <motion.div
                         key={social.id || index}
@@ -369,6 +443,17 @@ const HeroSection = () => {
                             border: '1px solid rgba(255, 255, 255, 0.25)',
                             borderRadius: '12px',
                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+                            width: isLargeDisplay 
+                              ? (isExtraLargeDisplay ? '56px' : '52px')
+                              : '48px',
+                            height: isLargeDisplay 
+                              ? (isExtraLargeDisplay ? '56px' : '52px')
+                              : '48px',
+                            '& svg': {
+                              fontSize: isLargeDisplay 
+                                ? (isExtraLargeDisplay ? '28px' : '26px')
+                                : '24px',
+                            },
                             '&:hover': {
                               backgroundColor: social.color,
                               borderColor: social.color,
@@ -398,11 +483,22 @@ const HeroSection = () => {
           sx={{
             position: 'absolute',
             top: '50%',
-            left: { xs: 10, sm: 20, md: 30 },
+            left: { 
+              xs: 10, 
+              sm: 20, 
+              md: 30,
+              lg: 40,
+              xl: isExtraLargeDisplay ? 60 : 50,
+            },
             transform: 'translateY(-50%)',
             display: 'flex',
             flexDirection: 'column',
-            gap: { xs: 0.8, sm: 1, lg: 1.2 },
+            gap: { 
+              xs: 0.8, 
+              sm: 1, 
+              lg: 1.2,
+              xl: isExtraLargeDisplay ? 1.5 : 1.3,
+            },
             zIndex: 3,
           }}
         >
@@ -411,8 +507,18 @@ const HeroSection = () => {
               key={index}
               onClick={() => goToSlide(index)}
               sx={{
-                width: { xs: 8, sm: 10, lg: 12 },
-                height: { xs: 8, sm: 10, lg: 12 },
+                width: { 
+                  xs: 8, 
+                  sm: 10, 
+                  lg: 12,
+                  xl: isExtraLargeDisplay ? 16 : 14,
+                },
+                height: { 
+                  xs: 8, 
+                  sm: 10, 
+                  lg: 12,
+                  xl: isExtraLargeDisplay ? 16 : 14,
+                },
                 borderRadius: '50%',
                 backgroundColor:
                   currentSlide === index

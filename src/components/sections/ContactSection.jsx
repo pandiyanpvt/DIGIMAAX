@@ -33,11 +33,15 @@ import {
 import { submitContactForm } from '../../api/contact';
 import { useAuth } from '../../context/AuthContext';
 import { getSocialMediaLinks } from '../../api/socialMedia';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ContactSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isLargeDisplay = useMediaQuery(theme.breakpoints.up('xl'));
+  const isExtraLargeDisplay = useMediaQuery('(min-width: 1920px)');
   const { user, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   
   // Form state management
   const [formData, setFormData] = useState({
@@ -159,25 +163,25 @@ const ContactSection = () => {
     const newErrors = {};
     
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = t('contact.nameRequired');
     }
     
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('contact.emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = t('contact.emailInvalid');
     }
     
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = t('contact.phoneRequired');
     }
     
     if (!formData.subject.trim()) {
-      newErrors.subject = 'Subject is required';
+      newErrors.subject = t('contact.subjectRequired');
     }
     
     if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
+      newErrors.message = t('contact.messageRequired');
     }
     
     setErrors(newErrors);
@@ -220,7 +224,7 @@ const ContactSection = () => {
       const message =
         error?.response?.data?.message ||
         error?.message ||
-        'Unable to send message. Please try again.';
+        t('contact.unableToSend');
       setApiError(message);
     } finally {
       setIsSubmitting(false);
@@ -231,22 +235,22 @@ const ContactSection = () => {
   const contactInfo = [
     {
       icon: <LocationOn sx={{ fontSize: 30, color: '#1976d2' }} />,
-      title: 'Address',
-      details: ['123 Business Street', 'City, State 12345', 'United States'],
+      title: t('contact.address'),
+      details: ['74 Route de Villemomble', '93140 Bondy', 'France'],
     },
     {
       icon: <Phone sx={{ fontSize: 30, color: '#1976d2' }} />,
-      title: 'Phone',
-      details: ['+1 (555) 123-4567', '+1 (555) 987-6543'],
+      title: t('contact.phone'),
+      details: ['09 73 22 12 64', '06 52 87 35 70'],
     },
     {
       icon: <Email sx={{ fontSize: 30, color: '#1976d2' }} />,
-      title: 'Email',
-      details: ['info@digimaax.com', 'support@digimaax.com'],
+      title: t('contact.email'),
+      details: ['digimaaxfr@gmail.com'],
     },
     {
       icon: <AccessTime sx={{ fontSize: 30, color: '#1976d2' }} />,
-      title: 'Business Hours',
+      title: t('contact.businessHours'),
       details: ['Mon - Fri: 9:00 AM - 6:00 PM', 'Sat: 10:00 AM - 4:00 PM', 'Sun: Closed'],
     },
   ];
@@ -295,14 +299,17 @@ const ContactSection = () => {
         background: 'linear-gradient(270deg, #4B11A9 0%, #29085D 100%)',
       }}
     >
-      <Container maxWidth="lg">
+      <Container 
+        maxWidth={isExtraLargeDisplay ? 'xl' : isLargeDisplay ? 'lg' : 'lg'}
+        sx={{ px: isExtraLargeDisplay ? 6 : isLargeDisplay ? 4 : 3 }}
+      >
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Box sx={{ textAlign: 'center', mb: isLargeDisplay ? 8 : 6 }}>
             <Typography
               variant="h2"
               sx={{
@@ -311,23 +318,32 @@ const ContactSection = () => {
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                mb: 2,
+                mb: isLargeDisplay ? 3 : 2,
                 fontFamily: 'sans-serif',
-                pt: 8,
+                pt: isLargeDisplay ? 10 : 8,
+                fontSize: {
+                  xs: '2rem',
+                  md: '2.5rem',
+                  lg: '3rem',
+                  xl: isExtraLargeDisplay ? '4rem' : '3.5rem',
+                },
               }}
             >
-              Get In Touch
+              {t('contact.getInTouch')}
             </Typography>
             <Typography
               variant="h6"
               sx={{
                 color: 'text.secondary',
-                maxWidth: '600px',
+                maxWidth: isLargeDisplay ? '800px' : '600px',
                 mx: 'auto',
                 lineHeight: 1.6,
+                fontSize: isLargeDisplay 
+                  ? (isExtraLargeDisplay ? '1.4rem' : '1.25rem')
+                  : '1rem',
               }}
             >
-              Ready to bring your ideas to life? Contact us today for a consultation on our 3D printing, design, and technology services.
+              {t('contact.getInTouchDesc')}
             </Typography>
           </Box>
         </motion.div>
@@ -365,7 +381,7 @@ const ContactSection = () => {
                       fontFamily: 'sans-serif',
                     }}
                   >
-                    Send us a Message
+                    {t('contact.sendUsMessage')}
                   </Typography>
                   
                   <form onSubmit={handleSubmit}>
@@ -373,7 +389,7 @@ const ContactSection = () => {
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth
-                          label="Full Name"
+                          label={t('contact.fullName')}
                           name="name"
                           value={formData.name}
                           onChange={handleInputChange}
@@ -414,7 +430,7 @@ const ContactSection = () => {
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth
-                          label="Email Address"
+                          label={t('contact.emailAddress')}
                           name="email"
                           type="email"
                           value={formData.email}
@@ -456,7 +472,7 @@ const ContactSection = () => {
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth
-                          label="Phone Number"
+                          label={t('contact.phoneNumber')}
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
@@ -494,7 +510,7 @@ const ContactSection = () => {
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth
-                          label="Service Interest"
+                          label={t('contact.serviceInterest')}
                           name="service"
                           value={formData.service}
                           onChange={handleInputChange}
@@ -536,7 +552,7 @@ const ContactSection = () => {
                             },
                           }}
                         >
-                          <option value="">Select a service</option>
+                          <option value="">{t('contact.selectService')}</option>
                           {services.map((service) => (
                             <option key={service} value={service}>
                               {service}
@@ -548,7 +564,7 @@ const ContactSection = () => {
                       <Grid size={{ xs: 12 }}>
                         <TextField
                           fullWidth
-                          label="Subject"
+                          label={t('contact.subject')}
                           name="subject"
                           value={formData.subject}
                           onChange={handleInputChange}
@@ -589,7 +605,7 @@ const ContactSection = () => {
                       <Grid size={{ xs: 12 }}>
                         <TextField
                           fullWidth
-                          label="Message"
+                          label={t('contact.message')}
                           name="message"
                           value={formData.message}
                           onChange={handleInputChange}
@@ -639,12 +655,15 @@ const ContactSection = () => {
                           sx={{
                             background: 'linear-gradient(45deg, #2196F3, #FF4081)',
                             borderRadius: '25px',
-                            py: 1.5,
-                            px: 4,
-                            fontSize: '1.1rem',
+                            py: isLargeDisplay ? 2 : 1.5,
+                            px: isLargeDisplay ? (isExtraLargeDisplay ? 7 : 6) : 4,
+                            fontSize: isLargeDisplay 
+                              ? (isExtraLargeDisplay ? '1.4rem' : '1.25rem')
+                              : '1.1rem',
                             fontWeight: 'bold',
                             textTransform: 'none',
                             boxShadow: '0 8px 32px rgba(33, 150, 243, 0.3)',
+                            minHeight: isLargeDisplay ? '56px' : 'auto',
                             '&:hover': {
                               background: 'linear-gradient(45deg, #1976D2, #C2185B)',
                               boxShadow: '0 12px 40px rgba(33, 150, 243, 0.4)',
@@ -653,7 +672,7 @@ const ContactSection = () => {
                             transition: 'all 0.3s ease',
                           }}
                         >
-                          {isSubmitting ? 'Sending...' : 'Send Message'}
+                          {isSubmitting ? t('contact.sending') : t('contact.sendMessage')}
                         </Button>
                       </Grid>
                     </Grid>
@@ -695,7 +714,7 @@ const ContactSection = () => {
                       fontFamily: 'sans-serif',
                     }}
                   >
-                    Contact Information
+                    {t('contact.contactInformation')}
                   </Typography>
                 
                   {/* Contact Info Boxes in 2x2 Grid */}
@@ -776,7 +795,7 @@ const ContactSection = () => {
                         textAlign: 'center',
                       }}
                     >
-                      Connect With Us
+                      {t('contact.connectWithUs')}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
                       {socialLinks.map((social) => (
@@ -812,7 +831,7 @@ const ContactSection = () => {
                         fontSize: '0.875rem',
                       }}
                     >
-                      Follow us on social media for updates and news
+                      {t('contact.followUsSocial')}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -833,7 +852,7 @@ const ContactSection = () => {
             severity="success"
             sx={{ width: '100%' }}
           >
-            Message sent successfully! We'll get back to you soon.
+            {t('contact.messageSentSuccess')}
           </Alert>
         </Snackbar>
         <Snackbar

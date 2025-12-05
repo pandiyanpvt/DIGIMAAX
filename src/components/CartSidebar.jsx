@@ -29,11 +29,15 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { useCart } from '../context/CartContext';
 import { formatLKR } from '../utils/currency';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const CartSidebar = () => {
   const navigate = useNavigate();
   const { cartItems, updateCartQuantity, removeFromCart, getCartTotalPrice, clearCart, cartDrawerOpen, setCartDrawerOpen } = useCart();
   const { isAuthenticated, openSignInModal } = useAuth();
+  const { language } = useLanguage();
+  const { t } = useTranslation();
 
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, itemId: null, itemName: '' });
@@ -59,7 +63,7 @@ const CartSidebar = () => {
   const confirmRemove = async () => {
     if (deleteDialog.itemId) {
       await removeFromCart(deleteDialog.itemId);
-      showSnackbar(`${deleteDialog.itemName} removed from cart`, 'info');
+      showSnackbar(t('cart.itemRemoved', { name: deleteDialog.itemName }), 'info');
       setDeleteDialog({ open: false, itemId: null, itemName: '' });
     }
   };
@@ -70,7 +74,7 @@ const CartSidebar = () => {
 
   const confirmClearCart = async () => {
     await clearCart();
-    showSnackbar('Cart cleared successfully', 'info');
+    showSnackbar(t('cart.clearCartSuccess'), 'info');
     setClearDialog(false);
   };
 
@@ -82,7 +86,7 @@ const CartSidebar = () => {
         handleRemoveProduct(itemId, item.title);
       } else {
         await updateCartQuantity(itemId, newQuantity);
-        showSnackbar('Quantity updated', 'success');
+        showSnackbar(t('cart.quantityUpdated'), 'success');
       }
     }
   };
@@ -122,8 +126,8 @@ const CartSidebar = () => {
           {/* Header */}
           <Box sx={{ p: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h5" sx={{ color: 'white', fontWeight: 700 }}>
-                Shopping Cart
+              <Typography variant="h5" sx={{ color: 'white', fontWeight: 700, wordBreak: 'break-word' }}>
+                {t('cart.title')}
               </Typography>
               <IconButton
                 onClick={() => setCartDrawerOpen(false)}
@@ -132,8 +136,8 @@ const CartSidebar = () => {
                 <CloseIcon />
               </IconButton>
             </Box>
-            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
+            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', wordBreak: 'break-word' }}>
+              {items.length} {items.length === 1 ? t('nav.items') : t('nav.itemsPlural')} {t('cart.inCart')}
             </Typography>
           </Box>
 
@@ -142,11 +146,11 @@ const CartSidebar = () => {
             {items.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
                 <ShoppingCartIcon sx={{ fontSize: 80, color: 'rgba(33, 150, 243, 0.4)', mb: 2 }} />
-                <Typography variant="h6" sx={{ mb: 1, color: 'white', fontWeight: 600 }}>
-                  Your cart is empty
+                <Typography variant="h6" sx={{ mb: 1, color: 'white', fontWeight: 600, wordBreak: 'break-word' }}>
+                  {t('cart.empty')}
                 </Typography>
-                <Typography variant="body2" sx={{ mb: 3, color: 'rgba(255, 255, 255, 0.7)' }}>
-                  Start shopping to add items to your cart
+                <Typography variant="body2" sx={{ mb: 3, color: 'rgba(255, 255, 255, 0.7)', wordBreak: 'break-word' }}>
+                  {t('cart.emptyDesc')}
                 </Typography>
                 <Button
                   variant="contained"
@@ -161,16 +165,18 @@ const CartSidebar = () => {
                     },
                     textTransform: 'none',
                     fontWeight: 600,
+                    minWidth: 'fit-content',
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  Continue Shopping
+                  {t('cart.continueShopping')}
                 </Button>
               </Box>
             ) : (
               <>
                 {items.length > 0 && (
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-                    <Tooltip title="Clear all items">
+                    <Tooltip title={t('cart.clearAllItems')}>
                       <Button
                         size="small"
                         startIcon={<ClearIcon />}
@@ -179,12 +185,14 @@ const CartSidebar = () => {
                           color: '#FF4081',
                           textTransform: 'none',
                           fontSize: '0.85rem',
+                          minWidth: 'fit-content',
+                          whiteSpace: 'nowrap',
                           '&:hover': {
                             background: 'rgba(255, 64, 129, 0.1)',
                           },
                         }}
                       >
-                        Clear Cart
+                        {t('cart.clearCart')}
                       </Button>
                     </Tooltip>
                   </Box>
@@ -260,7 +268,7 @@ const CartSidebar = () => {
                               >
                                 {item.title}
                               </Typography>
-                              <Tooltip title="Remove item">
+                              <Tooltip title={t('cart.removeItem')}>
                                 <IconButton
                                   size="small"
                                   onClick={() => handleRemoveProduct(item.id, item.title)}
@@ -306,18 +314,23 @@ const CartSidebar = () => {
                                 )}
                                 {item.customText && (
                                   <Chip
-                                    label={`Text: ${item.customText.length > 10 ? item.customText.substring(0, 10) + '...' : item.customText}`}
+                                    label={`${t('cart.textPrefix')} ${item.customText.length > 10 ? item.customText.substring(0, 10) + '...' : item.customText}`}
                                     size="small"
                                     sx={{
                                       background: 'rgba(255, 215, 0, 0.2)',
                                       color: '#FFD700',
                                       fontSize: '0.7rem',
                                       height: 20,
+                                      maxWidth: '150px',
+                                      '& .MuiChip-label': {
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                      },
                                     }}
                                   />
                                 )}
                                 {item.customImageUrl && (
-                                  <Tooltip title="Custom Image">
+                                  <Tooltip title={t('cart.customImage')}>
                                     <Box
                                       sx={{
                                         width: 32,
@@ -434,8 +447,8 @@ const CartSidebar = () => {
             <Box sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(0, 0, 0, 0.2)' }}>
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
-                    Total
+                  <Typography variant="h6" sx={{ color: 'white', fontWeight: 700, wordBreak: 'break-word' }}>
+                    {t('checkout.total')}
                   </Typography>
                   <Typography variant="h6" sx={{ color: '#64B5F6', fontWeight: 700 }}>
                     {formatLKR(total)}
@@ -455,12 +468,13 @@ const CartSidebar = () => {
                   py: 1.5,
                   mb: 1,
                   borderRadius: 2,
+                  whiteSpace: 'nowrap',
                   '&:hover': {
                     background: '#1976D2',
                   },
                 }}
               >
-                Proceed to Checkout
+                {t('cart.proceedToCheckout')}
               </Button>
 
               <Button
@@ -474,13 +488,14 @@ const CartSidebar = () => {
                   fontWeight: 600,
                   py: 1.2,
                   borderRadius: 2,
+                  whiteSpace: 'nowrap',
                   '&:hover': {
                     borderColor: '#2196F3',
                     background: 'rgba(33, 150, 243, 0.1)',
                   },
                 }}
               >
-                View Full Cart
+                {t('cart.viewFullCart')}
               </Button>
             </Box>
           )}
@@ -517,12 +532,12 @@ const CartSidebar = () => {
           },
         }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
-          Remove Item
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, wordBreak: 'break-word' }}>
+          {t('cart.removeItem')}
         </DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-            Are you sure you want to remove "{deleteDialog.itemName}" from your cart?
+          <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)', wordBreak: 'break-word' }}>
+            {t('cart.removeItemConfirm', { name: deleteDialog.itemName })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -530,7 +545,7 @@ const CartSidebar = () => {
             onClick={() => setDeleteDialog({ open: false, itemId: null, itemName: '' })}
             sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={confirmRemove}
@@ -540,9 +555,11 @@ const CartSidebar = () => {
               '&:hover': {
                 background: 'linear-gradient(45deg, #1976D2, #C2185B)',
               },
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
             }}
           >
-            Remove
+            {t('cart.remove')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -560,12 +577,12 @@ const CartSidebar = () => {
           },
         }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
-          Clear Cart
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, wordBreak: 'break-word' }}>
+          {t('cart.clearCart')}
         </DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-            Are you sure you want to remove all items from your cart?
+          <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)', wordBreak: 'break-word' }}>
+            {t('cart.clearCartConfirm')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -573,7 +590,7 @@ const CartSidebar = () => {
             onClick={() => setClearDialog(false)}
             sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={confirmClearCart}
@@ -583,9 +600,11 @@ const CartSidebar = () => {
               '&:hover': {
                 background: 'linear-gradient(45deg, #1976D2, #C2185B)',
               },
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
             }}
           >
-            Clear All
+            {t('cart.clearAll')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -603,12 +622,12 @@ const CartSidebar = () => {
           },
         }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
-          Checkout Unavailable
+        <DialogTitle sx={{ color: 'white', fontWeight: 700, wordBreak: 'break-word' }}>
+          {t('cart.checkoutUnavailable')}
         </DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-            Checkout is unavailable right now. Please try again later.
+          <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)', wordBreak: 'break-word' }}>
+            {t('cart.checkoutUnavailableDesc')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -620,9 +639,11 @@ const CartSidebar = () => {
               '&:hover': {
                 background: '#1976D2',
               },
+              minWidth: 'fit-content',
+              whiteSpace: 'nowrap',
             }}
           >
-            OK
+            {t('common.ok')}
           </Button>
         </DialogActions>
       </Dialog>

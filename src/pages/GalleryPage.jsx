@@ -17,10 +17,14 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon, ArrowBack as ArrowBackIcon, ArrowForward as ArrowForwardIcon } from '@mui/icons-material';
 import { getGalleryItems } from '../api/gallery';
+import { useTranslation } from '../hooks/useTranslation';
+import { useLanguage } from '../context/LanguageContext';
 
 const GalleryPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [galleryItems, setGalleryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,7 +48,7 @@ const GalleryPage = () => {
         }
       } catch (err) {
         if (isMounted) {
-          setError(err?.response?.data?.message || 'Failed to load gallery items. Please try again later.');
+          setError(err?.response?.data?.message || t('gallery.failedToLoad'));
         }
       } finally {
         if (isMounted) {
@@ -58,7 +62,7 @@ const GalleryPage = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, []); // Fetch once on mount - data already contains both languages
 
   const filteredItems = useMemo(() => galleryItems, [galleryItems]);
   const hasItems = filteredItems.length > 0;
@@ -117,7 +121,7 @@ const GalleryPage = () => {
                 mb: 2,
               }}
             >
-              Our Gallery
+              {t('gallery.title')}
             </Typography>
             <Typography
               variant="h6"
@@ -129,7 +133,7 @@ const GalleryPage = () => {
                 mx: 'auto',
               }}
             >
-              Explore our portfolio of creative projects and innovative solutions
+              {t('gallery.description')}
             </Typography>
           </Box>
         </motion.div>
@@ -234,7 +238,7 @@ const GalleryPage = () => {
                   color: 'white',
                 }}
               >
-                No gallery items available right now. Please check back soon.
+                {t('gallery.noItemsAvailable')}
               </Alert>
             )}
             {!!error && !loading && (
@@ -443,9 +447,11 @@ const GalleryPage = () => {
                       fontSize: { xs: '1.2rem', md: '1.5rem' },
                     }}
                   >
-                    {selectedImage.name}
+                    {language === 'fr' && selectedImage.name_french
+                      ? selectedImage.name_french
+                      : selectedImage.name}
                   </Typography>
-                  {selectedImage.description && (
+                  {(selectedImage.description || selectedImage.description_french) && (
                     <Typography
                       variant="body1"
                       sx={{
@@ -456,7 +462,9 @@ const GalleryPage = () => {
                         fontSize: { xs: '0.9rem', md: '1rem' },
                       }}
                     >
-                      {selectedImage.description}
+                      {language === 'fr' && selectedImage.description_french
+                        ? selectedImage.description_french
+                        : selectedImage.description}
                     </Typography>
                   )}
                   {filteredItems.length > 1 && (

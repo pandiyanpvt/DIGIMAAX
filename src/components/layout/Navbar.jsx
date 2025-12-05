@@ -25,17 +25,25 @@ import { motion } from 'framer-motion';
 import logoImage from '../../assets/hero/DIGIMAAX_LOGO-01 1.png';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
+  const [languageMenuAnchor, setLanguageMenuAnchor] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMedium = useMediaQuery(theme.breakpoints.between('md', 'lg'));
+  const isLargeDisplay = useMediaQuery(theme.breakpoints.up('xl'));
+  const isExtraLargeDisplay = useMediaQuery('(min-width: 1920px)');
   const location = useLocation();
   const navigate = useNavigate();
   const { openSignInModal, user, signOut, isAuthenticated } = useAuth();
   const { getCartTotalItems, setCartDrawerOpen } = useCart();
+  const { language, changeLanguage, languages, currentLanguage } = useLanguage();
+  const { t } = useTranslation();
   const cartItemCount = getCartTotalItems();
 
   useEffect(() => {
@@ -55,6 +63,21 @@ const Navbar = () => {
     setProfileMenuAnchor(null);
   };
 
+  const handleLanguageMenuOpen = (event) => {
+    setLanguageMenuAnchor(event.currentTarget);
+  };
+
+  const handleLanguageMenuClose = () => {
+    setLanguageMenuAnchor(null);
+  };
+
+  const handleLanguageChange = (langCode) => {
+    if (language !== langCode) {
+      changeLanguage(langCode);
+    }
+    handleLanguageMenuClose();
+  };
+
   const handleSignOut = () => {
     signOut();
     handleProfileMenuClose();
@@ -65,12 +88,12 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { name: 'Home', to: '/' },
-    { name: 'About Us', to: '/about' },
-    { name: 'Services', to: '/services' },
-    { name: 'Gallery', to: '/gallery' },
-    { name: 'Shop', to: '/shop' },
-    { name: 'Contact Us', to: '/contact' },
+    { name: t('nav.home'), to: '/' },
+    { name: t('nav.about'), to: '/about' },
+    { name: t('nav.services'), to: '/services' },
+    { name: t('nav.gallery'), to: '/gallery' },
+    { name: t('nav.shop'), to: '/shop' },
+    { name: t('nav.contact'), to: '/contact' },
   ];
 
   const drawer = (
@@ -140,14 +163,61 @@ const Navbar = () => {
               <ShoppingCart sx={{ fontSize: '28px', color: 'white' }} />
             </Badge>
             <ListItemText 
-              primary="Shopping Cart" 
-              secondary={`${cartItemCount} item${cartItemCount !== 1 ? 's' : ''}`}
+              primary={t('nav.shoppingCart')} 
+              secondary={`${cartItemCount} ${cartItemCount !== 1 ? t('nav.itemsPlural') : t('nav.items')}`}
               primaryTypographyProps={{ color: 'white', fontWeight: 600, fontSize: '1rem' }}
               secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}
             />
           </ListItemButton>
         </Box>
       )}
+
+      {/* Language Selector for Mobile */}
+      <Box sx={{ px: 3, py: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1, fontSize: '0.875rem' }}>
+          {t('nav.language')}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {languages.map((lang) => (
+            <Button
+              key={lang.code}
+              onClick={() => {
+                changeLanguage(lang.code);
+              }}
+              variant={language === lang.code ? 'contained' : 'outlined'}
+              size="small"
+              sx={{
+                flex: 1,
+                textTransform: 'none',
+                borderRadius: '8px',
+                backgroundColor: language === lang.code ? 'rgba(255, 215, 0, 0.2)' : 'transparent',
+                borderColor: language === lang.code ? '#FFD700' : 'rgba(255, 255, 255, 0.3)',
+                color: language === lang.code ? '#FFD700' : 'white',
+                fontWeight: language === lang.code ? 600 : 400,
+                '&:hover': {
+                  backgroundColor: language === lang.code ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                  borderColor: language === lang.code ? '#FFD700' : 'rgba(255, 255, 255, 0.5)',
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box
+                  component="img"
+                  src={lang.flag}
+                  alt={lang.name}
+                  sx={{
+                    width: '20px',
+                    height: '15px',
+                    objectFit: 'cover',
+                    borderRadius: '2px',
+                  }}
+                />
+                <Typography variant="body2">{lang.name}</Typography>
+              </Box>
+            </Button>
+          ))}
+        </Box>
+      </Box>
 
       {/* Sign In Button or User Profile for Mobile */}
       <Box sx={{ px: 3, pb: 2 }}>
@@ -188,7 +258,7 @@ const Navbar = () => {
                 },
               }}
             >
-              Sign Out
+              {t('nav.signOut')}
             </Button>
           </Box>
         ) : (
@@ -219,7 +289,7 @@ const Navbar = () => {
               transition: 'all 0.3s ease',
             }}
           >
-            Sign In
+            {t('nav.signIn')}
           </Button>
         )}
       </Box>
@@ -243,7 +313,12 @@ const Navbar = () => {
           transition: 'all 0.3s ease-in-out',
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
+        <Toolbar sx={{ 
+          justifyContent: 'space-between', 
+          py: 1,
+          px: { xs: 1, sm: 2, md: 2, lg: 3 },
+          overflow: 'hidden',
+        }}>
           {/* Logo */}
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -252,10 +327,41 @@ const Navbar = () => {
             <Box
               component={RouterLink}
               to="/"
+              onClick={() => navigate('/')}
               sx={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 textDecoration: 'none',
+                flexShrink: 0,
+                outline: 'none',
+                backgroundColor: 'transparent !important',
+                color: 'transparent',
+                '&:focus': {
+                  outline: 'none !important',
+                  boxShadow: 'none !important',
+                  backgroundColor: 'transparent !important',
+                  color: 'transparent',
+                },
+                '&:focus-visible': {
+                  outline: 'none !important',
+                  boxShadow: 'none !important',
+                  backgroundColor: 'transparent !important',
+                  color: 'transparent',
+                },
+                '&:active': {
+                  backgroundColor: 'transparent !important',
+                  color: 'transparent',
+                },
+                '&:hover': {
+                  backgroundColor: 'transparent !important',
+                  color: 'transparent',
+                },
+                '&::before': {
+                  display: 'none',
+                },
+                '&::after': {
+                  display: 'none',
+                },
               }}
             >
               <Box
@@ -263,10 +369,33 @@ const Navbar = () => {
                 src={logoImage}
                 alt="DIGIMAAX Logo"
                 sx={{
-                  height: isMobile ? '40px' : '50px',
+                  height: isMobile 
+                    ? '40px' 
+                    : isMedium 
+                      ? '45px' 
+                      : isLargeDisplay
+                        ? (isExtraLargeDisplay ? '60px' : '55px')
+                        : '50px',
                   width: 'auto',
                   objectFit: 'contain',
                   cursor: 'pointer',
+                  opacity: 1,
+                  filter: 'none',
+                  WebkitTapHighlightColor: 'transparent',
+                  userSelect: 'none',
+                  '&:focus': {
+                    outline: 'none',
+                    boxShadow: 'none',
+                    filter: 'none',
+                  },
+                  '&:active': {
+                    filter: 'none',
+                    opacity: 1,
+                  },
+                  '&:hover': {
+                    filter: 'none',
+                    opacity: 1,
+                  },
                 }}
               />
             </Box>
@@ -274,7 +403,21 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Box sx={{ 
+              display: 'flex', 
+              gap: isMedium 
+                ? 0.75 
+                : isLargeDisplay 
+                  ? (isExtraLargeDisplay ? 3 : 2.5)
+                  : 2, 
+              alignItems: 'center',
+              flex: 1,
+              justifyContent: 'flex-end',
+              minWidth: 0,
+              maxWidth: '100%',
+              overflow: 'hidden',
+              flexWrap: 'nowrap',
+            }}>
               {navItems.map((item) => (
                 <motion.div
                   key={item.name}
@@ -288,8 +431,24 @@ const Navbar = () => {
                       color: location.pathname === item.to ? '#FFD700' : 'white',
                       fontWeight: location.pathname === item.to ? 'bold' : 'medium',
                       textTransform: 'none',
-                      fontSize: '1rem',
+                      fontSize: isMedium 
+                        ? '0.875rem' 
+                        : isLargeDisplay
+                          ? (isExtraLargeDisplay ? '1.2rem' : '1.1rem')
+                          : '1rem',
                       position: 'relative',
+                      px: isMedium 
+                        ? 1 
+                        : isLargeDisplay 
+                          ? (isExtraLargeDisplay ? 2.5 : 2)
+                          : 1.5,
+                      py: isMedium 
+                        ? 0.5 
+                        : isLargeDisplay 
+                          ? 1
+                          : 0.75,
+                      minWidth: 'auto',
+                      whiteSpace: 'nowrap',
                       '&:hover': {
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
                       },
@@ -299,7 +458,7 @@ const Navbar = () => {
                         bottom: 0,
                         left: '50%',
                         width: location.pathname === item.to ? '100%' : 0,
-                        height: '2px',
+                        height: isLargeDisplay ? '3px' : '2px',
                         backgroundColor: '#FFD700',
                         transition: 'all 0.3s ease',
                         transform: 'translateX(-50%)',
@@ -314,6 +473,96 @@ const Navbar = () => {
                 </motion.div>
               ))}
               
+              {/* Language Dropdown */}
+              <Button
+                onClick={handleLanguageMenuOpen}
+                sx={{
+                  color: 'white',
+                  fontWeight: 'medium',
+                  textTransform: 'none',
+                  fontSize: isMedium 
+                    ? '0.875rem' 
+                    : isLargeDisplay
+                      ? (isExtraLargeDisplay ? '1.2rem' : '1.1rem')
+                      : '1rem',
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  minWidth: isMedium 
+                    ? '100px' 
+                    : isLargeDisplay
+                      ? (isExtraLargeDisplay ? '150px' : '140px')
+                      : '120px',
+                  justifyContent: 'flex-start',
+                  whiteSpace: 'nowrap',
+                  px: isMedium 
+                    ? 1 
+                    : isLargeDisplay 
+                      ? (isExtraLargeDisplay ? 2.5 : 2)
+                      : 1.5,
+                  py: isMedium 
+                    ? 0.5 
+                    : isLargeDisplay 
+                      ? 1
+                      : 0.75,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    transform: 'scale(1.05)',
+                  },
+                  '&:active': {
+                    transform: 'scale(0.95)',
+                  },
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: '50%',
+                    width: Boolean(languageMenuAnchor) ? '100%' : 0,
+                    height: isLargeDisplay ? '3px' : '2px',
+                    backgroundColor: '#FFD700',
+                    transition: 'all 0.3s ease',
+                    transform: 'translateX(-50%)',
+                  },
+                  '&:hover::after': {
+                    width: '100%',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <Box
+                  component="img"
+                  src={currentLanguage.flag}
+                  alt={currentLanguage.name}
+                  sx={{
+                    width: isMedium 
+                      ? '20px' 
+                      : isLargeDisplay
+                        ? (isExtraLargeDisplay ? '28px' : '26px')
+                        : '24px',
+                    height: isMedium 
+                      ? '15px' 
+                      : isLargeDisplay
+                        ? (isExtraLargeDisplay ? '21px' : '19px')
+                        : '18px',
+                    objectFit: 'cover',
+                    borderRadius: '2px',
+                    flexShrink: 0,
+                  }}
+                />
+                <Typography
+                  component="span"
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    minWidth: 0,
+                  }}
+                >
+                  {currentLanguage.name}
+                </Typography>
+              </Button>
+              
               {/* Sign In Button or User Profile */}
               {isAuthenticated && user ? (
                 <>
@@ -326,10 +575,22 @@ const Navbar = () => {
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1,
-                        px: 1.5,
-                        py: 0.5,
-                        ml: 1,
+                        gap: isMedium 
+                          ? 0.75 
+                          : isLargeDisplay 
+                            ? 1.25
+                            : 1,
+                        px: isMedium 
+                          ? 1 
+                          : isLargeDisplay 
+                            ? (isExtraLargeDisplay ? 2.5 : 2)
+                            : 1.5,
+                        py: isMedium 
+                          ? 0.4 
+                          : isLargeDisplay 
+                            ? 0.75
+                            : 0.5,
+                        ml: isMedium ? 0.5 : isLargeDisplay ? 1.5 : 1,
                         borderRadius: '25px',
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
                         backdropFilter: 'blur(10px)',
@@ -342,14 +603,26 @@ const Navbar = () => {
                         },
                       }}
                     >
-                      <Person sx={{ fontSize: '20px', color: 'white' }} />
+                      <Person sx={{ 
+                        fontSize: isMedium 
+                          ? '18px' 
+                          : isLargeDisplay
+                            ? (isExtraLargeDisplay ? '24px' : '22px')
+                            : '20px', 
+                        color: 'white' 
+                      }} />
                       <Typography 
                         variant="body2" 
                         sx={{ 
                           color: 'white', 
                           fontWeight: 500,
-                          fontSize: '0.9rem',
+                          fontSize: isMedium 
+                            ? '0.8rem' 
+                            : isLargeDisplay
+                              ? (isExtraLargeDisplay ? '1.1rem' : '1rem')
+                              : '0.9rem',
                           whiteSpace: 'nowrap',
+                          display: { md: isMedium ? 'none' : 'block', lg: 'block' },
                         }}
                       >
                         {user.firstName} {user.lastName}
@@ -366,15 +639,27 @@ const Navbar = () => {
                     <IconButton
                       onClick={() => setCartDrawerOpen(true)}
                       sx={{
-                        width: 45,
-                        height: 45,
+                        width: isMedium 
+                          ? 40 
+                          : isLargeDisplay
+                            ? (isExtraLargeDisplay ? 56 : 52)
+                            : 45,
+                        height: isMedium 
+                          ? 40 
+                          : isLargeDisplay
+                            ? (isExtraLargeDisplay ? 56 : 52)
+                            : 45,
                         borderRadius: '50%',
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
                         backdropFilter: 'blur(10px)',
                         border: '1px solid rgba(255, 255, 255, 0.2)',
                         color: 'white',
                         padding: '8px',
-                        marginLeft: '8px',
+                        marginLeft: isMedium 
+                          ? '4px' 
+                          : isLargeDisplay 
+                            ? '12px'
+                            : '8px',
                         '&:hover': {
                           backgroundColor: 'rgba(255, 255, 255, 0.2)',
                           border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -387,9 +672,9 @@ const Navbar = () => {
                         color="error"
                         sx={{
                           '& .MuiBadge-badge': {
-                            fontSize: '0.7rem',
-                            minWidth: '18px',
-                            height: '18px',
+                            fontSize: isLargeDisplay ? '0.8rem' : '0.7rem',
+                            minWidth: isLargeDisplay ? '20px' : '18px',
+                            height: isLargeDisplay ? '20px' : '18px',
                             padding: '0 4px',
                             backgroundColor: '#FF4081',
                             color: 'white',
@@ -397,7 +682,14 @@ const Navbar = () => {
                           },
                         }}
                       >
-                        <ShoppingCart sx={{ fontSize: '24px', color: 'white' }} />
+                        <ShoppingCart sx={{ 
+                          fontSize: isMedium 
+                            ? '20px' 
+                            : isLargeDisplay
+                              ? (isExtraLargeDisplay ? '28px' : '26px')
+                              : '24px', 
+                          color: 'white' 
+                        }} />
                       </Badge>
                     </IconButton>
                   </motion.div>
@@ -413,10 +705,28 @@ const Navbar = () => {
                     size="large"
                     sx={{
                       textTransform: 'none',
-                      fontSize: '1rem',
+                      fontSize: isMedium 
+                        ? '0.875rem' 
+                        : isLargeDisplay
+                          ? (isExtraLargeDisplay ? '1.2rem' : '1.1rem')
+                          : '1rem',
                       fontWeight: 600,
-                      px: 4,
-                      py: 1,
+                      px: isMedium 
+                        ? 2.5 
+                        : isLargeDisplay 
+                          ? (isExtraLargeDisplay ? 6 : 5)
+                          : 4,
+                      py: isMedium 
+                        ? 0.75 
+                        : isLargeDisplay 
+                          ? 1.25
+                          : 1,
+                      minWidth: isMedium 
+                        ? '100px' 
+                        : isLargeDisplay
+                          ? (isExtraLargeDisplay ? '180px' : '160px')
+                          : '140px',
+                      whiteSpace: 'nowrap',
                       borderRadius: '25px',
                       color: 'white',
                       borderColor: 'rgba(255, 255, 255, 0.3)',
@@ -425,6 +735,7 @@ const Navbar = () => {
                       WebkitBackdropFilter: 'blur(10px)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                      minHeight: isLargeDisplay ? '56px' : 'auto',
                       '&:hover': {
                         backgroundColor: 'rgba(255, 255, 255, 0.2)',
                         borderColor: 'rgba(255, 255, 255, 0.4)',
@@ -434,7 +745,7 @@ const Navbar = () => {
                       transition: 'all 0.3s ease',
                     }}
                   >
-                    Sign In
+                    {t('nav.signIn')}
                   </Button>
                 </motion.div>
               )}
@@ -537,7 +848,7 @@ const Navbar = () => {
           }}
         >
           <Person sx={{ mr: 2, fontSize: 20 }} />
-          My Profile
+          {t('nav.myProfile')}
         </MenuItem>
 
         <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
@@ -553,8 +864,75 @@ const Navbar = () => {
           }}
         >
           <Logout sx={{ mr: 2, fontSize: 20 }} />
-          Sign Out
+          {t('nav.signOut')}
         </MenuItem>
+      </Menu>
+
+      {/* Language Menu Dropdown */}
+      <Menu
+        anchorEl={languageMenuAnchor}
+        open={Boolean(languageMenuAnchor)}
+        onClose={handleLanguageMenuClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        disableScrollLock={true}
+        MenuListProps={{
+          disablePadding: true,
+        }}
+        PaperProps={{
+          sx: {
+            mt: 1.5,
+            minWidth: 180,
+            borderRadius: 2,
+            backgroundColor: 'rgba(15, 15, 25, 0.28)',
+            backdropFilter: 'blur(12px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(140%)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            transition: 'all 0.3s ease-in-out',
+          },
+        }}
+      >
+        {languages.map((lang) => (
+          <MenuItem
+            key={lang.code}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLanguageChange(lang.code);
+            }}
+            selected={language === lang.code}
+            sx={{
+              color: language === lang.code ? '#FFD700' : 'white',
+              py: 1.5,
+              fontWeight: language === lang.code ? 600 : 400,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+              },
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                },
+              },
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+              <Box
+                component="img"
+                src={lang.flag}
+                alt={lang.name}
+                sx={{
+                  width: '24px',
+                  height: '18px',
+                  objectFit: 'cover',
+                  borderRadius: '2px',
+                }}
+              />
+              <Typography variant="body2">{lang.name}</Typography>
+            </Box>
+          </MenuItem>
+        ))}
       </Menu>
     </motion.div>
   );

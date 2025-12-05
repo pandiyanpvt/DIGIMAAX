@@ -32,11 +32,15 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { useCart } from '../context/CartContext';
 import { formatLKR } from '../utils/currency';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const CartPage = () => {
   const navigate = useNavigate();
   const { cartItems, updateCartQuantity, removeFromCart, getCartTotalPrice, clearCart } = useCart();
   const { isAuthenticated, openSignInModal } = useAuth();
+  const { language } = useLanguage();
+  const { t } = useTranslation();
 
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, itemId: null, itemName: '' });
@@ -62,7 +66,7 @@ const CartPage = () => {
   const confirmRemove = async () => {
     if (deleteDialog.itemId) {
       await removeFromCart(deleteDialog.itemId);
-      showSnackbar(`${deleteDialog.itemName} removed from cart`, 'info');
+      showSnackbar(t('cart.itemRemoved', { name: deleteDialog.itemName }), 'info');
       setDeleteDialog({ open: false, itemId: null, itemName: '' });
     }
   };
@@ -73,7 +77,7 @@ const CartPage = () => {
 
   const confirmClearCart = async () => {
     await clearCart();
-    showSnackbar('Cart cleared successfully', 'info');
+    showSnackbar(t('cart.clearCartSuccess'), 'info');
     setClearDialog(false);
   };
 
@@ -85,7 +89,7 @@ const CartPage = () => {
         handleRemoveProduct(itemId, item.title);
       } else {
         await updateCartQuantity(itemId, newQuantity);
-        showSnackbar('Quantity updated', 'success');
+        showSnackbar(t('cart.quantityUpdated'), 'success');
       }
     }
   };
@@ -123,7 +127,7 @@ const CartPage = () => {
                 <ArrowBackIcon />
               </IconButton>
               <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>
-                Shopping Cart
+                {t('cart.title')}
               </Typography>
             </Box>
 
@@ -146,10 +150,10 @@ const CartPage = () => {
                 <ShoppingCartIcon sx={{ fontSize: 100, color: 'rgba(33, 150, 243, 0.4)', mb: 2 }} />
               </motion.div>
               <Typography variant="h4" sx={{ mb: 2, color: 'white', fontWeight: 700 }}>
-                Your cart is empty
+                {t('cart.empty')}
               </Typography>
               <Typography variant="body1" sx={{ mb: 4, color: 'rgba(255, 255, 255, 0.7)', fontSize: '1.1rem' }}>
-                Start shopping to add items to your cart
+                {t('cart.emptyDesc')}
               </Typography>
               <Button
                 variant="contained"
@@ -170,7 +174,7 @@ const CartPage = () => {
                   transition: 'all 0.3s ease',
                 }}
               >
-                Continue Shopping
+                {t('cart.continueShopping')}
               </Button>
             </Box>
           </motion.div>
@@ -217,11 +221,11 @@ const CartPage = () => {
         }}
       >
         <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
-          Remove Item
+          {t('cart.removeItem')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-            Are you sure you want to remove "{deleteDialog.itemName}" from your cart?
+            {t('cart.removeItemConfirm', { name: deleteDialog.itemName })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -229,7 +233,7 @@ const CartPage = () => {
             onClick={() => setDeleteDialog({ open: false, itemId: null, itemName: '' })}
             sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={confirmRemove}
@@ -241,7 +245,7 @@ const CartPage = () => {
               },
             }}
           >
-            Remove
+            {t('common.remove')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -260,11 +264,11 @@ const CartPage = () => {
         }}
       >
         <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
-          Clear Cart
+          {t('cart.clearCart')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-            Are you sure you want to remove all items from your cart?
+            {t('cart.clearCartConfirm')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -272,7 +276,7 @@ const CartPage = () => {
             onClick={() => setClearDialog(false)}
             sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={confirmClearCart}
@@ -284,7 +288,7 @@ const CartPage = () => {
               },
             }}
           >
-            Clear All
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -303,11 +307,11 @@ const CartPage = () => {
         }}
       >
         <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
-          Checkout Unavailable
+          {t('cart.checkoutUnavailable')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-            Checkout is unavailable right now. Please try again later.
+            {t('cart.checkoutUnavailableDesc')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -321,7 +325,7 @@ const CartPage = () => {
               },
             }}
           >
-            OK
+            {t('common.ok')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -352,15 +356,15 @@ const CartPage = () => {
               </IconButton>
               <Box>
                 <Typography variant="h4" sx={{ color: 'white', fontWeight: 700, mb: 0.5 }}>
-                  Shopping Cart
+                  {t('cart.title')}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
+                  {items.length} {items.length === 1 ? t('nav.items') : t('nav.itemsPlural')} {t('cart.inCart')}
                 </Typography>
               </Box>
             </Box>
             {items.length > 0 && (
-              <Tooltip title="Clear all items">
+              <Tooltip title={t('cart.clearCart')}>
                 <Button
                   variant="outlined"
                   startIcon={<ClearIcon />}
@@ -378,7 +382,7 @@ const CartPage = () => {
                     transition: 'all 0.3s',
                   }}
                 >
-                  Clear Cart
+                  {t('cart.clearCart')}
                 </Button>
               </Tooltip>
             )}
@@ -494,7 +498,7 @@ const CartPage = () => {
                               >
                                 {item.title}
                               </Typography>
-                              <Tooltip title="Remove item">
+                              <Tooltip title={t('cart.removeItem')}>
                                 <IconButton
                                   size="small"
                                   onClick={() => handleRemoveProduct(item.id, item.title)}
@@ -519,7 +523,7 @@ const CartPage = () => {
                             <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                               {item.color && (
                                 <Chip
-                                  label={`Color: ${item.color}`}
+                                  label={`${t('product.color')}: ${item.color}`}
                                   size="small"
                                   sx={{
                                     background: 'rgba(33, 150, 243, 0.2)',
@@ -532,7 +536,7 @@ const CartPage = () => {
                               )}
                               {item.size && (
                                 <Chip
-                                  label={`Size: ${item.size}`}
+                                  label={`${t('product.size')}: ${item.size}`}
                                   size="small"
                                   sx={{
                                     background: 'rgba(255, 64, 129, 0.2)',
@@ -545,7 +549,7 @@ const CartPage = () => {
                               )}
                               {item.customText && (
                                 <Chip
-                                  label={`Text: ${item.customText.length > 15 ? item.customText.substring(0, 15) + '...' : item.customText}`}
+                                  label={`${t('product.customText')}: ${item.customText.length > 15 ? item.customText.substring(0, 15) + '...' : item.customText}`}
                                   size="small"
                                   sx={{
                                     background: 'rgba(255, 215, 0, 0.2)',
@@ -557,7 +561,7 @@ const CartPage = () => {
                                 />
                               )}
                               {item.customImageUrl && (
-                                <Tooltip title="Custom Image">
+                                <Tooltip title={t('product.uploadImage')}>
                                   <Box
                                     sx={{
                                       width: 40,
@@ -596,7 +600,7 @@ const CartPage = () => {
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 'auto', flexWrap: 'wrap', gap: 2 }}>
                               {/* Quantity Controls */}
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Tooltip title="Decrease quantity">
+                                <Tooltip title={t('cart.decreaseQuantity')}>
                                   <IconButton
                                     size="small"
                                     onClick={() => handleQuantityChange(item.id, -1)}
@@ -639,7 +643,7 @@ const CartPage = () => {
                                 >
                                   {item.quantity}
                                 </Typography>
-                                <Tooltip title="Increase quantity">
+                                <Tooltip title={t('cart.increaseQuantity')}>
                                   <IconButton
                                     size="small"
                                     onClick={() => handleQuantityChange(item.id, 1)}
@@ -676,7 +680,7 @@ const CartPage = () => {
                                 </Typography>
                                 {item.quantity > 1 && (
                                   <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                                    {formatLKR(item.price)} each
+                                    {formatLKR(item.price)} {t('cart.each')}
                                   </Typography>
                                 )}
                               </Box>
@@ -733,13 +737,13 @@ const CartPage = () => {
                     textShadow: '0 0 10px rgba(33, 150, 243, 0.3)',
                   }}
                 >
-                  Order Summary
+                  {t('checkout.orderSummary')}
                 </Typography>
 
                 <Box sx={{ mb: 3 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="h6" sx={{ color: 'white', fontWeight: 700, fontSize: '1.3rem' }}>
-                      Total
+                      {t('checkout.total')}
                     </Typography>
                     <Typography 
                       variant="h5" 
@@ -777,7 +781,7 @@ const CartPage = () => {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  Proceed to Checkout
+                  {t('cart.proceedToCheckout')}
                 </Button>
 
                 <Button
@@ -800,7 +804,7 @@ const CartPage = () => {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  Continue Shopping
+                  {t('cart.continueShopping')}
                 </Button>
               </Paper>
             </motion.div>

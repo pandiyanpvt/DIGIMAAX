@@ -25,6 +25,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { formatLKR } from '../utils/currency';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById, getProducts } from '../services/products';
@@ -42,6 +44,8 @@ const ProductDetailPage = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const { addToCart } = useCart();
   const { isAuthenticated, openSignInModal } = useAuth();
+  const { language } = useLanguage();
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
@@ -134,7 +138,7 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = async () => {
     if (!product) {
-      setSnackbar({ open: true, message: 'Product not available', severity: 'error' });
+      setSnackbar({ open: true, message: t('product.productNotAvailable'), severity: 'error' });
       return;
     }
 
@@ -142,7 +146,7 @@ const ProductDetailPage = () => {
     if (!isAuthenticated) {
       setSnackbar({ 
         open: true, 
-        message: 'Please sign in to add items to your cart', 
+        message: t('product.pleaseSignIn'), 
         severity: 'info' 
       });
       openSignInModal();
@@ -170,16 +174,21 @@ const ProductDetailPage = () => {
       });
 
       await addToCart(product.id, itemDetails);
+      const productName = language === 'fr' && product.title_french
+        ? product.title_french
+        : product.title;
       setSnackbar({ 
         open: true, 
-        message: `${product.title} added to cart successfully!`, 
+        message: language === 'fr'
+          ? `${productName} ajouté au panier avec succès !`
+          : `${productName} added to cart successfully!`, 
         severity: 'success' 
       });
     } catch (error) {
       console.error('Error adding to cart:', error);
       setSnackbar({ 
         open: true, 
-        message: error.message || 'Failed to add item to cart. Please try again.', 
+        message: error.message || t('product.failedToAdd'), 
         severity: 'error' 
       });
     } finally {
@@ -201,7 +210,6 @@ const ProductDetailPage = () => {
       }
     }
     
-    // If no gallery, check if we have images array from API (objects with image_url)
     if (product.images && Array.isArray(product.images) && product.images.length > 0) {
       // Sort by sort_order and extract image_url
       const sortedImages = [...product.images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
@@ -231,24 +239,8 @@ const ProductDetailPage = () => {
   React.useEffect(() => {
     if (product && galleryImages.length > 0) {
       if (!activeImg || !galleryImages.includes(activeImg)) {
-        console.log('Setting active image to:', galleryImages[0]);
         setActiveImg(galleryImages[0]);
       }
-    }
-  }, [product, galleryImages, activeImg]);
-  
-  // Debug log
-  React.useEffect(() => {
-    if (product) {
-      console.log('Product Detail Page - Product loaded:', {
-        productId: product.id,
-        productTitle: product.title,
-        productImage: product.image,
-        productGallery: product.gallery,
-        productImages: product.images,
-        galleryImages: galleryImages,
-        activeImg: activeImg,
-      });
     }
   }, [product, galleryImages, activeImg]);
 
@@ -296,7 +288,7 @@ const ProductDetailPage = () => {
               navigate('/shop');
             }}
           >
-            Shop
+            {language === 'fr' ? 'Boutique' : 'Shop'}
           </Link>
           {/* Only show category name if it's different from product title */}
           {product?.category_name && product?.category_name !== product?.title && (
@@ -304,14 +296,18 @@ const ProductDetailPage = () => {
               color="rgba(255,255,255,0.7)"
               sx={{ fontSize: '0.9rem' }}
             >
-              {product.category_name}
+              {category && language === 'fr' && category.name_french
+                ? category.name_french
+                : product.category_name}
             </Typography>
           )}
           <Typography 
             color="rgba(255,255,255,0.9)"
             sx={{ fontSize: '0.9rem', fontWeight: 500 }}
           >
-            {product?.title || 'Product'}
+            {language === 'fr' && product?.title_french
+              ? product.title_french
+              : product?.title || (language === 'fr' ? 'Produit' : 'Product')}
           </Typography>
         </Breadcrumbs>
 
@@ -485,7 +481,9 @@ const ProductDetailPage = () => {
                                 <Box
                                   component="img"
                                   src={activeImg}
-                                  alt={product.title || 'Product'}
+                                  alt={language === 'fr' && product.title_french
+                                    ? product.title_french
+                                    : product.title || (language === 'fr' ? 'Produit' : 'Product')}
                                   loading="lazy"
                                   onError={(e) => {
                                     console.error('Image failed to load:', activeImg);
@@ -576,7 +574,9 @@ const ProductDetailPage = () => {
                           WebkitTextFillColor: 'transparent',
                         }}
                       >
-                        {product.title}
+                        {language === 'fr' && product.title_french
+                          ? product.title_french
+                          : product.title}
                       </Typography>
 
 
@@ -616,7 +616,9 @@ const ProductDetailPage = () => {
                             fontWeight: 500,
                           }}
                         >
-                          ({product.rating || 0}) {product.rating ? 'rating' : 'No ratings yet'}
+                          ({product.rating || 0}) {product.rating 
+                            ? (language === 'fr' ? 'note' : 'rating') 
+                            : (language === 'fr' ? 'Pas encore de notes' : 'No ratings yet')}
                         </Typography>
                       </Box>
 
@@ -640,7 +642,7 @@ const ProductDetailPage = () => {
                         </Typography>
                         {product.inStock && (
                           <Chip
-                            label="In Stock"
+                            label={language === 'fr' ? 'En Stock' : 'In Stock'}
                             sx={{
                               background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
                               color: 'white',
@@ -674,7 +676,9 @@ const ProductDetailPage = () => {
                               fontSize: '0.95rem',
                             }}
                           >
-                            {product.description || product.desc}
+                            {language === 'fr' && (product.description_french || product.desc_french)
+                              ? (product.description_french || product.desc_french)
+                              : (product.description || product.desc)}
                           </Typography>
                         </Box>
                       )}
@@ -715,7 +719,7 @@ const ProductDetailPage = () => {
                                 },
                               }}
                             >
-                              Customization Options
+                              {t('product.customizationOptions')}
                             </Typography>
 
                           {category?.customization_color === 1 && (
@@ -728,7 +732,7 @@ const ProductDetailPage = () => {
                                   fontSize: '0.95rem',
                                 }}
                               >
-                                Color: <span style={{ color: '#FFD700', fontWeight: 700 }}>{color}</span>
+                                {t('product.color')}: <span style={{ color: '#FFD700', fontWeight: 700 }}>{color}</span>
                               </Typography>
                               <Stack direction="row" spacing={2} flexWrap="wrap">
                                 {[
@@ -780,7 +784,7 @@ const ProductDetailPage = () => {
                                   letterSpacing: '0.5px',
                                 }}
                               >
-                                Size
+                                {t('product.size')}
                               </Typography>
                               <Stack direction="row" spacing={1.5} flexWrap="wrap">
                                 {['S', 'M', 'L', 'XL', 'XXL'].map((s) => (
@@ -827,10 +831,10 @@ const ProductDetailPage = () => {
                               <TextField
                                 fullWidth
                                 size="medium"
-                                label="Custom Text"
+                                label={t('product.customText')}
                                 value={customText}
                                 onChange={(e) => setCustomText(e.target.value)}
-                                placeholder="Enter your custom text here"
+                                placeholder={language === 'fr' ? 'Entrez votre texte personnalisé ici' : 'Enter your custom text here'}
                                 sx={{
                                   '& .MuiOutlinedInput-root': {
                                     color: 'white',
@@ -882,7 +886,7 @@ const ProductDetailPage = () => {
                                   transition: 'all 0.3s ease',
                                 }}
                               >
-                                Upload Your Image
+                                {t('product.uploadImage')}
                                 <input
                                   hidden
                                   type="file"
@@ -930,7 +934,7 @@ const ProductDetailPage = () => {
                               fontSize: '0.95rem',
                             }}
                           >
-                            Quantity:
+                            {t('product.quantity')}:
                           </Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <IconButton
@@ -1023,7 +1027,7 @@ const ProductDetailPage = () => {
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                           }}
                         >
-                          {addingToCart ? 'ADDING...' : 'ADD TO CART'}
+                          {addingToCart ? t('product.addingToCart') : t('product.addToCart')}
                         </Button>
                       </Box>
                     </Box>
@@ -1046,6 +1050,7 @@ const ProductDetailPage = () => {
                   fontSize: { xs: '1.85rem', md: '2.25rem' },
                   letterSpacing: '-0.02em',
                   position: 'relative',
+                  wordBreak: 'break-word',
                   '&::after': {
                     content: '""',
                     position: 'absolute',
@@ -1058,7 +1063,7 @@ const ProductDetailPage = () => {
                   },
                 }}
               >
-                Related Products
+                {t('product.relatedProducts')}
               </Typography>
 
               {relatedLoading ? (
@@ -1142,13 +1147,15 @@ const ProductDetailPage = () => {
                                   borderColor: 'rgba(255,215,0,0.5)',
                                   textTransform: 'none',
                                   fontWeight: 700,
+                                  minWidth: 'fit-content',
+                                  whiteSpace: 'nowrap',
                                   '&:hover': {
                                     borderColor: '#FFD700',
                                     backgroundColor: 'rgba(255, 215, 0, 0.1)',
                                   },
                                 }}
                               >
-                                View
+                                {t('shop.view')}
                               </Button>
                             </CardActions>
                           </Card>
@@ -1172,17 +1179,19 @@ const ProductDetailPage = () => {
                     sx={{
                       color: 'rgba(255, 255, 255, 0.8)',
                       mb: 1,
+                      wordBreak: 'break-word',
                     }}
                   >
-                    No Related Products Available
+                    {t('product.noRelatedProducts')}
                   </Typography>
                   <Typography
                     variant="body2"
                     sx={{
                       color: 'rgba(255, 255, 255, 0.6)',
+                      wordBreak: 'break-word',
                     }}
                   >
-                    There are no other products in this category at the moment.
+                    {t('product.noRelatedProductsDesc')}
                   </Typography>
                 </Card>
               )}

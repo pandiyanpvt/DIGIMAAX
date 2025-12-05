@@ -8,6 +8,7 @@ import Layout from './components/layout/Layout';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { preloadAllImages } from './utils/imagePreloader';
 import ScrollToTop from './components/ScrollToTop';
 import HomePage from './pages/HomePage';
@@ -23,15 +24,11 @@ const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
 import ContactPage from './pages/ContactPage';
 import ProfilePage from './pages/ProfilePage';
 import CartPage from './pages/CartPage';
-// import WishlistPage from './pages/WishlistPage';
-// import CategoryPage from './pages/CategoryPage';
-// import SearchResultsPage from './pages/SearchResultsPage';
 import CompareProductsPage from './pages/CompareProductsPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 
 function App() {
-  // Preload all images when app starts
   useEffect(() => {
     preloadAllImages();
   }, []);
@@ -39,10 +36,11 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <Router>
+      <LanguageProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <Router>
               <ScrollToTop />
               <Layout>
                 <Suspense fallback={null}>
@@ -58,7 +56,6 @@ function App() {
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/cart" element={<CartPage />} />
-                  {/** removed wishlist and search routes **/}
                   <Route path="/compare" element={<CompareProductsPage />} />
                   <Route path="/orders" element={<OrderHistoryPage />} />
                   <Route path="/orders/:id/track" element={<OrderTrackingPage />} />
@@ -67,10 +64,11 @@ function App() {
                 </Routes>
                 </Suspense>
               </Layout>
-            </Router>
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
+              </Router>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }
