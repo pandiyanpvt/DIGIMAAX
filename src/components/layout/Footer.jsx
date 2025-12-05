@@ -12,6 +12,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -35,6 +37,9 @@ import { useTranslation } from '../../hooks/useTranslation';
 const Footer = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const theme = useTheme();
+  const isLargeDisplay = useMediaQuery(theme.breakpoints.up('xl'));
+  const isExtraLargeDisplay = useMediaQuery('(min-width: 1920px)');
 
   const quickLinks = [
     { name: t('nav.home'), path: '/' },
@@ -188,10 +193,13 @@ const Footer = () => {
         }
       }}
     >
-      <Container maxWidth="lg">
+      <Container 
+        maxWidth={isExtraLargeDisplay ? 'xl' : isLargeDisplay ? 'lg' : 'lg'}
+        sx={{ px: isExtraLargeDisplay ? 6 : isLargeDisplay ? 4 : 3 }}
+      >
         <Grid 
           container 
-          spacing={4}
+          spacing={isLargeDisplay ? 6 : 4}
           sx={{
             justifyContent: 'space-between',
             alignItems: 'flex-start',
@@ -210,8 +218,8 @@ const Footer = () => {
                   src={logoImage}
                   alt="DIGIMAAX Logo"
                   sx={{
-                    height: 100,
-                    mb: 1,
+                    height: isLargeDisplay ? (isExtraLargeDisplay ? 140 : 120) : 100,
+                    mb: isLargeDisplay ? 1.5 : 1,
                   }}
                 />
                 <Typography
@@ -222,8 +230,10 @@ const Footer = () => {
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    mb: 1,
-                    fontSize: '1.3rem',
+                    mb: isLargeDisplay ? 1.5 : 1,
+                    fontSize: isLargeDisplay 
+                      ? (isExtraLargeDisplay ? '1.8rem' : '1.5rem')
+                      : '1.3rem',
                   }}
                 >
                   DIGIMAAX
@@ -233,7 +243,9 @@ const Footer = () => {
                   sx={{
                     color: 'rgba(255, 255, 255, 0.7)',
                     lineHeight: 1.5,
-                    fontSize: '0.85rem',
+                    fontSize: isLargeDisplay 
+                      ? (isExtraLargeDisplay ? '1.1rem' : '1rem')
+                      : '0.85rem',
                   }}
                 >
                   {t('footer.tagline')}
@@ -243,7 +255,9 @@ const Footer = () => {
                   sx={{
                     color: 'rgba(255, 255, 255, 0.7)',
                     lineHeight: 1.5,
-                    fontSize: '0.85rem',
+                    fontSize: isLargeDisplay 
+                      ? (isExtraLargeDisplay ? '1.1rem' : '1rem')
+                      : '0.85rem',
                   }}
                 >
                   {t('footer.tagline2')}
@@ -263,14 +277,16 @@ const Footer = () => {
                 variant="h6"
                 sx={{
                   fontWeight: 'bold',
-                  mb: 1.5,
+                  mb: isLargeDisplay ? 2 : 1.5,
                   color: '#FFD700',
-                  fontSize: '1rem',
+                  fontSize: isLargeDisplay 
+                    ? (isExtraLargeDisplay ? '1.3rem' : '1.2rem')
+                    : '1rem',
                 }}
               >
                 {t('footer.quickLinks')}
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: isLargeDisplay ? 1 : 0.8 }}>
                 {quickLinks.map((link, index) => (
                   <Link
                     key={index}
@@ -278,7 +294,9 @@ const Footer = () => {
                     sx={{
                       color: 'rgba(255, 255, 255, 0.7)',
                       textDecoration: 'none',
-                      fontSize: '0.85rem',
+                      fontSize: isLargeDisplay 
+                        ? (isExtraLargeDisplay ? '1.1rem' : '1rem')
+                        : '0.85rem',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       display: 'inline-block',
@@ -435,6 +453,13 @@ const Footer = () => {
                         border: '1px solid rgba(255, 255, 255, 0.25)',
                         borderRadius: '12px',
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+                        width: isLargeDisplay ? (isExtraLargeDisplay ? 56 : 52) : 48,
+                        height: isLargeDisplay ? (isExtraLargeDisplay ? 56 : 52) : 48,
+                        '& svg': {
+                          fontSize: isLargeDisplay 
+                            ? (isExtraLargeDisplay ? '28px' : '26px')
+                            : '24px',
+                        },
                         '&:hover': {
                           backgroundColor: social.color,
                           borderColor: social.color,
@@ -480,18 +505,18 @@ const Footer = () => {
               flexDirection: 'column',
               gap: 0.5,
               alignItems: { xs: 'center', md: 'flex-start' },
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontSize: '0.8rem',
+              textAlign: { xs: 'center', md: 'left' },
             }}
           >
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontSize: '0.8rem',
-                textAlign: { xs: 'center', md: 'left' },
-              }}
-            >
-              © {new Date().getFullYear()} DIGIMAAX. {t('footer.copyright')}
-            </Typography>
+            © {new Date().getFullYear()} DIGIMAAX. {t('footer.copyright')}
+          </Typography>
             <Typography
               variant="body2"
               sx={{

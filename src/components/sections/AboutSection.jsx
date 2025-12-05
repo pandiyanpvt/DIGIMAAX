@@ -9,6 +9,8 @@ import {
   Avatar,
   Rating,
   IconButton,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowBackIos, ArrowForwardIos, FormatQuote } from '@mui/icons-material';
@@ -60,6 +62,9 @@ const testimonials = [
 
 const AboutSection = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const isLargeDisplay = useMediaQuery(theme.breakpoints.up('xl'));
+  const isExtraLargeDisplay = useMediaQuery('(min-width: 1920px)');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
@@ -107,22 +112,30 @@ const AboutSection = () => {
         py: 8,
       }}
     >
-      <Container maxWidth="lg">
+      <Container 
+        maxWidth={isExtraLargeDisplay ? 'xl' : isLargeDisplay ? 'lg' : 'lg'}
+        sx={{ px: isExtraLargeDisplay ? 6 : isLargeDisplay ? 4 : 3 }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <Box sx={{ mb: 12, mt: 6 }}>
+          <Box sx={{ mb: isLargeDisplay ? 14 : 12, mt: isLargeDisplay ? 8 : 6 }}>
             <Typography
               variant="h3"
               sx={{
                 textAlign: 'center',
-                mb: 8,
+                mb: isLargeDisplay ? 10 : 8,
                 color: '#fff',
                 fontWeight: 'bold',
-                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                fontSize: { 
+                  xs: '2.5rem', 
+                  md: '3.5rem',
+                  lg: '4rem',
+                  xl: isExtraLargeDisplay ? '5rem' : '4.5rem',
+                },
               }}
             >
               {t('about.ourStory')}
@@ -166,9 +179,14 @@ const AboutSection = () => {
                   sx={{
                     color: 'rgba(255, 255, 255, 0.95)',
                     lineHeight: 1.9,
-                    fontSize: { xs: '1rem', md: '1.15rem' },
+                    fontSize: { 
+                      xs: '1rem', 
+                      md: '1.15rem',
+                      lg: '1.25rem',
+                      xl: isExtraLargeDisplay ? '1.5rem' : '1.35rem',
+                    },
                     textAlign: 'left',
-                    mb: 3,
+                    mb: isLargeDisplay ? 4 : 3,
                   }}
                 >
                   {t('about.storyParagraph1')}
@@ -178,9 +196,14 @@ const AboutSection = () => {
                   sx={{
                     color: 'rgba(255, 255, 255, 0.95)',
                     lineHeight: 1.9,
-                    fontSize: { xs: '1rem', md: '1.15rem' },
+                    fontSize: { 
+                      xs: '1rem', 
+                      md: '1.15rem',
+                      lg: '1.25rem',
+                      xl: isExtraLargeDisplay ? '1.5rem' : '1.35rem',
+                    },
                     textAlign: 'left',
-                    mb: 3,
+                    mb: isLargeDisplay ? 4 : 3,
                   }}
                 >
                   {t('about.storyParagraph2')}
@@ -202,10 +225,15 @@ const AboutSection = () => {
               variant="h3"
               sx={{
                 textAlign: 'center',
-                mb: 2,
+                mb: isLargeDisplay ? 3 : 2,
                 color: '#fff',
                 fontWeight: 'bold',
-                fontSize: { xs: '2rem', md: '2.5rem' },
+                fontSize: { 
+                  xs: '2rem', 
+                  md: '2.5rem',
+                  lg: '3rem',
+                  xl: isExtraLargeDisplay ? '3.5rem' : '3.25rem',
+                },
               }}
             >
               {t('about.whatClientsSay')}
@@ -215,9 +243,14 @@ const AboutSection = () => {
               variant="body1"
               sx={{
                 textAlign: 'center',
-                mb: 6,
+                mb: isLargeDisplay ? 8 : 6,
                 color: 'rgba(255, 255, 255, 0.7)',
-                fontSize: { xs: '0.9rem', md: '1rem' },
+                fontSize: { 
+                  xs: '0.9rem', 
+                  md: '1rem',
+                  lg: '1.1rem',
+                  xl: isExtraLargeDisplay ? '1.3rem' : '1.2rem',
+                },
               }}
             >
               {t('about.clientsSayDesc')}
@@ -266,8 +299,13 @@ const AboutSection = () => {
                         sx={{
                           color: '#fff',
                           textAlign: 'center',
-                          mb: 3,
-                          fontSize: { xs: '1rem', md: '1.1rem' },
+                          mb: isLargeDisplay ? 4 : 3,
+                          fontSize: { 
+                            xs: '1rem', 
+                            md: '1.1rem',
+                            lg: '1.2rem',
+                            xl: isExtraLargeDisplay ? '1.4rem' : '1.3rem',
+                          },
                           lineHeight: 1.8,
                           fontStyle: 'italic',
                         }}
@@ -275,11 +313,12 @@ const AboutSection = () => {
                         "{testimonials[currentIndex].comment}"
                       </Typography>
 
-                      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center', mb: isLargeDisplay ? 3 : 2 }}>
                         <Rating
                           value={testimonials[currentIndex].rating}
                           readOnly
                           sx={{
+                            fontSize: isLargeDisplay ? '2rem' : '1.5rem',
                             '& .MuiRating-iconFilled': {
                               color: '#FFD700',
                             },
@@ -287,13 +326,13 @@ const AboutSection = () => {
                         />
                       </Box>
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, pb: 6 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isLargeDisplay ? 3 : 2, pb: isLargeDisplay ? 8 : 6 }}>
                         <Avatar
                           sx={{
                             bgcolor: '#2196F3',
-                            width: 56,
-                            height: 56,
-                            fontSize: '1.5rem',
+                            width: isLargeDisplay ? (isExtraLargeDisplay ? 80 : 70) : 56,
+                            height: isLargeDisplay ? (isExtraLargeDisplay ? 80 : 70) : 56,
+                            fontSize: isLargeDisplay ? '2rem' : '1.5rem',
                           }}
                         >
                           {testimonials[currentIndex].avatar}
@@ -304,6 +343,9 @@ const AboutSection = () => {
                             sx={{
                               color: '#fff',
                               fontWeight: 'bold',
+                              fontSize: isLargeDisplay 
+                                ? (isExtraLargeDisplay ? '1.5rem' : '1.3rem')
+                                : '1.25rem',
                             }}
                           >
                             {testimonials[currentIndex].name}
@@ -312,6 +354,9 @@ const AboutSection = () => {
                             variant="body2"
                             sx={{
                               color: 'rgba(255, 255, 255, 0.7)',
+                              fontSize: isLargeDisplay 
+                                ? (isExtraLargeDisplay ? '1.1rem' : '1rem')
+                                : '0.875rem',
                             }}
                           >
                             {testimonials[currentIndex].role}
@@ -328,38 +373,52 @@ const AboutSection = () => {
                 onClick={handlePrevious}
                 sx={{
                   position: 'absolute',
-                  left: { xs: -10, md: -50 },
+                  left: { 
+                    xs: -10, 
+                    md: -50,
+                    lg: -60,
+                    xl: isExtraLargeDisplay ? -80 : -70,
+                  },
                   top: '50%',
                   transform: 'translateY(-50%)',
                   bgcolor: 'rgba(255, 255, 255, 0.1)',
                   backdropFilter: 'blur(10px)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#fff',
+                  width: isLargeDisplay ? (isExtraLargeDisplay ? 56 : 52) : 48,
+                  height: isLargeDisplay ? (isExtraLargeDisplay ? 56 : 52) : 48,
                   '&:hover': {
                     bgcolor: 'rgba(33, 150, 243, 0.3)',
                   },
                 }}
               >
-                <ArrowBackIos sx={{ ml: 1 }} />
+                <ArrowBackIos sx={{ ml: 1, fontSize: isLargeDisplay ? '1.5rem' : '1.25rem' }} />
               </IconButton>
 
               <IconButton
                 onClick={handleNext}
                 sx={{
                   position: 'absolute',
-                  right: { xs: -10, md: -50 },
+                  right: { 
+                    xs: -10, 
+                    md: -50,
+                    lg: -60,
+                    xl: isExtraLargeDisplay ? -80 : -70,
+                  },
                   top: '50%',
                   transform: 'translateY(-50%)',
                   bgcolor: 'rgba(255, 255, 255, 0.1)',
                   backdropFilter: 'blur(10px)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#fff',
+                  width: isLargeDisplay ? (isExtraLargeDisplay ? 56 : 52) : 48,
+                  height: isLargeDisplay ? (isExtraLargeDisplay ? 56 : 52) : 48,
                   '&:hover': {
                     bgcolor: 'rgba(33, 150, 243, 0.3)',
                   },
                 }}
               >
-                <ArrowForwardIos />
+                <ArrowForwardIos sx={{ fontSize: isLargeDisplay ? '1.5rem' : '1.25rem' }} />
               </IconButton>
             </Box>
 
@@ -373,8 +432,10 @@ const AboutSection = () => {
                     setCurrentIndex(index);
                   }}
                   sx={{
-                    width: currentIndex === index ? 32 : 12,
-                    height: 12,
+                    width: currentIndex === index 
+                      ? (isLargeDisplay ? (isExtraLargeDisplay ? 48 : 40) : 32)
+                      : (isLargeDisplay ? (isExtraLargeDisplay ? 16 : 14) : 12),
+                    height: isLargeDisplay ? (isExtraLargeDisplay ? 16 : 14) : 12,
                     borderRadius: 6,
                     bgcolor: currentIndex === index ? '#2196F3' : 'rgba(255, 255, 255, 0.3)',
                     cursor: 'pointer',

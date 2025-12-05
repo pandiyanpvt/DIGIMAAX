@@ -73,7 +73,6 @@ export const CartProvider = ({ children }) => {
   const [cartLoading, setCartLoading] = useState(false);
   const [cartError, setCartError] = useState(null);
 
-  // Fetch cart from API when user is authenticated
   const fetchCart = useCallback(async () => {
     if (!isAuthenticated || !user?.id) {
       setCartItems(new Map());
@@ -155,7 +154,6 @@ export const CartProvider = ({ children }) => {
       const result = await removeCartItemAPI(cartItemId);
 
       if (result.success) {
-        // Optimistically update UI
         setCartItems((prev) => {
           const newMap = new Map(prev);
           newMap.delete(cartItemId);
@@ -193,7 +191,6 @@ export const CartProvider = ({ children }) => {
       const result = await updateCartItemAPI(cartItemId, quantity);
 
       if (result.success) {
-        // Optimistically update UI
         setCartItems((prev) => {
           const newMap = new Map(prev);
           const item = newMap.get(cartItemId);

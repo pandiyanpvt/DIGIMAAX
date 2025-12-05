@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import englishFlag from '../assets/hero/header-slider/English.png';
+import franceFlag from '../assets/hero/header-slider/France.png';
 
 const LanguageContext = createContext();
 
@@ -11,22 +13,14 @@ export const useLanguage = () => {
 };
 
 const languages = [
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'en', name: 'English', flag: englishFlag },
+  { code: 'fr', name: 'Français', flag: franceFlag },
 ];
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState(() => {
-    // Get saved language from localStorage or default to 'en'
-    const savedLanguage = localStorage.getItem('language');
-    return savedLanguage || 'en';
-  });
+  const [language, setLanguage] = useState('fr');
 
   useEffect(() => {
-    // Save language preference to localStorage
-    localStorage.setItem('language', language);
-    
-    // Update HTML lang attribute
     document.documentElement.lang = language;
   }, [language]);
 
@@ -34,7 +28,7 @@ export const LanguageProvider = ({ children }) => {
     setLanguage(langCode);
   };
 
-  const currentLanguage = languages.find(lang => lang.code === language) || languages[0];
+  const currentLanguage = languages.find(lang => lang.code === language) || languages[1];
 
   return (
     <LanguageContext.Provider value={{ language, changeLanguage, languages, currentLanguage }}>
@@ -42,4 +36,3 @@ export const LanguageProvider = ({ children }) => {
     </LanguageContext.Provider>
   );
 };
-

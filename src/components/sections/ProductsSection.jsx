@@ -8,6 +8,8 @@ import {
   CardMedia,
   CardContent,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +20,9 @@ import { getProducts } from '../../services/products';
 const ProductsSection = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const theme = useTheme();
+  const isLargeDisplay = useMediaQuery(theme.breakpoints.up('xl'));
+  const isExtraLargeDisplay = useMediaQuery('(min-width: 1920px)');
   const navigate = useNavigate();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +57,10 @@ const ProductsSection = () => {
         pb: { xs: 6, md: 6 },
       }}
     >
-      <Container maxWidth="lg">
+      <Container 
+        maxWidth={isExtraLargeDisplay ? 'xl' : isLargeDisplay ? 'lg' : 'lg'}
+        sx={{ px: isExtraLargeDisplay ? 6 : isLargeDisplay ? 4 : 3 }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -65,20 +73,25 @@ const ProductsSection = () => {
               textAlign: 'center',
               color: 'white',
               fontWeight: 'bold',
-              mb: 2,
-              fontSize: { xs: '2rem', md: '3rem' }
+              mb: isLargeDisplay ? 3 : 2,
+              fontSize: { 
+                xs: '2rem', 
+                md: '3rem',
+                lg: '3.5rem',
+                xl: isExtraLargeDisplay ? '4.5rem' : '4rem',
+              }
             }}
           >
             {t('shop.shopWithUs')}
           </Typography>
           <Box
             sx={{
-              width: '80px',
-              height: '4px',
+              width: isLargeDisplay ? (isExtraLargeDisplay ? '120px' : '100px') : '80px',
+              height: isLargeDisplay ? '5px' : '4px',
               background: 'white',
               borderRadius: '2px',
               mx: 'auto',
-              mb: 2,
+              mb: isLargeDisplay ? 3 : 2,
             }}
           />
           <Typography
@@ -86,10 +99,15 @@ const ProductsSection = () => {
             sx={{
               textAlign: 'center',
               color: 'rgba(255, 255, 255, 0.8)',
-              maxWidth: '700px',
+              maxWidth: isLargeDisplay ? '900px' : '700px',
               mx: 'auto',
-              mb: 6,
-              fontSize: { xs: '1rem', md: '1.2rem' }
+              mb: isLargeDisplay ? 8 : 6,
+              fontSize: { 
+                xs: '1rem', 
+                md: '1.2rem',
+                lg: '1.3rem',
+                xl: isExtraLargeDisplay ? '1.5rem' : '1.4rem',
+              }
             }}
           >
             {t('shop.shopDesc')}
@@ -152,7 +170,7 @@ const ProductsSection = () => {
                     >
                       <CardMedia
                         component="img"
-                        height="200"
+                        height={isLargeDisplay ? (isExtraLargeDisplay ? 280 : 250) : 200}
                         image={product.image || product.primary_image || ''}
                         alt={product.title || product.name || 'Product'}
                         sx={{
@@ -170,7 +188,12 @@ const ProductsSection = () => {
                           sx={{
                             color: 'white',
                             fontWeight: 'bold',
-                            fontSize: { xs: '1rem', md: '1.1rem' }
+                            fontSize: { 
+                              xs: '1rem', 
+                              md: '1.1rem',
+                              lg: '1.2rem',
+                              xl: isExtraLargeDisplay ? '1.4rem' : '1.3rem',
+                            }
                           }}
                         >
                           {product.title || product.name || 'Product'}
@@ -179,7 +202,12 @@ const ProductsSection = () => {
                           variant="body2"
                           sx={{
                             color: 'rgba(255, 255, 255, 0.7)',
-                            fontSize: { xs: '0.85rem', md: '0.9rem' }
+                            fontSize: { 
+                              xs: '0.85rem', 
+                              md: '0.9rem',
+                              lg: '1rem',
+                              xl: isExtraLargeDisplay ? '1.15rem' : '1.1rem',
+                            }
                           }}
                         >
                           {product.description || ''}
@@ -208,12 +236,15 @@ const ProductsSection = () => {
               sx={{
                 background: '#2196F3',
                 borderRadius: '25px',
-                px: 5,
-                py: 1.5,
-                fontSize: '1.1rem',
+                px: isLargeDisplay ? (isExtraLargeDisplay ? 7 : 6) : 5,
+                py: isLargeDisplay ? 2 : 1.5,
+                fontSize: isLargeDisplay 
+                  ? (isExtraLargeDisplay ? '1.4rem' : '1.25rem')
+                  : '1.1rem',
                 fontWeight: 600,
                 textTransform: 'none',
                 boxShadow: '0 8px 32px rgba(33, 150, 243, 0.3)',
+                minHeight: isLargeDisplay ? '56px' : 'auto',
                 '&:hover': {
                   background: '#1976D2',
                   boxShadow: '0 12px 40px rgba(33, 150, 243, 0.4)',

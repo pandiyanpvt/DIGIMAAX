@@ -8,7 +8,6 @@ import apiClient from '../api/client';
 const normalizeProduct = (product) => {
   if (!product) return null;
   
-  // Extract images array - API returns images array for getById, primary_image for getAll
   const imagesArray = Array.isArray(product.images) 
     ? [...product.images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
     : [];
@@ -101,9 +100,6 @@ export async function getProducts(filters = {}) {
     params.append('max_price', filters.max_price);
   }
   if (filters.sort) {
-    // Map UI sort options to API sort options
-    // API accepts: newest, popular, trending (based on image query params)
-    // Map price sorting to standard format if needed
     const sortValue = filters.sort === 'priceAsc' ? 'price_asc' 
                    : filters.sort === 'priceDesc' ? 'price_desc'
                    : filters.sort;
@@ -149,16 +145,6 @@ export async function getProductById(id) {
   }
   
   const normalized = normalizeProduct(data.data);
-  
-  // Debug: Log normalized product to verify images are extracted
-  console.log('Normalized product from getProductById:', {
-    id: normalized.id,
-    title: normalized.title,
-    image: normalized.image,
-    gallery: normalized.gallery,
-    images: normalized.images,
-    rawImages: data.data.images,
-  });
   
   return normalized;
 }

@@ -17,7 +17,6 @@ export async function addCartItem(itemData) {
     quantity: itemData.quantity || 1,
   };
 
-  // Add optional customization fields
   if (itemData.custom_text) {
     payload.custom_text = itemData.custom_text;
   }
@@ -27,7 +26,6 @@ export async function addCartItem(itemData) {
   if (itemData.size) {
     payload.size = itemData.size;
   }
-  // Backend expects 'custom_image' but we accept 'custom_image_url' for consistency
   if (itemData.custom_image_url || itemData.custom_image) {
     payload.custom_image = itemData.custom_image_url || itemData.custom_image;
   }

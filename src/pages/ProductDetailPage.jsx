@@ -210,7 +210,6 @@ const ProductDetailPage = () => {
       }
     }
     
-    // If no gallery, check if we have images array from API (objects with image_url)
     if (product.images && Array.isArray(product.images) && product.images.length > 0) {
       // Sort by sort_order and extract image_url
       const sortedImages = [...product.images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
@@ -240,24 +239,8 @@ const ProductDetailPage = () => {
   React.useEffect(() => {
     if (product && galleryImages.length > 0) {
       if (!activeImg || !galleryImages.includes(activeImg)) {
-        console.log('Setting active image to:', galleryImages[0]);
         setActiveImg(galleryImages[0]);
       }
-    }
-  }, [product, galleryImages, activeImg]);
-  
-  // Debug log
-  React.useEffect(() => {
-    if (product) {
-      console.log('Product Detail Page - Product loaded:', {
-        productId: product.id,
-        productTitle: product.title,
-        productImage: product.image,
-        productGallery: product.gallery,
-        productImages: product.images,
-        galleryImages: galleryImages,
-        activeImg: activeImg,
-      });
     }
   }, [product, galleryImages, activeImg]);
 

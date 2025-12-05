@@ -15,15 +15,12 @@ body {
   background: #0A0A0F;
   color: #FFFFFF;
   overflow-x: hidden;
-  /* Firefox scrollbar colors: thumb track */
   scrollbar-color: #2196F3 rgba(26, 26, 46, 0.3);
 }
 
 #root {
   min-height: 100vh;
 }
-
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -41,19 +38,16 @@ body {
   background: #1976D2;
 }
 
-/* Selection color */
 ::selection {
   background: rgba(33, 150, 243, 0.3);
   color: white;
 }
 
-/* Focus styles */
 *:focus {
   outline: 2px solid rgba(33, 150, 243, 0.5);
   outline-offset: 2px;
 }
 
-/* Animation utilities */
 .fade-in {
   animation: fadeIn 0.8s ease-in-out;
 }
@@ -99,7 +93,6 @@ body {
   }
 }
 
-/* Responsive utilities */
 @media (max-width: 768px) {
   body {
     font-size: 14px;
