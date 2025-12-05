@@ -83,6 +83,38 @@ const Navbar = () => {
     handleProfileMenuClose();
   };
 
+  const handleLogoClick = (e) => {
+    if (location.pathname === '/') {
+      // Already on home page, prevent navigation and scroll to hero section
+      e.preventDefault();
+      const heroSection = document.getElementById('home');
+      if (heroSection) {
+        heroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        // Fallback: scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else {
+      // Navigate to home page, then scroll to hero section after navigation
+      e.preventDefault();
+      navigate('/', { replace: false });
+      // Wait for navigation and page load, then scroll to hero section
+      // Using multiple timeouts to ensure the element is rendered
+      setTimeout(() => {
+        const scrollToHero = () => {
+          const heroSection = document.getElementById('home');
+          if (heroSection) {
+            heroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            // Retry after a short delay if element not found
+            setTimeout(scrollToHero, 50);
+          }
+        };
+        scrollToHero();
+      }, 150);
+    }
+  };
+
   const getInitials = (firstName, lastName) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
@@ -327,7 +359,7 @@ const Navbar = () => {
             <Box
               component={RouterLink}
               to="/"
-              onClick={() => navigate('/')}
+              onClick={handleLogoClick}
               sx={{
                 display: 'inline-flex',
                 alignItems: 'center',
