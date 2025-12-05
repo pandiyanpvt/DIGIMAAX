@@ -178,8 +178,8 @@ const Footer = () => {
       sx={{
         background: 'linear-gradient(180deg, #29085D 0%, #1a0540 50%, #0d0220 100%)',
         color: 'white',
-        pt: { xs: 3, md: 4 },
-        pb: 1,
+        pt: { xs: 2, md: 2.5 },
+        pb: 0.5,
         position: 'relative',
         overflow: 'hidden',
         '&::before': {
@@ -194,32 +194,36 @@ const Footer = () => {
       }}
     >
       <Container 
-        maxWidth={isExtraLargeDisplay ? 'xl' : isLargeDisplay ? 'lg' : 'lg'}
-        sx={{ px: isExtraLargeDisplay ? 6 : isLargeDisplay ? 4 : 3 }}
+        maxWidth={false}
+        sx={{ 
+          px: 0,
+          width: '100%',
+        }}
       >
         <Grid 
           container 
-          spacing={isLargeDisplay ? 6 : 4}
+          spacing={isLargeDisplay ? 3 : 2}
           sx={{
             justifyContent: 'space-between',
             alignItems: 'flex-start',
+            width: '100%',
           }}
         >
-          <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Box>
+              <Box sx={{ px: { xs: 2, sm: 2, md: 3 } }}>
                 <Box
                   component="img"
                   src={logoImage}
                   alt="DIGIMAAX Logo"
                   sx={{
-                    height: isLargeDisplay ? (isExtraLargeDisplay ? 140 : 120) : 100,
-                    mb: isLargeDisplay ? 1.5 : 1,
+                    height: isLargeDisplay ? (isExtraLargeDisplay ? 100 : 90) : 70,
+                    mb: isLargeDisplay ? 0.75 : 0.5,
                   }}
                 />
                 <Typography
@@ -230,7 +234,7 @@ const Footer = () => {
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    mb: isLargeDisplay ? 1.5 : 1,
+                    mb: isLargeDisplay ? 0.75 : 0.5,
                     fontSize: isLargeDisplay 
                       ? (isExtraLargeDisplay ? '1.8rem' : '1.5rem')
                       : '1.3rem',
@@ -266,18 +270,19 @@ const Footer = () => {
             </motion.div>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
+              <Box sx={{ px: { xs: 2, sm: 2, md: 3 } }}>
               <Typography
                 variant="h6"
                 sx={{
                   fontWeight: 'bold',
-                  mb: isLargeDisplay ? 2 : 1.5,
+                  mb: isLargeDisplay ? 1 : 0.75,
                   color: '#FFD700',
                   fontSize: isLargeDisplay 
                     ? (isExtraLargeDisplay ? '1.3rem' : '1.2rem')
@@ -286,7 +291,7 @@ const Footer = () => {
               >
                 {t('footer.quickLinks')}
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: isLargeDisplay ? 1 : 0.8 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: isLargeDisplay ? 0.6 : 0.5 }}>
                 {quickLinks.map((link, index) => (
                   <Link
                     key={index}
@@ -310,34 +315,40 @@ const Footer = () => {
                   </Link>
                 ))}
               </Box>
+              </Box>
             </motion.div>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
+              <Box sx={{ px: { xs: 2, sm: 2, md: 3 } }}>
               <Typography
                 variant="h6"
                 sx={{
                   fontWeight: 'bold',
-                  mb: 1.5,
+                  mb: isLargeDisplay ? 1 : 0.75,
                   color: '#FFD700',
-                  fontSize: '1rem',
+                  fontSize: isLargeDisplay 
+                    ? (isExtraLargeDisplay ? '1.3rem' : '1.2rem')
+                    : '1rem',
                 }}
               >
                 {t('footer.ourServices')}
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: isLargeDisplay ? 0.6 : 0.5 }}>
                 {services.map((service, index) => (
                   <Typography
                     key={index}
                     sx={{
                       color: 'rgba(255, 255, 255, 0.7)',
-                      fontSize: '0.85rem',
+                      fontSize: isLargeDisplay 
+                        ? (isExtraLargeDisplay ? '1.1rem' : '1rem')
+                        : '0.85rem',
                       transition: 'all 0.3s ease',
                       cursor: 'pointer',
                       '&:hover': {
@@ -350,29 +361,33 @@ const Footer = () => {
                   </Typography>
                 ))}
               </Box>
+              </Box>
             </motion.div>
           </Grid>
 
           {/* Contact Info */}
-          <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
+              <Box sx={{ px: { xs: 2, sm: 2, md: 3 } }}>
               <Typography
                 variant="h6"
                 sx={{
                   fontWeight: 'bold',
-                  mb: 1.5,
+                  mb: isLargeDisplay ? 1 : 0.75,
                   color: '#FFD700',
-                  fontSize: '1rem',
+                  fontSize: isLargeDisplay 
+                    ? (isExtraLargeDisplay ? '1.3rem' : '1.2rem')
+                    : '1rem',
                 }}
               >
                 {t('footer.getInTouch')}
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: isLargeDisplay ? 0.8 : 0.6, mb: 1 }}>
                 {contactInfo.map((contact, index) => (
                   <Box
                     key={index}
@@ -397,7 +412,9 @@ const Footer = () => {
                         sx={{
                           color: 'rgba(255, 255, 255, 0.7)',
                           textDecoration: 'none',
-                          fontSize: '0.85rem',
+                          fontSize: isLargeDisplay 
+                            ? (isExtraLargeDisplay ? '1.1rem' : '1rem')
+                            : '0.85rem',
                           transition: 'color 0.3s ease',
                           '&:hover': {
                             color: '#FFD700',
@@ -410,7 +427,9 @@ const Footer = () => {
                       <Typography
                         sx={{
                           color: 'rgba(255, 255, 255, 0.7)',
-                          fontSize: '0.85rem',
+                          fontSize: isLargeDisplay 
+                            ? (isExtraLargeDisplay ? '1.1rem' : '1rem')
+                            : '0.85rem',
                         }}
                       >
                         {contact.text}
@@ -425,9 +444,12 @@ const Footer = () => {
                 variant="h6"
                 sx={{
                   fontWeight: 'bold',
-                  mb: 1,
+                  mb: isLargeDisplay ? 1 : 0.75,
                   color: '#FFD700',
-                  fontSize: '0.95rem',
+                  fontSize: isLargeDisplay 
+                    ? (isExtraLargeDisplay ? '1.2rem' : '1.1rem')
+                    : '0.95rem',
+                  mt: 1,
                 }}
               >
                 {t('footer.followUs')}
@@ -476,6 +498,7 @@ const Footer = () => {
                   </motion.div>
                 ))}
               </Box>
+              </Box>
             </motion.div>
           </Grid>
         </Grid>
@@ -483,8 +506,8 @@ const Footer = () => {
         {/* Divider */}
         <Divider
           sx={{
-            mt: 3,
-            mb: 2,
+            mt: 2,
+            mb: 1,
             borderColor: 'rgba(255, 255, 255, 0.1)',
           }}
         />
@@ -496,14 +519,16 @@ const Footer = () => {
             flexDirection: { xs: 'column', md: 'row' },
             justifyContent: 'space-between',
             alignItems: 'center',
-            gap: 1.5,
+            gap: 1,
+            px: { xs: 2, sm: 2, md: 3 },
+            pb: 0.5,
           }}
         >
           <Box
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 0.5,
+              gap: 0.25,
               alignItems: { xs: 'center', md: 'flex-start' },
           }}
         >
